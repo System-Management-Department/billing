@@ -1,0 +1,26 @@
+<?php
+/**
+* ユーザー名、パスワードを置き換えて、ファイル名を MySqlConnection.php に変更
+*/
+namespace Config;
+
+class MySqlConnection{
+	public static function __callStatic($name, $arguments){
+		return ['localhost', '(ユーザ名)', '（パスワード）', '売上請求管理'];
+	}
+	
+	public static function auth(){
+		/** ユーザー認証 */
+		return ['localhost', '(ユーザ名)', '（パスワード）', '売上請求管理'];
+	}
+	
+	public static function admin(){
+		/** 管理者 */
+		return ['localhost', '(ユーザ名)', '（パスワード）', '売上請求管理'];
+	}
+	
+	public static function entry(){
+		/** 編集 */
+		return ['localhost', '(ユーザ名)', '（パスワード）', '売上請求管理'];
+	}
+}

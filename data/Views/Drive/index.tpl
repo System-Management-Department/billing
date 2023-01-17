@@ -1,7 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8" />
+{block name="styles" append}
 <style type="text/css">{literal}
 html, body{
 	margin: 0;
@@ -17,6 +14,9 @@ thead{
 	background: white;
 }
 {/literal}</style>
+{/block}
+
+{block name="scripts" append}
 <script type="text/javascript" src="/assets/googleAPI/GoogleSheets.js"></script>
 <script type="text/javascript" src="/assets/googleAPI/GoogleDrive.js"></script>
 <script type="text/javascript">{literal}
@@ -224,8 +224,9 @@ document.addEventListener("DOMContentLoaded", function(e){
 });
 
 {/literal}</script>
-</head>
-<body>
+{/block}
+
+{block name="body"}
 <button type="button" id="create">新規</button><button type="button" id="create2">ダミー</button><span id="title"></span><button type="button" id="import" style="display: none;">取込</button>
 <table border="1" id="drive">
 	<thead><th>ファイル名</th><th>種類</th><th>権限</th><th>操作</th></thead>
@@ -235,5 +236,4 @@ document.addEventListener("DOMContentLoaded", function(e){
 	<thead><th>取込</th><th>通し番号</th><th>伝票番号</th><th>売上日付</th><th>部門</th><th>チーム</th><th>当社担当者</th><th>請求先</th><th>納品先</th><th>消費税</th><th>単価種別</th></thead>
 	<tbody></tbody>
 </table>
-</body>
-</html>
+{/block}
