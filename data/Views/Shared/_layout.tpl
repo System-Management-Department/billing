@@ -229,12 +229,17 @@ setInterval(() => {
 					</li>
 					<li class="nav-item">
 						<a class="nav-link text-white active" href="{url controller="Drive" action="index"}">
-							<i class="bi bi-house-door"></i><span class="sidebar-hidden">売上</span>
+							<i class="bi bi-house-door"></i><span class="sidebar-hidden">売上取込</span>
 						</a>
 					</li>
 					<li class="nav-item">
 						<a class="nav-link text-white active" href="{url controller="Sales" action="index"}">
-							<i class="bi bi-house-door"></i><span class="sidebar-hidden">売上</span>
+							<i class="bi bi-house-door"></i><span class="sidebar-hidden">売上入力</span>
+						</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link text-white active" href="{url controller="SalesOutput" action="index"}">
+							<i class="bi bi-house-door"></i><span class="sidebar-hidden">売上伝票出力</span>
 						</a>
 					</li>
 					{if $smarty.session["User.role"] eq "admin"}
