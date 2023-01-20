@@ -135,8 +135,6 @@ class SalesController extends ControllerBase{
 		
 		// 検証
 		$check = new Validator();
-		$check["slip_number"]->required("伝票番号を入力してください。")
-			->length("伝票番号は10文字以下で入力してください。", null, 10);
 		$check["accounting_date"]->required("売上日付を入力してください。");
 			//->date("売上日付を正しく入力してください。")
 		$check["division"]->required("部門を入力してください。");
@@ -159,7 +157,6 @@ class SalesController extends ControllerBase{
 			$db->beginTransaction();
 			try{
 				$updateQuery = $db->updateSet("sales_slips", [
-					"slip_number" => $_POST["slip_number"],
 					"accounting_date" => $_POST["accounting_date"],
 					"division" => $_POST["division"],
 					"team" => $_POST["team"],

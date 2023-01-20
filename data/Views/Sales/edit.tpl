@@ -16,9 +16,8 @@
 {block name="body"}
 <form action="{url action="update" id=$data.id}" method="POST" class="form-grid-12" data-form="売上" data-form-success="{url action="index"}">
 	<div class="grid-colspan-6 grid-colreset">
-		<label for="e{counter skip=0}" class="form-label d-flex gap-2">伝票番号<span class="badge bg-danger">必須</span></label>
-		<input type="text" name="slip_number" id="e{counter skip=1}" class="form-control" placeholder="入力してください" value="{$data.slip_number|escape:"html"}" autocomplete="off" />
-		<div class="invalid-feedback"></div>
+		<label class="form-label d-flex gap-2">伝票番号</label>
+		<div class="form-control">{$data.slip_number|escape:"html"}</div>
 	</div>
 	<div class="grid-colspan-6 grid-colreset">
 		<label for="e{counter skip=0}" class="form-label d-flex gap-2">売上日付<span class="badge bg-danger">必須</span></label>
