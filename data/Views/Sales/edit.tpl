@@ -9,12 +9,18 @@
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript" src="/assets/common/form.js"></script>
+<script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
+<script type="text/javascript" src="/assets/common/CoForm.js"></script>
+<script type="text/javascript">{literal}
+document.addEventListener("DOMContentLoaded", function(e){
+	co(new CoForm(document.querySelector('form'), "売上", "{/literal}{url action="update" id=$data.id}{literal}", "{/literal}{url action="index"}{literal}", {}));
+});
+{/literal}</script>
 {/block}
 
 
 {block name="body"}
-<form action="{url action="update" id=$data.id}" method="POST" class="form-grid-12" data-form="売上" data-form-success="{url action="index"}">
+<form action="javascript:void(0)" method="POST" class="form-grid-12">
 	<div class="grid-colspan-6 grid-colreset">
 		<label class="form-label d-flex gap-2">伝票番号</label>
 		<div class="form-control">{$data.slip_number|escape:"html"}</div>

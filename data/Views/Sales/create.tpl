@@ -9,12 +9,18 @@
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript" src="/assets/common/form.js"></script>
+<script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
+<script type="text/javascript" src="/assets/common/CoForm.js"></script>
+<script type="text/javascript">{literal}
+document.addEventListener("DOMContentLoaded", function(e){
+	co(new CoForm(document.querySelector('form'), "売上", "{/literal}{url action="regist"}{literal}", "{/literal}{url action="index"}{literal}", {}));
+});
+{/literal}</script>
 {/block}
 
 
 {block name="body"}
-<form action="{url action="regist"}" method="POST" class="form-grid-12" data-form="売上" data-form-success="{url action="index"}">
+<form action="javascript:void(0)" method="POST" class="form-grid-12">
 	<div class="grid-colspan-6 grid-colreset">
 		<label for="e{counter skip=0}" class="form-label d-flex gap-2">伝票番号<span class="badge bg-danger">必須</span></label>
 		<input type="text" name="slip_number" id="e{counter skip=1}" class="form-control" placeholder="入力してください" autocomplete="off" />
