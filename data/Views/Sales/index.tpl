@@ -15,7 +15,7 @@
 {foreach from=$table item="salse" name="loop"}
 <div class="mb-3">
 	<a href="{url action="edit" id=$salse.id}">
-	{$salse.slip_number}
+	{$salse.slip_number}|{$salse.subject}
 	<table>
 	{foreach from=$salse.detail|json_decode:true item="detail"}
 	<tr><td>{"</td><td>"|implode:$detail}</td></tr>

@@ -19,8 +19,8 @@ class DriveController extends ControllerBase{
 		$result = new Result();
 		try{
 			$db = Session::getDB();
-			$columns = $db->getJsonTableColumns("sales_slips", "slip_number", "accounting_date", "division", "team", "manager", "billing_destination", "delivery_destination", "sales_tax_calculation", "price_kind", "detail");
-			$query = $db->insertSelect("sales_slips", "`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`sales_tax_calculation`,`price_kind`,`detail`,`created`,`modified`")
+			$columns = $db->getJsonTableColumns("sales_slips", "slip_number", "accounting_date", "division", "team", "manager", "billing_destination", "delivery_destination", "subject", "note", "header1", "header2", "header3", "payment_date", "sales_tax", "detail");
+			$query = $db->insertSelect("sales_slips", "`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`sales_tax`,`detail`,`created`,`modified`")
 				->addTable("json_table(?, '$[*]' {$columns}) as t", $_POST["json"])
 				->addField("t.*,now(),now()");
 			$query();

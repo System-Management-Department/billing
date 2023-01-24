@@ -120,15 +120,15 @@ document.addEventListener("DOMContentLoaded", function(e){
 		}
 		gs = new GoogleSheets(jwt.drive);
 		gs.create(filename, [
-			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 100, 11, [
+			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 100, 15, [
 				[
 					GoogleSheets.formula`BYROW(B:B,LAMBDA(X,IF(ROW(X)=1,"取込済",COUNTIF('取込済'!A:A,X)>0)))`,
 					GoogleSheets.formula`BYROW(C:C,LAMBDA(X,IF(ROW(X)=1,"通し番号",TEXT(ROW(X)-1,"00000000"))))`,
-					"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "消費税", "単価種別"
+					"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "件名", "備考", "摘要ヘッダー１", "摘要ヘッダー２", "摘要ヘッダー３", "入金予定日"
 				]
 			], {_protectedRanges: [{range: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 12}}]}),
 			GoogleSheets.createSheetJson({index: 1, title: "売上明細"}, 500, 11, [
-				["通し番号", "商品コード", "商品名", "単位", "入数", "ケース", "数量", "現単価", "単価", "金額", "備考"]
+				["通し番号", "商品コード", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
 			]),
 			GoogleSheets.createSheetJson({index: 2, title: "取込済"}, 100, 2, [[]])
 		]).then(res => gd.createPermission(res.spreadsheetId)).then(res => {
@@ -146,45 +146,55 @@ document.addEventListener("DOMContentLoaded", function(e){
 			[
 				GoogleSheets.formula`BYROW(B:B,LAMBDA(X,IF(ROW(X)=1,"取込済",COUNTIF('取込済'!A:A,X)>0)))`,
 				GoogleSheets.formula`BYROW(C:C,LAMBDA(X,IF(ROW(X)=1,"通し番号",TEXT(ROW(X)-1,"00000000"))))`,
-				"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "消費税", "単価種別"
+				"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "件名", "備考", "摘要ヘッダー１", "摘要ヘッダー２", "摘要ヘッダー３", "入金予定日"
 			]
 		];
 		let s2 = [
-			["通し番号", "商品コード", "商品名", "単位", "入数", "ケース", "数量", "現単価", "単価", "金額", "備考"]
+			["通し番号", "商品コード", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
 		];
 		let unita = ["kg", "g", "mg", "L", "mL", "個", "ダース", "グロス", "ケース", "枚"];
 		let rs = "rehwserjhoyptfwsj rhbjsieryhow ksrbojaer8gu yw5y9hajri owehgq35uyjg8aqer 90w34qagihregw qy934yqt84hgawg9speu tw5ygsuiehgvisetwy4";
 		for(let i = 0; i < 500; i++){
 			let time = new Date("2022-10-01").setMilliseconds(Math.random() * 8640000000);
+			let time2 = new Date(time).setMilliseconds(Math.random() * 8640000000);
 			let sno = Math.floor(Math.random() * 10000000);
 			let k1 = Math.floor(Math.random() * 8);
 			let k2 = Math.floor(Math.random() * 10);
 			let k3 = Math.floor(Math.random() * 50);
 			let k4 = Math.floor(Math.random() * 300);
-			let k5 = Math.floor(Math.random() * 6) + 1;
-			let k6 = Math.floor(Math.random() * 5) + 1;
+			let hs1 = Math.floor(Math.random() * 100);
+			let hs2 = Math.floor(Math.random() * 100);
+			let hs3 = Math.floor(Math.random() * 100);
+			let hs4 = Math.floor(Math.random() * 100);
+			let hs5 = Math.floor(Math.random() * 100);
+			let he1 = hs1 + Math.floor(Math.random() * 30) + 5;
+			let he2 = hs2 + Math.floor(Math.random() * 30) + 5;
+			let he3 = hs3 + Math.floor(Math.random() * 30) + 5;
+			let he4 = hs4 + Math.floor(Math.random() * 30) + 5;
+			let he5 = hs5 + Math.floor(Math.random() * 30) + 5;
 			let rn = Math.floor(Math.random() * 10) + 1;
-			s1.push([null, null, sno, Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time), k1, k2, k3, k4, `納品先${i + 1}`, k5, k6]);
+			s1.push([null, null, sno, Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time), k1, k2, k3, k4, `納品先${i + 1}`, rs.substring(hs1, he1), rs.substring(hs2, he2), rs.substring(hs3, he3), rs.substring(hs4, he4), rs.substring(hs5, he5), Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time2)]);
 			for(let j = 0; j < rn; j ++){
 				let cn = Math.floor(Math.random() * 90000) + 10000;
 				let unit = unita[Math.floor(Math.random() * 10)];
-				let v1 = Math.floor(Math.random() * 16) + 1;
-				let v2 = Math.floor(Math.random() * 16);
 				let v3 = Math.floor(Math.random() * 200000) / 100;
 				let v4 = Math.floor(Math.random() * 100) * 50 + 50;
-				let v5 = Math.floor(Math.random() * 100) * 50 + 50;
 				let v6 = (Math.floor(Math.random() * 100) * 50 + 50) * (Math.floor(Math.random() * 16) + 1);
 				let ss1 = Math.floor(Math.random() * 100);
 				let ss2 = Math.floor(Math.random() * 100);
+				let ss3 = Math.floor(Math.random() * 100);
+				let ss4 = Math.floor(Math.random() * 100);
 				let se1 = ss1 + Math.floor(Math.random() * 30) + 5;
 				let se2 = ss2 + Math.floor(Math.random() * 30) + 5;
-				s2.push([`${i + 100000001}`.substring(1), `A${cn}`, rs.substring(ss1, se1), unit, v1, (v2 == 0) ? null : v2, v3, v4, v5, v6, rs.substring(ss2, se2)]);
+				let se3 = ss3 + Math.floor(Math.random() * 30) + 5;
+				let se4 = ss4 + Math.floor(Math.random() * 30) + 5;
+				s2.push([`${i + 100000001}`.substring(1), `A${cn}`, rs.substring(ss1, se1), unit, v3, v4, v6, rs.substring(ss2, se2), rs.substring(ss3, se3), rs.substring(ss4, se4)]);
 			}
 		}
 		
 		gs = new GoogleSheets(jwt.drive);
 		gs.create(filename, [
-			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 600, 11, s1),
+			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 600, 15, s1),
 			GoogleSheets.createSheetJson({index: 1, title: "売上明細"}, s2.length + 100, 11, s2),
 			GoogleSheets.createSheetJson({index: 2, title: "取込済"}, 100, 2, [[]])
 		]).then(res => gd.createPermission(res.spreadsheetId)).then(res => {
@@ -200,8 +210,15 @@ document.addEventListener("DOMContentLoaded", function(e){
 		for(let i = 0; i < n; i++){
 			let input = checked[i];
 			if(importMap.has(input)){
+				let taxRate = 0.1;
 				let tempRow = importMap.get(input);
-				let data = tempRow.slice(2, 11).map(a => (a instanceof Date) ? Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(a).split("/").join("-") : a);
+				let data = tempRow.slice(2, 15).map(a => (a instanceof Date) ? Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(a).split("/").join("-") : a);
+				data.push(detailValues[tempRow[1]].reduce((total, row) => {
+					if(typeof row[5] === "number"){
+						total += row[5];
+					}
+					return total;
+				}, 0) * taxRate);
 				data.push(detailValues[tempRow[1]]);
 				importData.push(data);
 				appendValues.push([tempRow[1], GoogleSheets.now]);
@@ -233,7 +250,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 	<tbody></tbody>
 </table>
 <table border="1" id="spreadsheet" style="display: none;">
-	<thead><th>取込</th><th>通し番号</th><th>伝票番号</th><th>売上日付</th><th>部門</th><th>チーム</th><th>当社担当者</th><th>請求先</th><th>納品先</th><th>消費税</th><th>単価種別</th></thead>
+	<thead><th>取込</th><th>通し番号</th><th>伝票番号</th><th>売上日付</th><th>部門</th><th>チーム</th><th>当社担当者</th><th>請求先</th><th>納品先</th><th>件名</th><th>備考</th><th>摘要ヘッダー１</th><th>摘要ヘッダー２</th><th>摘要ヘッダー３</th><th>入金予定日</th></thead>
 	<tbody></tbody>
 </table>
 {/block}

@@ -44,10 +44,11 @@ class SalesController extends ControllerBase{
 			// ->range("請求先を正しく入力してください。", "in", [])
 		$check["delivery_destination"]->required("納品先を入力してください。")
 			->length("納品先は-文字以下で入力してください。", null, 255);
-		$check["sales_tax_calculation"]->required("消費税を入力してください。")
-			->range("消費税を正しく入力してください。", "in", [1, 2, 3, 4, 5, 6]);
-		$check["price_kind"]->required("単価種別を入力してください。")
-			->range("単価種別を正しく入力してください。", "in", [1, 2, 3, 4, 5]);
+		//$check["sales_tax_calculation"]->required("税処理を入力してください。")
+		//	->range("税処理を正しく入力してください。", "in", [1, 2, 3, 4, 5, 6]);
+		$check["subject"]->required("件名を入力してください。");
+		$check["payment_date"]->required("入金予定日を入力してください。");
+			//->date("入金予定日を正しく入力してください。")
 		
 		
 		$result = $check($_POST);
@@ -64,8 +65,13 @@ class SalesController extends ControllerBase{
 					"manager" => $_POST["manager"],
 					"billing_destination" => $_POST["billing_destination"],
 					"delivery_destination" => $_POST["delivery_destination"],
-					"sales_tax_calculation" => $_POST["sales_tax_calculation"],
-					"price_kind" => $_POST["price_kind"],
+					//"sales_tax_calculation" => $_POST["sales_tax_calculation"],
+					"subject" => $_POST["subject"],
+					"note" => $_POST["note"],
+					"header1" => $_POST["header1"],
+					"header2" => $_POST["header2"],
+					"header3" => $_POST["header3"],
+					"payment_date" => $_POST["payment_date"],
 					"detail" => $_POST["detail"],
 				],[
 					"created" => "now()",
@@ -81,7 +87,7 @@ class SalesController extends ControllerBase{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
-			@Logger::record($db, "登録", ["targets" => $id]);
+			@Logger::record($db, "登録", ["sales_slips" => $id]);
 		}
 		
 		return new JsonView($result);
@@ -100,8 +106,15 @@ class SalesController extends ControllerBase{
 		$data = $query();
 		$detail = json_decode($data["detail"], true);
 		foreach($detail as &$row){
-			$row[5] = -$row[5];
-			$row[8] = -$row[8];
+			if(is_numeric($row[3])){
+				$row[3] = -$row[3];
+			}
+			if(is_numeric($row[5])){
+				$row[5] = -$row[5];
+			}
+			if(is_numeric($row[9])){
+				$row[9] = -$row[9];
+			}
 		}
 		$data["detail"] = json_encode($detail);
 		$v["data"] = $data;
@@ -147,10 +160,11 @@ class SalesController extends ControllerBase{
 			// ->range("請求先を正しく入力してください。", "in", [])
 		$check["delivery_destination"]->required("納品先を入力してください。")
 			->length("納品先は-文字以下で入力してください。", null, 255);
-		$check["sales_tax_calculation"]->required("消費税を入力してください。")
-			->range("消費税を正しく入力してください。", "in", [1, 2, 3, 4, 5, 6]);
-		$check["price_kind"]->required("単価種別を入力してください。")
-			->range("単価種別を正しく入力してください。", "in", [1, 2, 3, 4, 5]);
+		//$check["sales_tax_calculation"]->required("税処理を入力してください。")
+		//	->range("税処理を正しく入力してください。", "in", [1, 2, 3, 4, 5, 6]);
+		$check["subject"]->required("件名を入力してください。");
+		$check["payment_date"]->required("入金予定日を入力してください。");
+			//->date("入金予定日を正しく入力してください。")
 		$result = $check($_POST);
 		
 		if(!$result->hasError()){
@@ -163,8 +177,13 @@ class SalesController extends ControllerBase{
 					"manager" => $_POST["manager"],
 					"billing_destination" => $_POST["billing_destination"],
 					"delivery_destination" => $_POST["delivery_destination"],
-					"sales_tax_calculation" => $_POST["sales_tax_calculation"],
-					"price_kind" => $_POST["price_kind"],
+					//"sales_tax_calculation" => $_POST["sales_tax_calculation"],
+					"subject" => $_POST["subject"],
+					"note" => $_POST["note"],
+					"header1" => $_POST["header1"],
+					"header2" => $_POST["header2"],
+					"header3" => $_POST["header3"],
+					"payment_date" => $_POST["payment_date"],
 					"detail" => $_POST["detail"],
 				],[
 					"output_processed" => 0,

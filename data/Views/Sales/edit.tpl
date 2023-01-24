@@ -56,13 +56,33 @@ document.addEventListener("DOMContentLoaded", function(e){
 		<div class="invalid-feedback"></div>
 	</div>
 	<div class="grid-colspan-6 grid-colreset">
-		<label for="e{counter skip=0}" class="form-label d-flex gap-2">消費税<span class="badge bg-danger">必須</span></label>
-		<input type="text" name="sales_tax_calculation" id="e{counter skip=1}" class="form-control" placeholder="入力してください" value="{$data.sales_tax_calculation|escape:"html"}" autocomplete="off" />
+		<label for="e{counter skip=0}" class="form-label d-flex gap-2">件名<span class="badge bg-danger">必須</span></label>
+		<input type="text" name="subject" id="e{counter skip=1}" class="form-control" placeholder="入力してください" value="{$data.subject|escape:"html"}" autocomplete="off" />
 		<div class="invalid-feedback"></div>
 	</div>
 	<div class="grid-colspan-6 grid-colreset">
-		<label for="e{counter skip=0}" class="form-label d-flex gap-2">単価種別<span class="badge bg-danger">必須</span></label>
-		<input type="text" name="price_kind" id="e{counter skip=1}" class="form-control" placeholder="入力してください" value="{$data.price_kind|escape:"html"}" autocomplete="off" />
+		<label for="e{counter skip=0}" class="form-label d-flex gap-2">備考<span class="badge bg-secondary">任意</span></label>
+		<input type="text" name="note" id="e{counter skip=1}" class="form-control" placeholder="入力してください" value="{$data.subject|escape:"html"}" autocomplete="off" />
+		<div class="invalid-feedback"></div>
+	</div>
+	<div class="grid-colspan-6 grid-colreset">
+		<label for="e{counter skip=0}" class="form-label d-flex gap-2">摘要ヘッダー１<span class="badge bg-secondary">任意</span></label>
+		<input type="text" name="header1" id="e{counter skip=1}" class="form-control" placeholder="入力してください" value="{$data.header1|escape:"html"}" autocomplete="off" />
+		<div class="invalid-feedback"></div>
+	</div>
+	<div class="grid-colspan-6 grid-colreset">
+		<label for="e{counter skip=0}" class="form-label d-flex gap-2">摘要ヘッダー２<span class="badge bg-secondary">任意</span></label>
+		<input type="text" name="header2" id="e{counter skip=1}" class="form-control" placeholder="入力してください" value="{$data.header2|escape:"html"}" autocomplete="off" />
+		<div class="invalid-feedback"></div>
+	</div>
+	<div class="grid-colspan-6 grid-colreset">
+		<label for="e{counter skip=0}" class="form-label d-flex gap-2">摘要ヘッダー３<span class="badge bg-secondary">任意</span></label>
+		<input type="text" name="header3" id="e{counter skip=1}" class="form-control" placeholder="入力してください" value="{$data.header3|escape:"html"}" autocomplete="off" />
+		<div class="invalid-feedback"></div>
+	</div>
+	<div class="grid-colspan-6 grid-colreset">
+		<label for="e{counter skip=0}" class="form-label d-flex gap-2">入金予定日<span class="badge bg-danger">必須</span></label>
+		<input type="date" name="payment_date" id="e{counter skip=1}" class="form-control" placeholder="入力してください" value="{$data.payment_date|escape:"html"}" autocomplete="off" />
 		<div class="invalid-feedback"></div>
 	</div>
 	<div class="grid-colspan-6 grid-colreset">
