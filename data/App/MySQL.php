@@ -46,6 +46,7 @@ class MySQL{
 	public function getTable2JsonField($table, $alias, $fieldAlias){
 		$tableName = "";
 		$tablePrefix = "";
+		$aliasSuffix = "";
 		if(is_scalar($table)){
 			$tableName = $table;
 			$tablePrefix = "`{$table}`.";
@@ -54,6 +55,9 @@ class MySQL{
 		}else{
 			$tableName = $table[0];
 			$tablePrefix = "`{$table[1]}`.";
+		}
+		if(!is_null($alias)){
+			$aliasSuffix = " AS `{$alias}`";
 		}
 		$result = $this->mysqli->query("SHOW FULL COLUMNS FROM `{$tableName}`");
 		$keys = [];
@@ -70,7 +74,7 @@ class MySQL{
 			$keys[] = $key;
 			$res[] = "?,{$tablePrefix}`{$column["Field"]}`";
 		}
-		return ["JSON_OBJECT(" . implode(",", $res) . ") AS `{$alias}`", $keys];
+		return ["JSON_OBJECT(" . implode(",", $res) . "){$aliasSuffix}", $keys];
 	}
 	
 	public function beginTransaction(){
