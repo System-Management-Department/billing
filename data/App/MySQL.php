@@ -43,6 +43,35 @@ class MySQL{
 		}
 		return "COLUMNS(" . implode(",", $res) . ")";
 	}
+	public function getTable2JsonField($table, $alias, $fieldAlias){
+		$tableName = "";
+		$tablePrefix = "";
+		if(is_scalar($table)){
+			$tableName = $table;
+			$tablePrefix = "`{$table}`.";
+		}else if(is_null($table[1])){
+			$tableName = $table[0];
+		}else{
+			$tableName = $table[0];
+			$tablePrefix = "`{$table[1]}`.";
+		}
+		$result = $this->mysqli->query("SHOW FULL COLUMNS FROM `{$tableName}`");
+		$keys = [];
+		$res = [];
+		while($column = $result->fetch_array(MYSQLI_ASSOC)){
+			$key = $column["Field"];
+			if(array_key_exists($column["Field"], $fieldAlias)){
+				if(is_null($fieldAlias[$column["Field"]])){
+					continue;
+				}else{
+					$key = $fieldAlias[$column["Field"]];
+				}
+			}
+			$keys[] = $key;
+			$res[] = "?,{$tablePrefix}`{$column["Field"]}`";
+		}
+		return ["JSON_OBJECT(" . implode(",", $res) . ") AS `{$alias}`", $keys];
+	}
 	
 	public function beginTransaction(){
 		$this->mysqli->begin_transaction();
