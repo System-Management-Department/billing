@@ -52,9 +52,20 @@ document.addEventListener("DOMContentLoaded", function(e){
 		<label href="{url action="edit" id=$salse.id}">
 		<input type="checkbox" name="id[]" value="{$salse.id}" />{$salse.slip_number}|{$salse.output_processed}
 		<table>
-		{foreach from=$salse.detail|json_decode:true item="detail"}
-		<tr><td>{"</td><td>"|implode:$detail}</td></tr>
-		{/foreach}
+			{assign var="detail" value=$salse.detail|json_decode:true}{section name="detail" loop=$detail.length}
+			<tr>
+				<td>{$detail.itemCode[$smarty.section.detail.index]}</td>
+				<td>{$detail.itemName[$smarty.section.detail.index]}</td>
+				<td>{$detail.unit[$smarty.section.detail.index]}</td>
+				<td>{$detail.quantity[$smarty.section.detail.index]}</td>
+				<td>{$detail.unitPrice[$smarty.section.detail.index]}</td>
+				<td>{$detail.amount[$smarty.section.detail.index]}</td>
+				<td>{$detail.data1[$smarty.section.detail.index]}</td>
+				<td>{$detail.data2[$smarty.section.detail.index]}</td>
+				<td>{$detail.data3[$smarty.section.detail.index]}</td>
+				<td>{$detail.circulation[$smarty.section.detail.index]}</td>
+			</tr>
+			{/section}
 		</table>
 		</label>
 	</div>

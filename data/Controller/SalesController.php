@@ -105,15 +105,15 @@ class SalesController extends ControllerBase{
 			->andWhere("close_processed=0");
 		$data = $query();
 		$detail = json_decode($data["detail"], true);
-		foreach($detail as &$row){
-			if(is_numeric($row[3])){
-				$row[3] = -$row[3];
+		for($i = 0; $i < $detail["length"]; $i++){
+			if(is_numeric($detail["quantity"][$i])){
+				$detail["quantity"][$i] = -$detail["quantity"][$i];
 			}
-			if(is_numeric($row[5])){
-				$row[5] = -$row[5];
+			if(is_numeric($detail["amount"][$i])){
+				$detail["amount"][$i] = -$detail["amount"][$i];
 			}
-			if(is_numeric($row[9])){
-				$row[9] = -$row[9];
+			if(is_numeric($detail["circulation"][$i])){
+				$detail["circulation"][$i] = -$detail["circulation"][$i];
 			}
 		}
 		$data["detail"] = json_encode($detail);

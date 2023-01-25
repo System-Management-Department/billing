@@ -48,7 +48,19 @@ document.addEventListener("DOMContentLoaded", function(e){
 				checkbox.disabled = true;
 			}
 			if(!checkbox.disabled){
-				detailValues[row[1]] = [];
+				detailValues[row[1]] = {
+					length: 0,
+					itemCode: [],
+					itemName: [],
+					unit: [],
+					quantity: [],
+					unitPrice: [],
+					amount: [],
+					data1: [],
+					data2: [],
+					data3: [],
+					circulation: []
+				};
 			}
 			checkboxCell.appendChild(checkbox);
 			importMap.set(checkbox, row);
@@ -60,8 +72,19 @@ document.addEventListener("DOMContentLoaded", function(e){
 			tbody.appendChild(tr);
 		}
 		for(let row of range){
-			if(row[0] in detailValues){
-				detailValues[row[0]].push(row.slice(1));
+			let key = row[0]
+			if(key in detailValues){
+				detailValues[key].length++;
+				detailValues[key].itemCode.push(row[1]);
+				detailValues[key].itemName.push(row[2]);
+				detailValues[key].unit.push(row[3]);
+				detailValues[key].quantity.push(row[4]);
+				detailValues[key].unitPrice.push(row[5]);
+				detailValues[key].amount.push(row[6]);
+				detailValues[key].data1.push(row[7]);
+				detailValues[key].data2.push(row[8]);
+				detailValues[key].data3.push(row[9]);
+				detailValues[key].circulation.push(row[10]);
 			}
 		}
 	};
@@ -213,12 +236,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 				let taxRate = 0.1;
 				let tempRow = importMap.get(input);
 				let data = tempRow.slice(2, 15).map(a => (a instanceof Date) ? Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(a).split("/").join("-") : a);
-				data.push(detailValues[tempRow[1]].reduce((total, row) => {
-					if(typeof row[5] === "number"){
-						total += row[5];
-					}
-					return total;
-				}, 0) * taxRate);
+				data.push(detailValues[tempRow[1]].amount.filter(v => typeof v === "number").reduce((total, v) => total + v, 0) * taxRate);
 				data.push(detailValues[tempRow[1]]);
 				importData.push(data);
 				appendValues.push([tempRow[1], GoogleSheets.now]);
