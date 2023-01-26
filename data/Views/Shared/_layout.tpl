@@ -242,6 +242,11 @@ setInterval(() => {
 							<i class="bi bi-house-door"></i><span class="sidebar-hidden">売上伝票出力</span>
 						</a>
 					</li>
+					<li class="nav-item">
+						<a class="nav-link text-white active" href="{url controller="Billing" action="index"}">
+							<i class="bi bi-house-door"></i><span class="sidebar-hidden">請求締データ</span>
+						</a>
+					</li>
 					{if $smarty.session["User.role"] eq "admin"}
 					<li class="nav-item">
 						<a class="nav-link text-white" href="{url controller="Home" action="master"}"><i class="bi bi-gear-wide"></i><span class="sidebar-hidden">マスタ管理</span></a>
