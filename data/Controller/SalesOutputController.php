@@ -17,8 +17,17 @@ class SalesOutputController extends ControllerBase{
 		$db = Session::getDB();
 		$v = new View();
 		
-		$query = $db->select("ALL")
-			->addTable("sales_slips");
+		list($jsonField, $keys) = $db->getTable2JsonField(["sales_slips", null], null, [
+			"id" => null,
+			"output_processed" => null,
+			"close_processed" => null,
+			"closing_date" => null,
+			"created" => null,
+			"modified" => null
+		]);
+		$query = $db->select("ONE")
+			->addTable("sales_slips")
+			->addField("JSON_OBJECTAGG(id,{$jsonField})", ...$keys);
 		$v["table"] = $query();
 		
 		return $v;
