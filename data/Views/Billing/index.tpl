@@ -7,6 +7,7 @@
 {/block}
 
 {block name="scripts" append}
+<script type="text/javascript" src="/assets/encoding.js/encoding.min.js"></script>
 <script type="text/javascript">
 var data = JSON.parse("{$table|escape:"javascript"}");{literal}
 document.addEventListener("DOMContentLoaded", function(e){
@@ -15,6 +16,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 	let HTMLEscape = v => (v == null) ? "" : Object.assign(eelement, {textContent: v}).innerHTML;
 	for(let id in data){
 		let item = data[id];
+		item.detail[Symbol.iterator] = detailIterator;
 		let template = {/literal}`{call name="item_template"}`{literal};
 		form.insertAdjacentHTML("beforeend", template);
 	}
@@ -23,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 		e.preventDefault();
 		let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(new Date());
 		let inputs = form.querySelectorAll('[name="id[]"]:checked');
-		let csvData = [new Uint8Array([0xef, 0xbb, 0xbf]), [
+		let csvData = [new Uint8Array(Encoding.convert(Encoding.stringToCode([
 			"対象日付",
 			"帳票No",
 			"顧客コード",
@@ -60,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 			"税込金額(明細別)",
 			"担当者氏名",
 			"発行部数"
-		].join(",") + "\r\n"];
+		].join(",") + "\r\n"), {to: "SJIS", from: "UNICODE"}))];
 		let n = inputs.length;
 		for(let i = 0; i < n; i++){
 			let id = inputs[i].value;
@@ -88,42 +90,42 @@ document.addEventListener("DOMContentLoaded", function(e){
 			cols[26] = item.header3;
 			cols[30] = 0;
 			cols[34] = "----"; /** TODO マスター作成後担当者氏名 */
-			for(let i = 0; i < item.detail.length; i++){
+			for(let detail of item.detail){
 				// 合計
-				if(typeof item.detail.amount[i] === "number"){
-					cols[4] += item.detail.amount[i];
-					cols[30] += item.detail.amount[i] * taxRate;
+				if(typeof detail.amount === "number"){
+					cols[4] += detail.amount;
+					cols[30] += detail.amount * taxRate;
 				}
 			}
 			cols[5] = cols[4] * taxRate;
 			cols[6] = cols[4] + cols[5];
 			cols[21] = cols[6];
 			cols[31] = cols[4] + cols[30];
-			for(let i = 0; i < item.detail.length; i++){
-				cols[9] = item.detail.itemName[i];
-				cols[10] = item.detail.quantity[i];
-				cols[11] = item.detail.unitPrice[i];
-				cols[12] = item.detail.amount[i];
-				cols[23] = item.detail.unit[i];
-				cols[27] = item.detail.data1[i];
-				cols[28] = item.detail.data2[i];
-				cols[29] = item.detail.data3[i];
-				if(typeof item.detail.amount[i] === "number"){
-					cols[32] = item.detail.amount[i] * taxRate;
-					cols[33] = item.detail.amount[i] + cols[32];
+			for(let detail of item.detail){
+				cols[9] = detail.itemName;
+				cols[10] = detail.quantity;
+				cols[11] = detail.unitPrice;
+				cols[12] = detail.amount;
+				cols[23] = detail.unit;
+				cols[27] = detail.data1;
+				cols[28] = detail.data2;
+				cols[29] = detail.data3;
+				if(typeof detail.amount === "number"){
+					cols[32] = detail.amount * taxRate;
+					cols[33] = detail.amount + cols[32];
 				}else{
 					cols[32] = "";
 					cols[33] = "";
 				}
-				cols[35] = item.detail.circulation[i];
-				csvData.push(cols.map(v => {
+				cols[35] = detail.circulation;
+				csvData.push(new Uint8Array(Encoding.convert(Encoding.stringToCode(cols.map(v => {
 					if(v == null){
 						return "";
 					}else if(typeof v === "string" && v.match(/[,"\r\n]/)){
 						return `"${v.split('"').join('""')}"`;
 					}
 					return `${v}`;
-				}).join(",") + "\r\n");
+				}).join(",") + "\r\n"), {to: "SJIS", from: "UNICODE"})));
 			}
 		}
 		let blob = new Blob(csvData, {type: "text/csv"});
@@ -147,6 +149,16 @@ document.addEventListener("DOMContentLoaded", function(e){
 			}
 		});
 	});
+	
+	function* detailIterator(){
+		let keys = Object.keys(this).filter(k => k != "length");
+		for(let i = 0; i < this.length; i++){
+			yield keys.reduce((obj, k) => {
+				obj[k] = this[k][i];
+				return obj;
+			}, {});
+		}
+	}
 });
 {/literal}</script>
 {/block}
@@ -157,27 +169,26 @@ document.addEventListener("DOMContentLoaded", function(e){
 	{function name="item_template"
 		id="$\x7bid\x7d"
 		item=["slip_number" => "$\x7bitem.slip_number\x7d", "subject" => "$\x7bitem.subject\x7d"]
-		ldetail="$\x7bnew Array(item.detail.length).fill(null).map((dummy, i) => `"
+		ldetail="$\x7bArray.from(item.detail).map(detail => `"
 		rdetail="`).join(\"\")\x7d"
 		detail=[
-			"itemCode" => "$\x7bHTMLEscape(item.detail.itemCode[i])\x7d",
-			"itemName" => "$\x7bHTMLEscape(item.detail.itemName[i])\x7d",
-			"unit" => "$\x7bHTMLEscape(item.detail.unit[i])\x7d",
-			"quantity" => "$\x7bHTMLEscape(item.detail.quantity[i])\x7d",
-			"unitPrice" => "$\x7bHTMLEscape(item.detail.unitPrice[i])\x7d",
-			"amount" => "$\x7bHTMLEscape(item.detail.amount[i])\x7d",
-			"data1" => "$\x7bHTMLEscape(item.detail.data1[i])\x7d",
-			"data2" => "$\x7bHTMLEscape(item.detail.data2[i])\x7d",
-			"data3" => "$\x7bHTMLEscape(item.detail.data3[i])\x7d",
-			"circulation" => "$\x7bHTMLEscape(item.detail.circulation[i])\x7d"
+			"itemCode"    => "$\x7bHTMLEscape(detail.itemCode)\x7d",
+			"itemName"    => "$\x7bHTMLEscape(detail.itemName)\x7d",
+			"unit"        => "$\x7bHTMLEscape(detail.unit)\x7d",
+			"quantity"    => "$\x7bHTMLEscape(detail.quantity)\x7d",
+			"unitPrice"   => "$\x7bHTMLEscape(detail.unitPrice)\x7d",
+			"amount"      => "$\x7bHTMLEscape(detail.amount)\x7d",
+			"data1"       => "$\x7bHTMLEscape(detail.data1)\x7d",
+			"data2"       => "$\x7bHTMLEscape(detail.data2)\x7d",
+			"data3"       => "$\x7bHTMLEscape(detail.data3)\x7d",
+			"circulation" => "$\x7bHTMLEscape(detail.circulation)\x7d"
 		]
 	}
 	<div class="mb-3">
 		<label>
 		<input type="checkbox" name="id[]" value="{$id}" />{$item.slip_number}|{$item.subject}
 		<table>
-		{$ldetail}
-		<tr>
+		{$ldetail}<tr>
 			<td>{$detail.itemCode}</td>
 			<td>{$detail.itemName}</td>
 			<td>{$detail.unit}</td>
@@ -188,8 +199,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 			<td>{$detail.data2}</td>
 			<td>{$detail.data3}</td>
 			<td>{$detail.circulation}</td>
-		</tr>
-		{$rdetail}
+		</tr>{$rdetail}
 		</table>
 		</label>
 	</div>
