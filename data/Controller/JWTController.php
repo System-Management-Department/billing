@@ -6,20 +6,24 @@ use App\ControllerBase;
 use App\View;
 use App\JsonView;
 use App\MySQL;
+use Model\Session;
 
 class JWTController extends ControllerBase{
+	#[\Attribute\AcceptRole("admin", "entry")]
 	public function spreadsheet(){
-		return new JsonView(self::getJWT("https://www.googleapis.com/auth/spreadsheets"));
+		$db = Session::getDB();
+		return new JsonView(self::getJWT($db, "https://www.googleapis.com/auth/spreadsheets"));
 	}
 	
+	#[\Attribute\AcceptRole("admin", "entry")]
 	public function drive(){
-		return new JsonView(self::getJWT("https://www.googleapis.com/auth/drive"));
+		$db = Session::getDB();
+		return new JsonView(self::getJWT($db, "https://www.googleapis.com/auth/drive"));
 	}
 	
 	
-	private static function getJWT(...$scope){
+	private static function getJWT($db, ...$scope){
 		$now = time();
-		$db = new MySQL();
 		$query = $db->select("ONE")
 			->addTable("基本情報")
 			->addField("`値`")
