@@ -87,11 +87,17 @@ class GoogleSheets{
 	}
 	create(filename, sheets){
 		return new Promise((resolve, reject) => {
+			let sheetData = {};
 			let headers = {};
+			let user = "";
+			for(let sheet of sheets){
+				sheetData[sheet.properties.title] = sheet[GoogleSheets.updateSymbol];
+			}
 			fetch(this.#url).then(res => res.json()).then(jwt => {
 				let formData = new FormData();
 				formData.append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
 				formData.append("assertion", jwt.assertion);
+				user = jwt.iss;
 				return fetch("https://oauth2.googleapis.com/token", {
 					method: "POST",
 					body: formData
@@ -103,7 +109,57 @@ class GoogleSheets{
 					method: "POST",
 					body: JSON.stringify({properties:{title:filename,locale:"ja_JP",autoRecalc:"ON_CHANGE",timeZone:"Asia/Tokyo"},sheets:sheets})
 				});
-			}).then(res => res.json()).then(spreadsheets => {resolve(spreadsheets);}).catch(e => {reject(e);});
+			}).then(res => res.json()).then(spreadsheets => {
+				let book = new GoogleSheetsBook(spreadsheets);
+				let requests = [];
+				for(let sheet of book){
+					if("namedRanges" in sheetData[sheet.name]){
+						for(let name in sheetData[sheet.name].namedRanges){
+							requests.push({
+								addNamedRange: {
+									namedRange: {
+										name: name,
+										range: Object.assign({sheetId:sheet.sheetId}, sheetData[sheet.name].namedRanges[name])
+									}
+								}
+							});
+						}
+					}
+					if("protectedRanges" in sheetData[sheet.name]){
+						for(let range of sheetData[sheet.name].protectedRanges){
+							requests.push({
+								addProtectedRange: {
+									protectedRange: {
+										range: Object.assign({sheetId:sheet.sheetId}, range),
+										editors: {users: [user]},
+										requestingUserCanEdit: true
+									}
+								}
+							});
+						}
+					}
+					if("rows" in sheetData[sheet.name]){
+						requests.push({
+							appendCells: {
+								sheetId: sheet.sheetId,
+								rows: sheetData[sheet.name].rows,
+								fields: "*"
+							}
+						});
+					}
+				}
+				return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheets.spreadsheetId}:batchUpdate`, {
+					headers: headers,
+					method: "POST",
+					body: JSON.stringify({
+						requests: requests,
+						includeSpreadsheetInResponse: false,
+						responseIncludeGridData: false
+					})
+				});
+			}).then(res => res.json()).then(spreadsheets => {
+				resolve(spreadsheets);
+			}).catch(e => {reject(e);});
 		});
 	}
 	update(...request){
@@ -164,15 +220,22 @@ class GoogleSheets{
 	static #baseTime = new Date("1899-12-30T00:00:00.000").getTime();
 	static formulaSymbol = Symbol("formula");
 	static requestSymbol = Symbol("request");
+	static updateSymbol = Symbol("update");
 	static now = {};
 	static formula(callSite, ...substitutions){
 		return {[GoogleSheets.formulaSymbol]: String.raw(callSite, ...substitutions)};
 	}
-	static createSheetJson(properties, rowCount, columnCount, data, options = null){
-		let json = {properties:Object.assign({sheetType:"GRID",gridProperties:{rowCount:rowCount,columnCount:columnCount}}, properties),data:[{rowData:GoogleSheets.encodeRowData(data)}]};
+	static createSheetJson(properties, rowCount, columnCount, options = null){
+		let json = {properties:Object.assign({sheetType:"GRID",gridProperties:{rowCount:rowCount,columnCount:columnCount}}, properties),[GoogleSheets.updateSymbol]:{}};
 		if(options != null){
+			if("namedRanges" in options){
+				json[GoogleSheets.updateSymbol].namedRanges = options.namedRanges;
+			}
+			if("rows" in options){
+				json[GoogleSheets.updateSymbol].rows = GoogleSheets.encodeRowData(options.rows);
+			}
 			if("protectedRanges" in options){
-				json.protectedRanges = options.protectedRanges;
+				json[GoogleSheets.updateSymbol].protectedRanges = options.protectedRanges;
 			}
 		}
 		return json;

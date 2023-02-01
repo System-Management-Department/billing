@@ -25,9 +25,9 @@ class JWTController extends ControllerBase{
 	private static function getJWT($db, ...$scope){
 		$now = time();
 		$query = $db->select("ONE")
-			->addTable("基本情報")
-			->addField("`値`")
-			->andWhere("`項目`=?", "サービスアカウントキー");
+			->addTable("basic_info")
+			->addField("value")
+			->andWhere("`key`=?", "gserviceaccount");
 		$data = json_decode($query(), true);
 		$header = ["alg" => "RS256", "typ" => "JWT"];
 		$payload = [
@@ -41,7 +41,7 @@ class JWTController extends ControllerBase{
 		$signature = "";
 		$private_key = openssl_pkey_get_private($data["private_key"]);
 		openssl_sign($message, $signature, $private_key, "SHA256");
-		return ["assertion" => "{$message}." . rtrim(strtr(base64_encode($signature), "+/", "-_"), "="), "now" => microtime(true) * 1000];
+		return ["assertion" => "{$message}." . rtrim(strtr(base64_encode($signature), "+/", "-_"), "="), "now" => microtime(true) * 1000, "iss" => $data["client_email"]];
 	}
 	
 	private static function encode($data){

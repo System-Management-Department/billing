@@ -18,7 +18,8 @@ class SalesController extends ControllerBase{
 		$v = new View();
 		
 		$query = $db->select("ALL")
-			->addTable("sales_slips");
+			->addTable("sales_slips")
+			->andWhere("close_processed=0");
 		$v["table"] = $query();
 		
 		return $v;
