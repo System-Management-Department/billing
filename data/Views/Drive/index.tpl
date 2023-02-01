@@ -151,6 +151,40 @@ document.addEventListener("DOMContentLoaded", function(e){
 						"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "件名", "備考", "摘要ヘッダー１", "摘要ヘッダー２", "摘要ヘッダー３", "入金予定日"
 					]
 				],
+				fillRows: function(rowData){
+					rowData.values[4].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range1"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
+					rowData.values[5].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range2"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
+					rowData.values[6].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range3"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
+					rowData.values[7].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range4"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
+				},
 				protectedRanges: [
 					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 15}
 				]
@@ -159,6 +193,16 @@ document.addEventListener("DOMContentLoaded", function(e){
 				rows: [
 					["通し番号", "商品コード", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
 				],
+				fillRows: function(rowData){
+					rowData.values[1].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range5"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
+				},
 				protectedRanges: [
 					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 11}
 				]
@@ -169,7 +213,10 @@ document.addEventListener("DOMContentLoaded", function(e){
 			GoogleSheets.createSheetJson({index: 3, title: "マスター", hidden: true}, 100, 2, {
 				namedRanges: {
 					range1: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range2: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1}
+					range2: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
+					range3: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
+					range4: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
+					range5: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1}
 				},
 				protectedRanges: [{}]
 			})
@@ -238,12 +285,56 @@ document.addEventListener("DOMContentLoaded", function(e){
 		gs.create(filename, [
 			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 600, 15, {
 				rows: s1,
+				fillRows: function(rowData){
+					rowData.values[4].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range1"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
+					rowData.values[5].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range2"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
+					rowData.values[6].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range3"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
+					rowData.values[7].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range4"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
+				},
 				protectedRanges: [
 					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 15}
 				]}
 			),
 			GoogleSheets.createSheetJson({index: 1, title: "売上明細"}, s2.length + 100, 11, {
 				rows: s2,
+				fillRows: function(rowData){
+					rowData.values[1].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range5"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
+				},
 				protectedRanges: [
 					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 11}
 				]
@@ -254,7 +345,10 @@ document.addEventListener("DOMContentLoaded", function(e){
 			GoogleSheets.createSheetJson({index: 3, title: "マスター", hidden: true}, 100, 2, {
 				namedRanges: {
 					range1: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range2: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1}
+					range2: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
+					range3: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
+					range4: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
+					range5: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1}
 				},
 				protectedRanges: [{}]
 			})

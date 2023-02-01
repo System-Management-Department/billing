@@ -139,6 +139,16 @@ class GoogleSheets{
 						}
 					}
 					if("rows" in sheetData[sheet.name]){
+						if("fillRows" in sheetData[sheet.name]){
+							let rowData = {values: []};
+							for(let i = 0; i < sheetData[sheet.name].columnCount; i++){
+								rowData.values.push({userEnteredValue: {}});
+							}
+							sheetData[sheet.name].fillRows(rowData);
+							for(let i = sheetData[sheet.name].rows.length; i < sheetData[sheet.name].rowCount; i++){
+								sheetData[sheet.name].rows.push(rowData);
+							}
+						}
 						requests.push({
 							appendCells: {
 								sheetId: sheet.sheetId,
@@ -233,6 +243,11 @@ class GoogleSheets{
 			}
 			if("rows" in options){
 				json[GoogleSheets.updateSymbol].rows = GoogleSheets.encodeRowData(options.rows);
+			}
+			if("fillRows" in options){
+				json[GoogleSheets.updateSymbol].rowCount = rowCount;
+				json[GoogleSheets.updateSymbol].columnCount = columnCount;
+				json[GoogleSheets.updateSymbol].fillRows = options.fillRows;
 			}
 			if("protectedRanges" in options){
 				json[GoogleSheets.updateSymbol].protectedRanges = options.protectedRanges;
