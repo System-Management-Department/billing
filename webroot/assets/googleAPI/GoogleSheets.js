@@ -252,6 +252,12 @@ class GoogleSheets{
 			if("protectedRanges" in options){
 				json[GoogleSheets.updateSymbol].protectedRanges = options.protectedRanges;
 			}
+			if("frozenRowCount" in options){
+				json.properties.gridProperties.frozenRowCount = options.frozenRowCount;
+			}
+			if("frozenColumnCount" in options){
+				json.properties.gridProperties.frozenColumnCount = options.frozenColumnCount;
+			}
 		}
 		return json;
 	}

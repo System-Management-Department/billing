@@ -144,6 +144,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 		gs = new GoogleSheets(jwt.drive);
 		gs.create(filename, [
 			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 100, 15, {
+				frozenRowCount: 1,
 				rows: [
 					[
 						GoogleSheets.formula`BYROW(B:B,LAMBDA(X,IF(ROW(X)=1,"取込済",COUNTIF('取込済'!A:A,X)>0)))`,
@@ -190,6 +191,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 				]
 			}),
 			GoogleSheets.createSheetJson({index: 1, title: "売上明細"}, 500, 11, {
+				frozenRowCount: 1,
 				rows: [
 					["通し番号", "商品コード", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
 				],
@@ -284,6 +286,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 		gs = new GoogleSheets(jwt.drive);
 		gs.create(filename, [
 			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 600, 15, {
+				frozenRowCount: 1,
 				rows: s1,
 				fillRows: function(rowData){
 					rowData.values[4].dataValidation = {
@@ -324,6 +327,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 				]}
 			),
 			GoogleSheets.createSheetJson({index: 1, title: "売上明細"}, s2.length + 100, 11, {
+				frozenRowCount: 1,
 				rows: s2,
 				fillRows: function(rowData){
 					rowData.values[1].dataValidation = {
