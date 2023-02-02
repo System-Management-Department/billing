@@ -1,13 +1,5 @@
 <?php
 namespace Config;
-define('DATA_DIR', dirname(__FILE__, 2) . DIRECTORY_SEPARATOR);
-spl_autoload_register(function($class){
-	$fileName = DATA_DIR . str_replace('\\', '/', $class) . '.php';
-	if(file_exists($fileName)){
-		include $fileName;
-	}
-});
-set_error_handler('\\Model\\Error::pushData');
 
 // リクエスト
 $url = parse_url(urldecode($_SERVER['REQUEST_URI']));
