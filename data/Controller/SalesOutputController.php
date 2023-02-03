@@ -7,7 +7,6 @@ use App\View;
 use App\JsonView;
 use App\RedirectResponse;
 use App\Validator;
-use Model\Logger;
 use Model\Session;
 use Model\Result;
 use Model\SalesSlip;
