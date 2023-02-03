@@ -4,6 +4,9 @@ class GoogleSheets{
 		this.#url = url;
 		this.#id = id;
 	}
+	getId(){
+		return this.#id;
+	}
 	get(range){
 		return new Promise((resolve, reject) => {
 			let headers = {};

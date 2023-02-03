@@ -380,6 +380,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 		}
 		let formData = new FormData();
 		formData.append("json", JSON.stringify(importData));
+		formData.append("spreadsheets", gs.getId());
 		fetch("{/literal}{url action="import"}{literal}", {
 			method: "POST",
 			body: formData

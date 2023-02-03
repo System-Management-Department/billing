@@ -7,6 +7,7 @@ use App\ControllerBase;
 use App\MySQL;
 use Model\Result;
 use Model\Session;
+use Model\Logger;
 
 class DriveController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry")]
@@ -25,6 +26,7 @@ class DriveController extends ControllerBase{
 				->addField("t.*,now(),now()");
 			$query();
 			$result->addMessage("読込が完了しました。", "INFO", "");
+			@Logger::record($db, "売上取込", ["spreadsheet" => $_POST["spreadsheets"]]);
 		}catch(Exception $ex){
 			$result->addMessage("読込に失敗しました。", "ERROR", "");
 		}
