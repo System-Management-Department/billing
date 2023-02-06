@@ -20,7 +20,7 @@
 	<table>
 	{assign var="detail" value=$salse.detail|json_decode:true}{section name="detail" loop=$detail.length}
 	<tr>
-		<td>{$detail.itemCode[$smarty.section.detail.index]}</td>
+		<td>{$detail.categoryCode[$smarty.section.detail.index]}</td>
 		<td>{$detail.itemName[$smarty.section.detail.index]}</td>
 		<td>{$detail.unit[$smarty.section.detail.index]}</td>
 		<td>{$detail.quantity[$smarty.section.detail.index]}</td>

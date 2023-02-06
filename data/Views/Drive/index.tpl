@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 			if(!checkbox.disabled){
 				detailValues[row[1]] = {
 					length: 0,
-					itemCode: [],
+					categoryCode: [],
 					itemName: [],
 					unit: [],
 					quantity: [],
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 			let key = row[0]
 			if(key in detailValues){
 				detailValues[key].length++;
-				detailValues[key].itemCode.push(row[1]);
+				detailValues[key].categoryCode.push(row[1]);
 				detailValues[key].itemName.push(row[2]);
 				detailValues[key].unit.push(row[3]);
 				detailValues[key].quantity.push(row[4]);
@@ -143,13 +143,13 @@ document.addEventListener("DOMContentLoaded", function(e){
 		}
 		gs = new GoogleSheets(jwt.drive);
 		gs.create(filename, [
-			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 100, 15, {
+			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 100, 16, {
 				frozenRowCount: 1,
 				rows: [
 					[
 						GoogleSheets.formula`BYROW(B:B,LAMBDA(X,IF(ROW(X)=1,"取込済",COUNTIF('取込済'!A:A,X)>0)))`,
 						GoogleSheets.formula`BYROW(C:C,LAMBDA(X,IF(ROW(X)=1,"通し番号",TEXT(ROW(X)-1,"00000000"))))`,
-						"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "件名", "備考", "摘要ヘッダー１", "摘要ヘッダー２", "摘要ヘッダー３", "入金予定日"
+						"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "件名", "備考", "摘要ヘッダー１", "摘要ヘッダー２", "摘要ヘッダー３", "入金予定日", "請求パターン"
 					]
 				],
 				fillRows: function(rowData){
@@ -185,6 +185,14 @@ document.addEventListener("DOMContentLoaded", function(e){
 						strict: true,
 						showCustomUi: true
 					};
+					rowData.values[15].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range5"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
 				},
 				protectedRanges: [
 					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 15}
@@ -193,13 +201,13 @@ document.addEventListener("DOMContentLoaded", function(e){
 			GoogleSheets.createSheetJson({index: 1, title: "売上明細"}, 500, 11, {
 				frozenRowCount: 1,
 				rows: [
-					["通し番号", "商品コード", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
+					["通し番号", "カテゴリー", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
 				],
 				fillRows: function(rowData){
 					rowData.values[1].dataValidation = {
 						condition: {
 							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range5"}]
+							values: [{userEnteredValue: "=range6"}]
 						},
 						strict: true,
 						showCustomUi: true
@@ -218,7 +226,8 @@ document.addEventListener("DOMContentLoaded", function(e){
 					range2: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
 					range3: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
 					range4: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range5: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1}
+					range5: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
+					range6: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1}
 				},
 				protectedRanges: [{}]
 			})
@@ -237,11 +246,11 @@ document.addEventListener("DOMContentLoaded", function(e){
 			[
 				GoogleSheets.formula`BYROW(B:B,LAMBDA(X,IF(ROW(X)=1,"取込済",COUNTIF('取込済'!A:A,X)>0)))`,
 				GoogleSheets.formula`BYROW(C:C,LAMBDA(X,IF(ROW(X)=1,"通し番号",TEXT(ROW(X)-1,"00000000"))))`,
-				"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "件名", "備考", "摘要ヘッダー１", "摘要ヘッダー２", "摘要ヘッダー３", "入金予定日"
+				"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "件名", "備考", "摘要ヘッダー１", "摘要ヘッダー２", "摘要ヘッダー３", "入金予定日", "請求パターン"
 			]
 		];
 		let s2 = [
-			["通し番号", "商品コード", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
+			["通し番号", "カテゴリー", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
 		];
 		let unita = ["kg", "g", "mg", "L", "mL", "個", "ダース", "グロス", "ケース", "枚"];
 		let rs = "rehwserjhoyptfwsj rhbjsieryhow ksrbojaer8gu yw5y9hajri owehgq35uyjg8aqer 90w34qagihregw qy934yqt84hgawg9speu tw5ygsuiehgvisetwy4";
@@ -263,8 +272,9 @@ document.addEventListener("DOMContentLoaded", function(e){
 			let he3 = hs3 + Math.floor(Math.random() * 30) + 5;
 			let he4 = hs4 + Math.floor(Math.random() * 30) + 5;
 			let he5 = hs5 + Math.floor(Math.random() * 30) + 5;
+			let pt = Math.floor(Math.random() * 4) + 1;
 			let rn = Math.floor(Math.random() * 10) + 1;
-			s1.push([null, null, sno, Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time), k1, k2, k3, k4, `納品先${i + 1}`, rs.substring(hs1, he1), rs.substring(hs2, he2), rs.substring(hs3, he3), rs.substring(hs4, he4), rs.substring(hs5, he5), Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time2)]);
+			s1.push([null, null, sno, Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time), k1, k2, k3, k4, `納品先${i + 1}`, rs.substring(hs1, he1), rs.substring(hs2, he2), rs.substring(hs3, he3), rs.substring(hs4, he4), rs.substring(hs5, he5), Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time2), pt]);
 			for(let j = 0; j < rn; j ++){
 				let cn = Math.floor(Math.random() * 90000) + 10000;
 				let unit = unita[Math.floor(Math.random() * 10)];
@@ -285,7 +295,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 		
 		gs = new GoogleSheets(jwt.drive);
 		gs.create(filename, [
-			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 600, 15, {
+			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 600, 16, {
 				frozenRowCount: 1,
 				rows: s1,
 				fillRows: function(rowData){
@@ -321,6 +331,14 @@ document.addEventListener("DOMContentLoaded", function(e){
 						strict: true,
 						showCustomUi: true
 					};
+					rowData.values[15].dataValidation = {
+						condition: {
+							type: "ONE_OF_RANGE",
+							values: [{userEnteredValue: "=range5"}]
+						},
+						strict: true,
+						showCustomUi: true
+					};
 				},
 				protectedRanges: [
 					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 15}
@@ -333,7 +351,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 					rowData.values[1].dataValidation = {
 						condition: {
 							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range5"}]
+							values: [{userEnteredValue: "=range6"}]
 						},
 						strict: true,
 						showCustomUi: true
@@ -352,7 +370,8 @@ document.addEventListener("DOMContentLoaded", function(e){
 					range2: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
 					range3: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
 					range4: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range5: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1}
+					range5: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
+					range6: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1}
 				},
 				protectedRanges: [{}]
 			})
@@ -371,7 +390,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 			if(importMap.has(input)){
 				let taxRate = 0.1;
 				let tempRow = importMap.get(input);
-				let data = tempRow.slice(2, 15).map(a => (a instanceof Date) ? Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(a).split("/").join("-") : a);
+				let data = tempRow.slice(2, 16).map(a => (a instanceof Date) ? Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(a).split("/").join("-") : a);
 				data.push(detailValues[tempRow[1]].amount.filter(v => typeof v === "number").reduce((total, v) => total + v, 0) * taxRate);
 				data.push(detailValues[tempRow[1]]);
 				importData.push(data);
@@ -405,7 +424,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 	<tbody></tbody>
 </table>
 <table border="1" id="spreadsheet" style="display: none;">
-	<thead><th>取込</th><th>通し番号</th><th>伝票番号</th><th>売上日付</th><th>部門</th><th>チーム</th><th>当社担当者</th><th>請求先</th><th>納品先</th><th>件名</th><th>備考</th><th>摘要ヘッダー１</th><th>摘要ヘッダー２</th><th>摘要ヘッダー３</th><th>入金予定日</th></thead>
+	<thead><th>取込</th><th>通し番号</th><th>伝票番号</th><th>売上日付</th><th>部門</th><th>チーム</th><th>当社担当者</th><th>請求先</th><th>納品先</th><th>件名</th><th>備考</th><th>摘要ヘッダー１</th><th>摘要ヘッダー２</th><th>摘要ヘッダー３</th><th>入金予定日</th><th>請求パターン</th></thead>
 	<tbody></tbody>
 </table>
 {/block}

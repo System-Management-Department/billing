@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 		ldetail="$\x7bArray.from(item.detail).map(detail => `"
 		rdetail="`).join(\"\")\x7d"
 		detail=[
-			"itemCode"    => "$\x7bHTMLEscape(detail.itemCode)\x7d",
+			"categoryCode"=> "$\x7bHTMLEscape(detail.categoryCode)\x7d",
 			"itemName"    => "$\x7bHTMLEscape(detail.itemName)\x7d",
 			"unit"        => "$\x7bHTMLEscape(detail.unit)\x7d",
 			"quantity"    => "$\x7bHTMLEscape(detail.quantity)\x7d",
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 		<input type="checkbox" name="id[]" value="{$id}" />{$item.slip_number}|{$item.subject}
 		<table>
 		{$ldetail}<tr>
-			<td>{$detail.itemCode}</td>
+			<td>{$detail.categoryCode}</td>
 			<td>{$detail.itemName}</td>
 			<td>{$detail.unit}</td>
 			<td>{$detail.quantity}</td>
