@@ -59,6 +59,57 @@ class SalesSlip{
 			//->date("入金予定日を正しく入力してください。")
 	}
 	
+	public static function execImport($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$tempTable = $db->getJsonArray2Tabel([
+				"sales_slips" => [
+					"slip_number"          => "$[ 0]",
+					"accounting_date"      => "$[ 1]",
+					"delivery_destination" => "$[ 6]",
+					"subject"              => "$[ 7]",
+					"note"                 => "$[ 8]",
+					"header1"              => "$[ 9]",
+					"header2"              => "$[10]",
+					"header3"              => "$[11]",
+					"payment_date"         => "$[12]",
+					"invoice_format"       => "$[13]",
+					"sales_tax"            => "$[14]",
+					"detail"               => "$[15]",
+				],
+				"divisions" => [
+					"name" => ["f1", "$[2]"],
+				],
+				"teams" => [
+					"name" => ["f2", "$[3]"],
+				],
+				"managers" => [
+					"name" => ["f3", "$[4]"],
+				],
+				"apply_clients" => [
+					"name" => ["f4", "$[5]"]
+				],
+			], "t");
+			$query = $db->insertSelect("sales_slips", "`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`invoice_format`,`sales_tax`,`detail`,`created`,`modified`")
+				->addTable($tempTable, $q["json"])
+				->leftJoin("(SELECT name AS f1,code AS division FROM divisions) AS t1 USING(f1)")
+				->leftJoin("(SELECT name AS f2,code AS team FROM teams) AS t2 USING(f2)")
+				->leftJoin("(SELECT name AS f3,code AS manager FROM managers) AS t3 USING(f3)")
+				->leftJoin("(SELECT name AS f4,code AS billing_destination FROM apply_clients) AS t4 USING(f4)")
+				->addField("`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`invoice_format`,`sales_tax`,`detail`,now(),now()");
+			$query();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("読込に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("読込が完了しました。", "INFO", "");
+			@Logger::record($db, "売上取込", ["spreadsheet" => $q["spreadsheets"]]);
+		}
+	}
+	
 	public static function execInsert($db, $q, $context, $result){
 		$db->beginTransaction();
 		try{
