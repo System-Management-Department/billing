@@ -87,7 +87,7 @@ class SalesSlip{
 					"name" => ["f3", "$[4]"],
 				],
 				"apply_clients" => [
-					"name" => ["f4", "$[5]"]
+					"unique_name" => ["f4", "$[5]"]
 				],
 			], "t");
 			$query = $db->insertSelect("sales_slips", "`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`invoice_format`,`sales_tax`,`detail`,`created`,`modified`")
@@ -95,7 +95,7 @@ class SalesSlip{
 				->leftJoin("(SELECT name AS f1,code AS division FROM divisions) AS t1 USING(f1)")
 				->leftJoin("(SELECT name AS f2,code AS team FROM teams) AS t2 USING(f2)")
 				->leftJoin("(SELECT name AS f3,code AS manager FROM managers) AS t3 USING(f3)")
-				->leftJoin("(SELECT name AS f4,code AS billing_destination FROM apply_clients) AS t4 USING(f4)")
+				->leftJoin("(SELECT unique_name AS f4,code AS billing_destination FROM apply_clients) AS t4 USING(f4)")
 				->addField("`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`invoice_format`,`sales_tax`,`detail`,now(),now()");
 			$query();
 			$db->commit();
