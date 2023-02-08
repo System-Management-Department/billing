@@ -1,10 +1,10 @@
 <?php
 function smarty_modifier_invoiceFormat($code){
 	static $invoiceAssoc = [
-		"1" => "標準",
-		"2" => "ニッピ様_発行部数",
-		"3" => "加茂繊維様",
-		"4" => "ダイドー様",
+		"1" => "通常",
+		"2" => "ニッピ様",
+		"3" => "加茂繊維",
+		"4" => "ダイドー",
 	];
 	
 	if(is_array($code)){
