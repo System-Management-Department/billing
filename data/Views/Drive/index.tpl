@@ -21,6 +21,8 @@ thead{
 <script type="text/javascript" src="/assets/googleAPI/GoogleDrive.js"></script>
 <script type="text/javascript">{literal}
 document.addEventListener("DOMContentLoaded", function(e){
+	const master = JSON.parse("{/literal}{$master|escape:"javascript"}{literal}");
+	const categories = JSON.parse("{/literal}{$categories|escape:"javascript"}{literal}");
 	const jwt = {{/literal}spreadsheet: "{url controller="JWT" action="spreadsheet"}", drive: "{url controller="JWT" action="drive"}"{literal}};
 	let gd = new GoogleDrive(jwt.drive);
 	let gs = null;
@@ -75,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 			let key = row[0]
 			if(key in detailValues){
 				detailValues[key].length++;
-				detailValues[key].categoryCode.push(row[1]);
+				detailValues[key].categoryCode.push(categories[row[1]]);
 				detailValues[key].itemName.push(row[2]);
 				detailValues[key].unit.push(row[3]);
 				detailValues[key].quantity.push(row[4]);
@@ -88,6 +90,63 @@ document.addEventListener("DOMContentLoaded", function(e){
 			}
 		}
 	};
+	let masterRowData = [];
+	let namedRanges = {};
+	namedRanges.range1 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+	if(master.divisions == null || master.divisions.length < 1){
+		masterRowData.push([null]);
+	}else{
+		for(let value of master.divisions){
+			masterRowData.push([value]);
+		}
+	}
+	namedRanges.range1.endRowIndex = masterRowData.length;
+	namedRanges.range2 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+	if(master.teams == null || master.teams.length < 1){
+		masterRowData.push([null]);
+	}else{
+		for(let value of master.teams){
+			masterRowData.push([value]);
+		}
+	}
+	namedRanges.range2.endRowIndex = masterRowData.length;
+	namedRanges.range3 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+	if(master.managers == null || master.managers.length < 1){
+		masterRowData.push([null]);
+	}else{
+		for(let value of master.managers){
+			masterRowData.push([value]);
+		}
+	}
+	namedRanges.range3.endRowIndex = masterRowData.length;
+	namedRanges.range4 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+	if(master.applyClients == null || master.applyClients.length < 1){
+		masterRowData.push([null]);
+	}else{
+		for(let value of master.applyClients){
+			masterRowData.push([value]);
+		}
+	}
+	namedRanges.range4.endRowIndex = masterRowData.length;
+	namedRanges.range5 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+	if(master.invoiceFormats == null || master.invoiceFormats.length < 1){
+		masterRowData.push([null]);
+	}else{
+		for(let value of master.invoiceFormats){
+			masterRowData.push([value]);
+		}
+	}
+	namedRanges.range5.endRowIndex = masterRowData.length;
+	namedRanges.range6 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+	if(master.categories == null || master.categories.length < 1){
+		masterRowData.push([null]);
+	}else{
+		for(let value of master.categories){
+			masterRowData.push([value]);
+		}
+	}
+	namedRanges.range6.endRowIndex = masterRowData.length;
+	
 	gd.getAll().then(obj => {
 		let tbody = document.querySelector('#drive tbody');
 		for(let item of obj.items){
@@ -221,14 +280,8 @@ document.addEventListener("DOMContentLoaded", function(e){
 				protectedRanges: [{}]
 			}),
 			GoogleSheets.createSheetJson({index: 3, title: "マスター", hidden: true}, 100, 2, {
-				namedRanges: {
-					range1: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range2: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range3: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range4: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range5: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range6: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1}
-				},
+				rows: masterRowData,
+				namedRanges: namedRanges,
 				protectedRanges: [{}]
 			})
 		]).then(res => gd.createPermission(res.spreadsheetId)).then(res => {
@@ -258,10 +311,10 @@ document.addEventListener("DOMContentLoaded", function(e){
 			let time = new Date("2022-10-01").setMilliseconds(Math.random() * 8640000000);
 			let time2 = new Date(time).setMilliseconds(Math.random() * 8640000000);
 			let sno = Math.floor(Math.random() * 10000000);
-			let k1 = Math.floor(Math.random() * 8);
-			let k2 = Math.floor(Math.random() * 10);
-			let k3 = Math.floor(Math.random() * 50);
-			let k4 = Math.floor(Math.random() * 300);
+			let k1 = Math.floor(Math.random() * ((master.divisions == null) ? 0 : master.divisions.length));
+			let k2 = Math.floor(Math.random() * ((master.teams == null) ? 0 : master.teams.length));
+			let k3 = Math.floor(Math.random() * ((master.managers == null) ? 0 : master.managers.length));
+			let k4 = Math.floor(Math.random() * ((master.applyClients == null) ? 0 : master.applyClients.length));
 			let hs1 = Math.floor(Math.random() * 100);
 			let hs2 = Math.floor(Math.random() * 100);
 			let hs3 = Math.floor(Math.random() * 100);
@@ -272,11 +325,25 @@ document.addEventListener("DOMContentLoaded", function(e){
 			let he3 = hs3 + Math.floor(Math.random() * 30) + 5;
 			let he4 = hs4 + Math.floor(Math.random() * 30) + 5;
 			let he5 = hs5 + Math.floor(Math.random() * 30) + 5;
-			let pt = Math.floor(Math.random() * 4) + 1;
+			let pt = Math.floor(Math.random() * ((master.invoiceFormats == null) ? 0 : master.invoiceFormats.length));
 			let rn = Math.floor(Math.random() * 10) + 1;
-			s1.push([null, null, sno, Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time), k1, k2, k3, k4, `納品先${i + 1}`, rs.substring(hs1, he1), rs.substring(hs2, he2), rs.substring(hs3, he3), rs.substring(hs4, he4), rs.substring(hs5, he5), Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time2), pt]);
+			s1.push([
+				null, null, sno, Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time),
+				(master.divisions == null) ? null : master.divisions[k1],
+				(master.teams == null) ? null : master.teams[k2],
+				(master.managers == null) ? null : master.managers[k3],
+				(master.applyClients == null) ? null : master.applyClients[k4],
+				`納品先${i + 1}`,
+				rs.substring(hs1, he1),
+				rs.substring(hs2, he2),
+				rs.substring(hs3, he3),
+				rs.substring(hs4, he4),
+				rs.substring(hs5, he5),
+				Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time2),
+				(master.invoiceFormats == null) ? null : master.invoiceFormats[pt]
+			]);
 			for(let j = 0; j < rn; j ++){
-				let cn = Math.floor(Math.random() * 90000) + 10000;
+				let cn = Math.floor(Math.random() * ((master.categories == null) ? 0 : master.categories.length));
 				let unit = unita[Math.floor(Math.random() * 10)];
 				let v3 = Math.floor(Math.random() * 200000) / 100;
 				let v4 = Math.floor(Math.random() * 100) * 50 + 50;
@@ -289,7 +356,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 				let se2 = ss2 + Math.floor(Math.random() * 30) + 5;
 				let se3 = ss3 + Math.floor(Math.random() * 30) + 5;
 				let se4 = ss4 + Math.floor(Math.random() * 30) + 5;
-				s2.push([`${i + 100000001}`.substring(1), `A${cn}`, rs.substring(ss1, se1), unit, v3, v4, v6, rs.substring(ss2, se2), rs.substring(ss3, se3), rs.substring(ss4, se4)]);
+				s2.push([`${i + 100000001}`.substring(1), (master.categories == null) ? null : master.categories[cn], rs.substring(ss1, se1), unit, v3, v4, v6, rs.substring(ss2, se2), rs.substring(ss3, se3), rs.substring(ss4, se4)]);
 			}
 		}
 		
@@ -365,14 +432,8 @@ document.addEventListener("DOMContentLoaded", function(e){
 				protectedRanges: [{}]
 			}),
 			GoogleSheets.createSheetJson({index: 3, title: "マスター", hidden: true}, 100, 2, {
-				namedRanges: {
-					range1: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range2: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range3: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range4: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range5: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1},
-					range6: {startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1}
-				},
+				rows: masterRowData,
+				namedRanges: namedRanges,
 				protectedRanges: [{}]
 			})
 		]).then(res => gd.createPermission(res.spreadsheetId)).then(res => {
