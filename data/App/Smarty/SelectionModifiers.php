@@ -2,6 +2,10 @@
 namespace App\Smarty;
 
 class SelectionModifiers{
+	private static $role = [
+		"admin" => "管理者",
+		"entry" => "一般ユーザー",
+	];
 	private static $closeProcessing = [
 		"0" => "都度請求",
 		"1" => "締め請求",
