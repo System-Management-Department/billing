@@ -1,6 +1,7 @@
 <?php
 namespace Model;
 use App\Validator;
+use App\Smarty\SelectionModifiers;
 
 class SalesSlip{
 	public static function getJsonQuery($db){
@@ -60,6 +61,10 @@ class SalesSlip{
 	}
 	
 	public static function execImport($db, $q, $context, $result){
+		$invoiceFormats = [];
+		foreach(SelectionModifiers::invoiceFormat([]) as $ak => $av){
+			$invoiceFormats[] = [$ak, $av];
+		}
 		$db->beginTransaction();
 		try{
 			$tempTable = $db->getJsonArray2Tabel([
@@ -73,7 +78,6 @@ class SalesSlip{
 					"header2"              => "$[10]",
 					"header3"              => "$[11]",
 					"payment_date"         => "$[12]",
-					"invoice_format"       => "$[13]",
 					"sales_tax"            => "$[14]",
 					"detail"               => "$[15]",
 				],
@@ -89,6 +93,9 @@ class SalesSlip{
 				"apply_clients" => [
 					"unique_name" => ["f4", "$[5]"]
 				],
+				"dual" => [
+					"f5 text" => "$[13]"
+				]
 			], "t");
 			$query = $db->insertSelect("sales_slips", "`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`invoice_format`,`sales_tax`,`detail`,`created`,`modified`")
 				->addTable($tempTable, $q["json"])
@@ -96,6 +103,7 @@ class SalesSlip{
 				->leftJoin("(SELECT name AS f2,code AS team FROM teams) AS t2 USING(f2)")
 				->leftJoin("(SELECT name AS f3,code AS manager FROM managers) AS t3 USING(f3)")
 				->leftJoin("(SELECT unique_name AS f4,code AS billing_destination FROM apply_clients) AS t4 USING(f4)")
+				->leftJoin("JSON_TABLE(?, '$[*]' COLUMNS(invoice_format text PATH '$[0]', f5 text PATH '$[1]')) AS t5 USING(f5)", json_encode($invoiceFormats))
 				->addField("`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`invoice_format`,`sales_tax`,`detail`,now(),now()");
 			$query();
 			$db->commit();
