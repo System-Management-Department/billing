@@ -86,79 +86,71 @@
 {/block}
 {block name="scripts"}
 <script type="text/javascript" src="/assets/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript">{literal}
-class Storage{
-	static getToast(){
-		return new Promise((resolve, reject) => {
-			let openRequest = indexedDB.open("Storage", 1);
-			let onSuccess = e => {
-				let result = e.currentTarget.result;
-				if(result == null){
-					reject(null);
-				}else{
-					resolve(result);
-				}
-			};
-			openRequest.addEventListener("error", reject);
-			openRequest.addEventListener("upgradeneeded", e => {
-				Storage.init(openRequest.result);
+<script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
+<script type="text/javascript" src="/assets/common/SQLite.js"></script>
+<script type="text/javascript" src="/assets/common/Flow.js"></script>
+<script type="text/javascript">
+Flow.start("{$smarty.session["User.role"]}", {literal}{{/literal}
+	db: Flow.DB,
+	dbName: "{$smarty.session["User.role"]}",
+	dbDownloadURL: "{url controller="Storage" action="sqlite"}",
+	location: "{url}",{literal}
+	*[Symbol.iterator](){
+		{/literal}{db_download test="Object.keys(this.db.tables).length < 1"}yield* this.dbUpdate();{/db_download}{literal}
+		yield* this.breadcrumbs();
+		yield* this.toast();
+		let prev = localStorage.getItem("session");
+		let pObj = {resolve: null, reject: null};
+		setInterval(() => { pObj.resolve(null); }, 60000);
+		do{
+			let now = Date.now();
+			if((prev == null) || (now - prev) >= 60000){
+				localStorage.setItem("session", prev = now);
+				fetch({/literal}"{url controller="Online" action="update"}"{literal}).then(response => response.json()).then(json =>{
+					
+				});
+			}
+			this.db
+				.delete("search_histories")
+				.andWhere("time<?", now - 86400000)
+				.apply();
+			yield new Promise((resolve, reject) => {
+				pObj.resolve = resolve;
+				pObj.reject = reject;
 			});
-			openRequest.addEventListener("success", e => {
-				let db = openRequest.result;
-				let transaction = db.transaction("map", "readonly");
-				let map = transaction.objectStore("map");
-				let request = map.get("Toast");
-				request.addEventListener("success", onSuccess);
+		}while(true);
+	},
+	*dbUpdate(){
+		yield new Promise((resolve, reject) => {
+			fetch(this.dbDownloadURL).then(response => response.arrayBuffer()).then(buffer => {
+				this.db.import(buffer, this.dbName);
+				this.db.commit().then(res => {resolve(res);});
 			});
-			
 		});
-	}
-	static pushToast(header, value){
-		return new Promise((resolve, reject) => {
-			let openRequest = indexedDB.open("Storage", 1);
-			let onSuccess = e => {
-				resolve(null);
-			};
-			openRequest.addEventListener("error", reject);
-			openRequest.addEventListener("upgradeneeded", e => {
-				Storage.init(openRequest.result);
-			});
-			openRequest.addEventListener("success", e => {
-				let db = openRequest.result;
-				let transaction = db.transaction("map", "readwrite");
-				let map = transaction.objectStore("map");
-				let request = map.put({key: "Toast", header: header, value: value});
-				request.addEventListener("success", onSuccess);
-			});
-			
-		});
-	}
-	static removeToast(){
-		return new Promise((resolve, reject) => {
-			let openRequest = indexedDB.open("Storage", 1);
-			let onSuccess = e => {
-				resolve(null);
-			};
-			openRequest.addEventListener("error", reject);
-			openRequest.addEventListener("upgradeneeded", e => {
-				Storage.init(openRequest.result);
-			});
-			openRequest.addEventListener("success", e => {
-				let db = openRequest.result;
-				let transaction = db.transaction("map", "readwrite");
-				let map = transaction.objectStore("map");
-				let request = map.delete("Toast");
-				request.addEventListener("success", onSuccess);
-			});
-			
-		});
-	}
-	static init(db){
-		if(!db.objectStoreNames.contains("map")){
-			db.createObjectStore("map", {keyPath: "key"});
+	},
+	*breadcrumbs(){
+		console.log(
+			this.db
+				.select("ALL")
+				.addWith("recursive t as (select *,1 as active from breadcrumbs where url=? UNION ALL select breadcrumbs.*,0 as active from breadcrumbs,t where breadcrumbs.url=t.parent)", this.location)
+				.addTable("t")
+				.setOrderBy("depth")
+				.apply()
+		);
+	},
+	*toast(){
+		let messages = this.db
+			.select("ALL")
+			.addTable("messages")
+			.leftJoin("toast_classes using(type)")
+			.apply();
+		if(messages.length > 0){
+			Toaster.show(messages);
+			this.db.delete("messages").apply();
+			this.db.commit();
 		}
 	}
-}
+});
 class Toaster{
 	static show(messages){
 		let container = document.querySelector('.toast-container');
@@ -167,23 +159,17 @@ class Toaster{
 			autohide: false,
 			delay: 1000
 		};
-		for(let message of messages.value){
-			let bg = "bg-success";
+		for(let message of messages){
 			let toast = document.createElement("div");
 			let header = document.createElement("div");
 			let body = document.createElement("div");
 			let title = document.createElement("strong");
-			if(message[1] == 1){
-				bg = "bg-warning";
-			}else if(message[1] == 2){
-				bg = "bg-danger";
-			}
-			toast.setAttribute("class", `toast show ${bg}`);
+			toast.setAttribute("class", message["class"]);
 			header.setAttribute("class", "toast-header");
 			body.setAttribute("class", "toast-body text-white");
 			title.setAttribute("class", "me-auto");
-			body.textContent = message[0];
-			title.textContent = messages.header;
+			body.textContent = message.message;
+			title.textContent = message.title;
 			header.appendChild(title);
 			header.insertAdjacentHTML("beforeend", '<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>');
 			toast.appendChild(header);
@@ -193,22 +179,6 @@ class Toaster{
 		}
 	}
 }
-document.addEventListener("DOMContentLoaded", function(){
-	Storage.getToast().then(messages => {
-		Toaster.show(messages);
-		Storage.removeToast();
-	}).catch(() => {});
-});
-setInterval(() => {
-	let prev = localStorage.getItem("session");
-	let now = Date.now();
-	if((prev == null) || (now - prev) >= 60000){
-		localStorage.setItem("session", now);
-		fetch({/literal}"{url controller="Online" action="update"}"{literal}).then(response => response.json()).then(json =>{
-			
-		});
-	}
-}, 60000);
 {/literal}</script>
 {/block}
 </head>

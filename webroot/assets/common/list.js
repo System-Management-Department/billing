@@ -41,8 +41,10 @@ document.addEventListener("DOMContentLoaded", function(){
 				body: formData
 			}).then(res => res.json()).then(json => {
 				if(json.success){
-					Storage.pushToast(form.getAttribute("data-master"), json.messages);
-					location.reload()
+					for(let message of json.messages){
+						Flow.DB.insertSet("messages", {title: form.getAttribute("data-master"), message: message[0], type: message[1], name: message[2]}, {}).apply();
+					}
+					Flow.DB.commit().then(res => { location.reload() });
 				}else{
 				}
 			});

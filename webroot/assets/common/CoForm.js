@@ -111,8 +111,10 @@ class CoForm{
 	 */
 	*submitThen(response){
 		// メッセージをpushしてリダイレクト
-		Storage.pushToast(this.title, response.messages);
-		location.href = this.success;
+		for(let message of response.messages){
+			Flow.DB.insertSet("messages", {title: this.title, message: message[0], type: message[1], name: message[2]}, {}).apply();
+		}
+		Flow.DB.commit().then(res => { location.href = this.success; });
 		
 		// 次の状態 入力待ち
 		return {next: "input", args: []};
