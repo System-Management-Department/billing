@@ -41,6 +41,7 @@ class PaymentCategory{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@SQLite::cache($db, "payment_categories");
 			@Logger::record($db, "登録", ["payment_categories" => $q["code"]]);
 		}
 	}
@@ -63,6 +64,7 @@ class PaymentCategory{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@SQLite::cache($db, "payment_categories");
 			@Logger::record($db, "編集", ["payment_categories" => $code]);
 		}
 	}
@@ -84,6 +86,7 @@ class PaymentCategory{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
+			@SQLite::cache($db, "payment_categories");
 			@Logger::record($db, "削除", ["payment_categories" => $q["code"]]);
 		}
 	}

@@ -41,6 +41,7 @@ class Team{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@SQLite::cache($db, "teams");
 			@Logger::record($db, "登録", ["teams" => $q["code"]]);
 		}
 	}
@@ -63,6 +64,7 @@ class Team{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@SQLite::cache($db, "teams");
 			@Logger::record($db, "編集", ["teams" => $code]);
 		}
 	}
@@ -84,6 +86,7 @@ class Team{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
+			@SQLite::cache($db, "teams");
 			@Logger::record($db, "削除", ["teams" => $q["code"]]);
 		}
 	}

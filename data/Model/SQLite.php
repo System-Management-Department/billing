@@ -2,38 +2,30 @@
 namespace Model;
 
 class SQLite{
-	public $db;
-	public static $tables = [
-		"divisions"          => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
-		"teams"              => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
-		"managers"           => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
-		"payment_categories" => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
-		"summaries"          => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
-		"clients"            => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
-		"apply_clients"      => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
-		"categories"         => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
-	];
-	
-	/**
-	 * コンストラクタ テーブル出力用の関数を登録
-	 */
-	public function __construct(){
-		$this->db = new \SQLite3(dirname(DATA_DIR) . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "sqlite" . DIRECTORY_SEPARATOR . "master.sqlite3");
-	}
-	
 	/**
 	 * マスターの有効なデータをSQLiteにキャッシュ
 	 */
-	public function cache($db, $target){
-		$builder = new SQLiteTableBuilder($this->db);
+	public static function cache($db, $target){
+		static $tables = [
+			"divisions"          => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
+			"teams"              => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
+			"managers"           => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
+			"payment_categories" => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
+			"summaries"          => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
+			"clients"            => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
+			"apply_clients"      => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
+			"categories"         => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
+		];
+		$sqlite = new \SQLite3(dirname(DATA_DIR) . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "sqlite" . DIRECTORY_SEPARATOR . "master.sqlite3");
+		$builder = new SQLiteTableBuilder($sqlite);
 		if($target == "*"){
-			foreach(SQLite::$tables as $table => $options){
+			foreach($tables as $table => $options){
 				list($columns, $data) = $db->exportTable($table, $options["alias"], $options["where"]);
 				$builder->createTable($table, $columns, $data);
 			}
-		}else if(array_key_exists($target, SQLite::$tables)){
+		}else if(array_key_exists($target, $tables)){
 			$table = $target;
-			$options = SQLite::$tables[$table];
+			$options = $tables[$table];
 			list($columns, $data) = $db->exportTable($table, $options["alias"], $options["where"]);
 			$builder->createTable($table, $columns, $data);
 		}

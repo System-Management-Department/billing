@@ -41,6 +41,7 @@ class Manager{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@SQLite::cache($db, "managers");
 			@Logger::record($db, "登録", ["managers" => $q["code"]]);
 		}
 	}
@@ -63,6 +64,7 @@ class Manager{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@SQLite::cache($db, "managers");
 			@Logger::record($db, "編集", ["managers" => $code]);
 		}
 	}
@@ -84,6 +86,7 @@ class Manager{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
+			@SQLite::cache($db, "managers");
 			@Logger::record($db, "削除", ["managers" => $q["code"]]);
 		}
 	}

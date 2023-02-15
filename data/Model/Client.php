@@ -41,6 +41,7 @@ class Client{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@SQLite::cache($db, "clients");
 			@Logger::record($db, "登録", ["clients" => $q["code"]]);
 		}
 	}
@@ -63,6 +64,7 @@ class Client{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@SQLite::cache($db, "clients");
 			@Logger::record($db, "編集", ["clients" => $code]);
 		}
 	}
@@ -84,6 +86,7 @@ class Client{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
+			@SQLite::cache($db, "clients");
 			@Logger::record($db, "削除", ["clients" => $q["code"]]);
 		}
 	}
