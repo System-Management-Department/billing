@@ -30,6 +30,10 @@ class SQLite{
 			$builder->createTable($table, $columns, $data);
 		}
 	}
+	
+	public static function cachedData(){
+		return new SQLiteCachedData();
+	}
 }
 class SQLiteTableBuilder{
 	private $db;
@@ -53,6 +57,41 @@ class SQLiteTableBuilder{
 		}
 		if(in_array($table, $this->tables)){
 			$this->db->exec("drop table `{$table}`");
+		}
+		$stmt = $this->db->prepare("create table `{$table}` as with recursive t as (select 0 as i UNION ALL select i+1 from t limit :limit) select " . implode(",", $ref) . " from t");
+		$stmt->bindParam(":limit", count($data), SQLITE3_INTEGER);
+		foreach($columns as $i => &$field){
+			$stmt->bindParam(":c{$i}", $field, SQLITE3_TEXT);
+		}
+		$stmt->execute();
+	}
+	public function reference($i, $c){
+		return $this->data[$i][$c];
+	}
+}
+class SQLiteCachedData{
+	private $fileName;
+	private $db;
+	private $data;
+	public function __construct(){
+		$this->fileName = tempnam(sys_get_temp_dir(), "sqlite");
+		copy(dirname(DATA_DIR) . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "sqlite" . DIRECTORY_SEPARATOR . "master.sqlite3", $this->fileName);
+		$this->db = $sqlite = new \SQLite3($this->fileName);
+		$this->data = null;
+		$this->db->createFunction("reference", [$this, "reference"], 2);
+	}
+	public function __destruct(){
+		$this->db->close();
+		unlink($this->fileName);
+	}
+	public function getFileName(){
+		return $this->fileName;
+	}
+	public function createTable($table, $columns, $data){
+		$this->data = $data;
+		$ref = [];
+		foreach($columns as $i => $field){
+			$ref[] = sprintf("reference(i, :c%d) as `%s`", $i, $field);
 		}
 		$stmt = $this->db->prepare("create table `{$table}` as with recursive t as (select 0 as i UNION ALL select i+1 from t limit :limit) select " . implode(",", $ref) . " from t");
 		$stmt->bindParam(":limit", count($data), SQLITE3_INTEGER);

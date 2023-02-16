@@ -129,14 +129,26 @@ Flow.start("{$smarty.session["User.role"]}", {literal}{{/literal}
 		});
 	},
 	*breadcrumbs(){
-		console.log(
-			this.db
-				.select("ALL")
-				.addWith("recursive t as (select *,1 as active from breadcrumbs where url=? UNION ALL select breadcrumbs.*,0 as active from breadcrumbs,t where breadcrumbs.url=t.parent)", this.location)
-				.addTable("t")
-				.setOrderBy("depth")
-				.apply()
-		);
+		let query = this.db.select("ALL")
+			.addWith("recursive t as (select *,1 as active from breadcrumbs where url=? UNION ALL select breadcrumbs.*,0 as active from breadcrumbs,t where breadcrumbs.url=t.parent)", this.location)
+			.addTable("t")
+			.setOrderBy("depth");
+		let res = query.apply();
+		let breadcrumb = document.querySelector("ol.breadcrumb");
+		for(let row of res){
+			let li = document.createElement("li");
+			if(row.active == 0){
+				let a = document.createElement("a");
+				li.setAttribute("class", "breadcrumb-item");
+				a.setAttribute("href", row.url);
+				a.textContent = row.title;
+				li.appendChild(a);
+			}else{
+				li.setAttribute("class", "breadcrumb-item active");
+				li.textContent = row.title;
+			}
+			breadcrumb.appendChild(li);
+		}
 	},
 	*toast(){
 		let messages = this.db
@@ -243,7 +255,10 @@ class Toaster{
 		<div class="bg-dark text-white text-end px-3 py-1">
 			<a href="{url controller="Default" action="logout"}" class="text-white">Logout&ensp;<i class="bi bi-box-arrow-right"></i></a>
 		</div>
-		<div>{block name="title"}{/block}</div>
+		<div>
+			{block name="title"}{/block}
+			<ol class="breadcrumb"></ol>
+		</div>
 		<div class="overflow-auto px-4 py-4">
 			{block name="body"}{/block}
 		</div>

@@ -9,6 +9,28 @@
 
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/common/list.js"></script>
+<script type="text/javascript">
+Flow.start("{$smarty.session["User.role"]}", {literal}{{/literal}
+	dbDownloadURL: "{url action="search"}",{literal}
+	*[Symbol.iterator](){
+		const db = new SQLite();
+		const buffer = yield fetch(this.dbDownloadURL).then(response => response.arrayBuffer());
+		db.import(buffer, "list");
+		console.log(
+			db.select("ALL")
+			.addTable("sales_slips")
+			.addField("sales_slips.id,sales_slips.slip_number,sales_slips.subject,sales_slips.detail")
+			.leftJoin("divisions on sales_slips.division=divisions.code")
+			.addField("divisions.name as division_name")
+			.leftJoin("teams on sales_slips.team=teams.code")
+			.addField("teams.name as team_name")
+			.leftJoin("managers on sales_slips.manager=managers.code")
+			.addField("managers.name as manager_name,managers.kana as manager_kana")
+			.apply()
+		);
+	}
+});
+{/literal}</script>
 {/block}
 
 

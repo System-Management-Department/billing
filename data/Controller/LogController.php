@@ -10,6 +10,11 @@ use Model\Logger;
 class LogController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin")]
 	public function index(){
+		return new RedirectResponse("*", "list");
+	}
+	
+	#[\Attribute\AcceptRole("admin")]
+	public function list(){
 		$curdate = null;
 		if($_SERVER["REQUEST_METHOD"] == "POST"){
 			try{
