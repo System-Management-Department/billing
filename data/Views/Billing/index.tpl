@@ -61,14 +61,15 @@ document.addEventListener("DOMContentLoaded", function(e){
 			"消費税(明細別)",
 			"税込金額(明細別)",
 			"担当者氏名",
-			"発行部数"
+			"発行部数",
+			"明細単価"
 		].join(",") + "\r\n"), {to: "SJIS", from: "UNICODE"}))];
 		let n = inputs.length;
 		for(let i = 0; i < n; i++){
 			let id = inputs[i].value;
 			let item = data[id];
 			let taxRate = 0.1;
-			let cols = new Array(36);
+			let cols = new Array(37);
 			cols[0] = item.accounting_date.split("-").join("/");
 			cols[1] = item.slip_number;
 			cols[2] = item.billing_destination;
@@ -118,6 +119,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 					cols[33] = "";
 				}
 				cols[35] = detail.circulation;
+				cols[36] = detail.unitPrice;
 				csvData.push(new Uint8Array(Encoding.convert(Encoding.stringToCode(cols.map(v => {
 					if(v == null){
 						return "";
