@@ -90,7 +90,8 @@
 <script type="text/javascript" src="/assets/common/SQLite.js"></script>
 <script type="text/javascript" src="/assets/common/Flow.js"></script>
 <script type="text/javascript">
-Flow.start("{$smarty.session["User.role"]}", {literal}{{/literal}
+Flow.DbName = "{$smarty.session["User.role"]}";{literal}
+Flow.start({{/literal}
 	db: Flow.DB,
 	dbName: "{$smarty.session["User.role"]}",
 	dbDownloadURL: "{url controller="Storage" action="sqlite"}",

@@ -9,8 +9,8 @@
 
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/common/list.js"></script>
-<script type="text/javascript">
-Flow.start("{$smarty.session["User.role"]}", {literal}{{/literal}
+<script type="text/javascript">{literal}
+Flow.start({{/literal}
 	dbDownloadURL: "{url action="search"}",{literal}
 	*[Symbol.iterator](){
 		const db = new SQLite();
