@@ -83,6 +83,9 @@ class SQLite{
 	run(...q){
   		this.#using.run(...q);
 	}
+	create_function(...q){
+		return this.#using.create_function(...q);
+	}
 	prepare(q){
 		return this.#using.prepare(q);
 	}
