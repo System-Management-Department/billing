@@ -86,8 +86,27 @@ class SQLite{
 	create_function(...q){
 		return this.#using.create_function(...q);
 	}
+	create_aggregate(...q){
+		return this.#using.create_aggregate(...q);
+	}
 	prepare(q){
 		return this.#using.prepare(q);
+	}
+	createTable(table, columns, data){
+		const dateFormater = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'});
+		this.#using.create_function("reference", (i, j) => {
+			if(data[i][j] == null){
+				return null;
+			}else if(data[i][j] instanceof Date){
+				return dateFormater.format(data[i][j]).split("/").join("-");
+			}
+			return data[i][j];
+		});
+		let ref = columns.map((field, j) => `reference(i, ${j}) AS \`${field}\``);
+		let stmt = this.#using.prepare(`CREATE TABLE \`${table}\` AS WITH RECURSIVE t AS (SELECT 0 AS i UNION ALL SELECT i+1 FROM t LIMIT ?) SELECT ${ref.join(",")} FROM t`);
+		stmt.bind([data.length]);
+		while(stmt.step()){}
+		stmt.free();
 	}
 	get tables(){
 		let res = {};

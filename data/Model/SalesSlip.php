@@ -69,42 +69,29 @@ class SalesSlip{
 		try{
 			$tempTable = $db->getJsonArray2Tabel([
 				"sales_slips" => [
-					"slip_number"          => "$[ 0]",
-					"accounting_date"      => "$[ 1]",
-					"delivery_destination" => "$[ 6]",
-					"subject"              => "$[ 7]",
-					"note"                 => "$[ 8]",
-					"header1"              => "$[ 9]",
-					"header2"              => "$[10]",
-					"header3"              => "$[11]",
-					"payment_date"         => "$[12]",
-					"sales_tax"            => "$[14]",
-					"detail"               => "$[15]",
-				],
-				"divisions" => [
-					"name" => ["f1", "$[2]"],
-				],
-				"teams" => [
-					"name" => ["f2", "$[3]"],
-				],
-				"managers" => [
-					"name" => ["f3", "$[4]"],
-				],
-				"apply_clients" => [
-					"unique_name" => ["f4", "$[5]"]
+					"slip_number"          => "$.slip_number",
+					"accounting_date"      => "$.accounting_date",
+					"division"             => "$.division",
+					"team"                 => "$.team",
+					"manager"              => "$.manager",
+					"billing_destination"  => "$.billing_destination",
+					"delivery_destination" => "$.delivery_destination",
+					"subject"              => "$.subject",
+					"note"                 => "$.note",
+					"header1"              => "$.header1",
+					"header2"              => "$.header2",
+					"header3"              => "$.header3",
+					"payment_date"         => "$.payment_date",
+					"invoice_format"       => "$.invoice_format",
+					"sales_tax"            => "$.sales_tax",
 				],
 				"dual" => [
-					"f5 text" => "$[13]"
+					"detail text" => "$.detail"
 				]
 			], "t");
 			$query = $db->insertSelect("sales_slips", "`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`invoice_format`,`sales_tax`,`detail`,`created`,`modified`")
 				->addTable($tempTable, $q["json"])
-				->leftJoin("(SELECT name AS f1,code AS division FROM divisions) AS t1 USING(f1)")
-				->leftJoin("(SELECT name AS f2,code AS team FROM teams) AS t2 USING(f2)")
-				->leftJoin("(SELECT name AS f3,code AS manager FROM managers) AS t3 USING(f3)")
-				->leftJoin("(SELECT unique_name AS f4,code AS billing_destination FROM apply_clients) AS t4 USING(f4)")
-				->leftJoin("JSON_TABLE(?, '$[*]' COLUMNS(invoice_format text PATH '$[0]', f5 text PATH '$[1]')) AS t5 USING(f5)", json_encode($invoiceFormats))
-				->addField("`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`invoice_format`,`sales_tax`,`detail`,now(),now()");
+				->addField("`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`invoice_format`,`sales_tax`,CAST(`detail` AS JSON),now(),now()");
 			$query();
 			$db->commit();
 		}catch(Exception $ex){

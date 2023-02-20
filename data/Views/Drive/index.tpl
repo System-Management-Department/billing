@@ -19,189 +19,269 @@ thead{
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/googleAPI/GoogleSheets.js"></script>
 <script type="text/javascript" src="/assets/googleAPI/GoogleDrive.js"></script>
-<script type="text/javascript">{literal}
-document.addEventListener("DOMContentLoaded", function(e){
-	const master = JSON.parse("{/literal}{$master|escape:"javascript"}{literal}");
-	const categories = JSON.parse("{/literal}{$categories|escape:"javascript"}{literal}");
-	const jwt = {{/literal}spreadsheet: "{url controller="JWT" action="spreadsheet"}", drive: "{url controller="JWT" action="drive"}"{literal}};
-	let gd = new GoogleDrive(jwt.drive);
-	let gs = null;
-	let tableValues = [];
-	let detailValues = {};
-	let importMap = null;
-	let targetId = null;
-	let reloadBook = book => {
-		let range = book.sheet("売上明細").range.slice(1);
-		let tbody = document.querySelector('#spreadsheet tbody');
-		tbody.innerHTML = "";
-		targetId = book.sheet("取込済").sheetId;
-		tableValues = book.sheet("売上").range.slice(1);
-		detailValues = {};
-		importMap = new Map();
-		for(let row of tableValues){
-			let disabled = row[0] = !!row[0];
-			let tr = document.createElement("tr");
-			let checkboxCell = document.createElement("td");
-			let checkbox = document.createElement("input");
-			checkbox.setAttribute("type", "checkbox");
-			checkbox.checked = disabled;
-			checkbox.disabled = disabled;
-			if(row[2] == null){
-				checkbox.disabled = true;
-			}
-			if(!checkbox.disabled){
-				detailValues[row[1]] = {
-					length: 0,
-					categoryCode: [],
-					itemName: [],
-					unit: [],
-					quantity: [],
-					unitPrice: [],
-					amount: [],
-					data1: [],
-					data2: [],
-					data3: [],
-					circulation: []
-				};
-			}
-			checkboxCell.appendChild(checkbox);
-			importMap.set(checkbox, row);
-			for(let cell of row){
-				let data = (cell instanceof Date) ? Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(cell) : cell;
-				tr.appendChild(Object.assign(document.createElement("td"), {textContent: data}));
-			}
-			tr.replaceChild(checkboxCell, tr.firstChild);
-			tbody.appendChild(tr);
+<script type="text/javascript">
+{call name="DriveItem"}
+{call name="ItemList"}{literal}
+Flow.start({{/literal}
+	dbDownloadURL: "{url action="master"}",{literal}
+	jwt: {{/literal}
+		spreadsheet: "{url controller="JWT" action="spreadsheet"}",
+		drive: "{url controller="JWT" action="drive"}"
+	{literal}},
+	gd: null,
+	gs: null,
+	db: new SQLite(),
+	*[Symbol.iterator](){
+		const buffer = yield fetch(this.dbDownloadURL).then(response => response.arrayBuffer());
+		this.db.import(buffer, "list");
+		
+		let p = yield* this.driveInit();
+		while("next" in p){
+			p = yield* this[p.next](...p.args);
 		}
-		for(let row of range){
-			let key = row[0]
-			if(key in detailValues){
-				detailValues[key].length++;
-				detailValues[key].categoryCode.push(categories[row[1]]);
-				detailValues[key].itemName.push(row[2]);
-				detailValues[key].unit.push(row[3]);
-				detailValues[key].quantity.push(row[4]);
-				detailValues[key].unitPrice.push(row[5]);
-				detailValues[key].amount.push(row[6]);
-				detailValues[key].data1.push(row[7]);
-				detailValues[key].data2.push(row[8]);
-				detailValues[key].data3.push(row[9]);
-				detailValues[key].circulation.push(row[10]);
-			}
-		}
-	};
-	let masterRowData = [];
-	let namedRanges = {};
-	namedRanges.range1 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
-	if(master.divisions == null || master.divisions.length < 1){
-		masterRowData.push([null]);
-	}else{
-		for(let value of master.divisions){
-			masterRowData.push([value]);
-		}
-	}
-	namedRanges.range1.endRowIndex = masterRowData.length;
-	namedRanges.range2 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
-	if(master.teams == null || master.teams.length < 1){
-		masterRowData.push([null]);
-	}else{
-		for(let value of master.teams){
-			masterRowData.push([value]);
-		}
-	}
-	namedRanges.range2.endRowIndex = masterRowData.length;
-	namedRanges.range3 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
-	if(master.managers == null || master.managers.length < 1){
-		masterRowData.push([null]);
-	}else{
-		for(let value of master.managers){
-			masterRowData.push([value]);
-		}
-	}
-	namedRanges.range3.endRowIndex = masterRowData.length;
-	namedRanges.range4 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
-	if(master.applyClients == null || master.applyClients.length < 1){
-		masterRowData.push([null]);
-	}else{
-		for(let value of master.applyClients){
-			masterRowData.push([value]);
-		}
-	}
-	namedRanges.range4.endRowIndex = masterRowData.length;
-	namedRanges.range5 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
-	if(master.invoiceFormats == null || master.invoiceFormats.length < 1){
-		masterRowData.push([null]);
-	}else{
-		for(let value of master.invoiceFormats){
-			masterRowData.push([value]);
-		}
-	}
-	namedRanges.range5.endRowIndex = masterRowData.length;
-	namedRanges.range6 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
-	if(master.categories == null || master.categories.length < 1){
-		masterRowData.push([null]);
-	}else{
-		for(let value of master.categories){
-			masterRowData.push([value]);
-		}
-	}
-	namedRanges.range6.endRowIndex = masterRowData.length;
-	
-	gd.getAll().then(obj => {
-		let tbody = document.querySelector('#drive tbody');
+	},
+	*driveInit(){
+		this.gd = new GoogleDrive(this.jwt.drive);
+		const template = new DriveItem();
+		const obj = yield this.gd.getAll();
+		const tbody = document.querySelector('#drive tbody');
+		let pObj = {};
 		for(let item of obj.items){
-			let tr = document.createElement("tr");
-			let a = Object.assign(document.createElement("a"), {textContent: item.title});
-			let td1 = document.createElement("td");
-			let td2 = document.createElement("td");
-			a.setAttribute("target", "_blank");
-			a.setAttribute("href", `https://docs.google.com/spreadsheets/d/${item.id}/edit`);
-			if(item.userPermission.role == "owner"){
-				let button = Object.assign(document.createElement("button"), {textContent: "読込"});
-				button.setAttribute("type", "button");
-				button.setAttribute("data-id", item.id);
-				button.setAttribute("data-action", "load");
-				button.setAttribute("data-title", item.title);
-				td2.appendChild(button);
-				
-				button = Object.assign(document.createElement("button"), {textContent: "削除"});
-				button.setAttribute("type", "button");
-				button.setAttribute("data-id", item.id);
-				button.setAttribute("data-action", "delete");
-				td2.appendChild(button);
+			template.insertBeforeEnd(tbody, item);
+		}
+		let btns = tbody.querySelectorAll('[data-role]:not([data-role="owner"]) button');
+		for(let i = btns.length - 1; i >= 0; i--){
+			btns[i].parentNode.removeChild(btns[i]);
+		}
+		tbody.addEventListener("click", e => {
+			if(e.target.hasAttribute("data-id") && e.target.hasAttribute("data-action")){
+				if(e.target.getAttribute("data-action") == "delete"){
+					pObj.resolve({next: "deleteBook", args: [e.target.getAttribute("data-id")]});
+				}else{
+					pObj.resolve({next: "sheetsInit", args: [e.target.getAttribute("data-id")]});
+				}
 			}
-			td1.appendChild(a);
-			tr.appendChild(td1);
-			tr.appendChild(Object.assign(document.createElement("td"), {textContent: item.mimeType}));
-			tr.appendChild(Object.assign(document.createElement("td"), {textContent: item.userPermission.role}));
-			tr.appendChild(td2);
-			tbody.appendChild(tr);
+		}, true);
+		document.getElementById('create').addEventListener("click", e => {
+			let filename = prompt("filename", "");
+			if(filename == null || filename == ""){
+				return;
+			}
+			pObj.resolve({next: "createBook", args: [filename]});
+		}, true);
+		let p = new Promise((resolve, reject) => {Object.assign(pObj, {resolve, reject})});
+		return yield p;
+	},
+	*sheetsInit(id){
+		const template = new ItemList();
+		let targetId = null;
+		if(id == null){
+		}else{
+			this.gs = new GoogleSheets(this.jwt.spreadsheet, id);
+			document.getElementById("title").textContent = "";
+			document.getElementById("drive").style.display = "none";
+			document.getElementById("spreadsheet").style.display = "table";
+			document.getElementById("create").style.display = "none";
+			document.getElementById("import").style.display = "inline-block";
 		}
-	});
-	document.querySelector('#drive tbody').addEventListener("click", e => {
-		if(e.target.hasAttribute("data-id") && e.target.hasAttribute("data-action")){
-			if(e.target.getAttribute("data-action") == "delete"){
-				gd.delete(e.target.getAttribute("data-id")).then(res => {location.reload();});
-			}else{
-				gs = new GoogleSheets(jwt.spreadsheet, e.target.getAttribute("data-id"));
-				gs.getAll().then(reloadBook);
-				
-				document.getElementById("title").textContent = e.target.getAttribute("data-title");
-				document.getElementById("drive").style.display = "none";
-				document.getElementById("spreadsheet").style.display = "table";
-				document.getElementById("create").style.display = "none";
-				document.getElementById("create2").style.display = "none";
-				document.getElementById("import").style.display = "inline-block";
+		let pObj = {};
+		const book = yield this.gs.getAll();
+		this.db.createTable("slips", [
+			"import", "id", "slip_number", "accounting_date", "division_name", "team_name", "manager_name", "billing_destination_name",
+			"delivery_destination", "subject", "note", "header1", "header2", "header3", "payment_date", "invoice_format_name"
+		], book.sheet("売上").range.slice(1));
+		this.db.createTable("details", [
+			"id", "categoryName", "itemName", "unit", "quantity", "unitPrice", "amount", "data1", "data2", "data3", "circulation"
+		], book.sheet("売上明細").range.slice(1));
+		
+		let tbody = Object.assign(document.querySelector('#spreadsheet tbody'), {innerHTML: ""});
+		let data = this.db.select("ALL")
+			.addTable("slips")
+			.andWhere("import=0")
+			.apply();
+		targetId = book.sheet("取込済").sheetId;
+		for(let item of data){
+			template.insertBeforeEnd(tbody, item);
+		}
+		
+		let controller = new AbortController();
+		document.getElementById("import").addEventListener("click", e => {
+			let importData = [];
+			let checked = tbody.querySelectorAll('input:checked:not([disabled])');
+			let n = checked.length;
+			let appendValues = [];
+			let values = [];
+			for(let i = 0; i < n; i++){
+				values.push(checked[i].value);
+				appendValues.push([checked[i].value, GoogleSheets.now]);
+			}
+			this.db.create_function("is_checked", id => (values.includes(id) ? 1 : 0));
+			this.db.create_aggregate("sales_tax", {
+				init(){
+					return 0;
+				},
+				step(state, value){
+					if(typeof value === "number"){
+						return state + value;
+					}
+					return state;
+				},
+				finalize(state){
+					return state * 0.1;
+				}
+			});
+			this.db.create_aggregate("json_detail", {
+				init(){
+					return {
+						length: 0,
+						categoryCode: [],
+						itemName: [],
+						unit: [],
+						quantity: [],
+						unitPrice: [],
+						amount: [],
+						data1: [],
+						data2: [],
+						data3: [],
+						circulation: []
+					};
+				},
+				step(state, categoryCode, itemName, unit, quantity, unitPrice, amount, data1, data2, data3, circulation){
+					state.length++;
+					state.categoryCode.push(categoryCode);
+					state.itemName.push(itemName);
+					state.unit.push(unit);
+					state.quantity.push(quantity);
+					state.unitPrice.push(unitPrice);
+					state.amount.push(amount);
+					state.data1.push(data1);
+					state.data2.push(data2);
+					state.data3.push(data3);
+					state.circulation.push(circulation);
+					return state;
+				},
+				finalize(state){
+					return JSON.stringify(state);
+				}
+			});
+			importData = this.db.select("ALL")
+				.addTable("slips")
+				.addField("slips.slip_number")
+				.addField("slips.accounting_date")
+				.leftJoin("divisions on slips.division_name=divisions.name")
+				.addField("divisions.code as division")
+				.leftJoin("teams on slips.team_name=teams.name")
+				.addField("teams.code as team")
+				.leftJoin("managers on slips.manager_name=managers.name")
+				.addField("managers.code as manager")
+				.leftJoin("apply_clients on slips.billing_destination_name=apply_clients.unique_name")
+				.addField("apply_clients.code as billing_destination")
+				.addField("slips.delivery_destination")
+				.addField("slips.subject")
+				.addField("slips.note")
+				.addField("slips.header1")
+				.addField("slips.header2")
+				.addField("slips.header3")
+				.addField("slips.payment_date")
+				.leftJoin("invoice_formats on slips.invoice_format_name=invoice_formats.name")
+				.addField("invoice_formats.id as invoice_format")
+				.leftJoin("details on slips.id=details.id")
+				.leftJoin("categories on details.categoryName=categories.name")
+				.addField("sales_tax(details.amount) as sales_tax")
+				.addField("json_detail(categories.code, details.itemName, details.unit, details.quantity, details.unitPrice, details.amount, details.data1, details.data2, details.data3, details.circulation) as detail")
+				.andWhere("is_checked(slips.id)=1")
+				.setGroupBy("slips.id")
+				.apply();
+			
+			let formData = new FormData();
+			formData.append("json", JSON.stringify(importData));
+			formData.append("spreadsheets", this.gs.getId());
+			fetch("{/literal}{url action="import"}{literal}", {
+				method: "POST",
+				body: formData
+			}).then(res => res.json()).then(data => {
+			});
+			this.gs.update({
+				[GoogleSheets.requestSymbol]: "appendCells",
+				[targetId]: appendValues
+			}).then(res => {
+				this.db.run("drop table slips");
+				this.db.run("drop table details");
+				pObj.resolve({next: "sheetsInit", args:[null]});
+			});
+		}, {signal: controller.signal});
+		let p = new Promise((resolve, reject) => {Object.assign(pObj, {resolve, reject})});
+		let res =  yield p;
+		controller.abort();
+		return res;
+	},
+	*createBook(filename){
+		this.gs = new GoogleSheets(this.jwt.drive);
+		let master = {
+			divisions:      this.db.select("COL").addTable("divisions").addField("name").apply(),
+			teams:          this.db.select("COL").addTable("teams").addField("name").apply(),
+			managers:       this.db.select("COL").addTable("managers").addField("name").apply(),
+			applyClients:   this.db.select("COL").addTable("apply_clients").addField("name").apply(),
+			invoiceFormats: this.db.select("COL").addTable("invoice_formats").addField("name").apply(),
+			categories:     this.db.select("COL").addTable("categories").addField("name").apply()
+		};
+		let masterRowData = [];
+		let namedRanges = {};
+		namedRanges.range1 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+		if(master.divisions == null || master.divisions.length < 1){
+			masterRowData.push([null]);
+		}else{
+			for(let value of master.divisions){
+				masterRowData.push([value]);
 			}
 		}
-	}, true);
-	document.getElementById('create').addEventListener("click", e => {
-		let filename = prompt("filename", "");
-		if(filename == null || filename == ""){
-			return;
+		namedRanges.range1.endRowIndex = masterRowData.length;
+		namedRanges.range2 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+		if(master.teams == null || master.teams.length < 1){
+			masterRowData.push([null]);
+		}else{
+			for(let value of master.teams){
+				masterRowData.push([value]);
+			}
 		}
-		gs = new GoogleSheets(jwt.drive);
-		gs.create(filename, [
+		namedRanges.range2.endRowIndex = masterRowData.length;
+		namedRanges.range3 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+		if(master.managers == null || master.managers.length < 1){
+			masterRowData.push([null]);
+		}else{
+			for(let value of master.managers){
+				masterRowData.push([value]);
+			}
+		}
+		namedRanges.range3.endRowIndex = masterRowData.length;
+		namedRanges.range4 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+		if(master.applyClients == null || master.applyClients.length < 1){
+			masterRowData.push([null]);
+		}else{
+			for(let value of master.applyClients){
+				masterRowData.push([value]);
+			}
+		}
+		namedRanges.range4.endRowIndex = masterRowData.length;
+		namedRanges.range5 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+		if(master.invoiceFormats == null || master.invoiceFormats.length < 1){
+			masterRowData.push([null]);
+		}else{
+			for(let value of master.invoiceFormats){
+				masterRowData.push([value]);
+			}
+		}
+		namedRanges.range5.endRowIndex = masterRowData.length;
+		namedRanges.range6 = {startRowIndex: masterRowData.length, startColumnIndex: 0, endColumnIndex: 1};
+		if(master.categories == null || master.categories.length < 1){
+			masterRowData.push([null]);
+		}else{
+			for(let value of master.categories){
+				masterRowData.push([value]);
+			}
+		}
+		namedRanges.range6.endRowIndex = masterRowData.length;
+		return this.gs.create(filename, [
 			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 100, 16, {
 				frozenRowCount: 1,
 				rows: [
@@ -284,208 +364,56 @@ document.addEventListener("DOMContentLoaded", function(e){
 				namedRanges: namedRanges,
 				protectedRanges: [{}]
 			})
-		]).then(res => gd.createPermission(res.spreadsheetId)).then(res => {
-			location.reload();
-		});
-	}, true);
-	document.getElementById('create2').addEventListener("click", e => {
-		// ダミーデータ
-		let filename = prompt("filename", "");
-		if(filename == null || filename == ""){
-			return;
-		}
-		
-		let s1 = [
-			[
-				GoogleSheets.formula`BYROW(B:B,LAMBDA(X,IF(ROW(X)=1,"取込済",COUNTIF('取込済'!A:A,X)>0)))`,
-				GoogleSheets.formula`BYROW(C:C,LAMBDA(X,IF(ROW(X)=1,"通し番号",TEXT(ROW(X)-1,"00000000"))))`,
-				"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "件名", "備考", "摘要ヘッダー１", "摘要ヘッダー２", "摘要ヘッダー３", "入金予定日", "請求パターン"
-			]
-		];
-		let s2 = [
-			["通し番号", "カテゴリー", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
-		];
-		let unita = ["kg", "g", "mg", "L", "mL", "個", "ダース", "グロス", "ケース", "枚"];
-		let rs = "rehwserjhoyptfwsj rhbjsieryhow ksrbojaer8gu yw5y9hajri owehgq35uyjg8aqer 90w34qagihregw qy934yqt84hgawg9speu tw5ygsuiehgvisetwy4";
-		for(let i = 0; i < 500; i++){
-			let time = new Date("2022-10-01").setMilliseconds(Math.random() * 8640000000);
-			let time2 = new Date(time).setMilliseconds(Math.random() * 8640000000);
-			let sno = Math.floor(Math.random() * 10000000);
-			let k1 = Math.floor(Math.random() * ((master.divisions == null) ? 0 : master.divisions.length));
-			let k2 = Math.floor(Math.random() * ((master.teams == null) ? 0 : master.teams.length));
-			let k3 = Math.floor(Math.random() * ((master.managers == null) ? 0 : master.managers.length));
-			let k4 = Math.floor(Math.random() * ((master.applyClients == null) ? 0 : master.applyClients.length));
-			let hs1 = Math.floor(Math.random() * 100);
-			let hs2 = Math.floor(Math.random() * 100);
-			let hs3 = Math.floor(Math.random() * 100);
-			let hs4 = Math.floor(Math.random() * 100);
-			let hs5 = Math.floor(Math.random() * 100);
-			let he1 = hs1 + Math.floor(Math.random() * 30) + 5;
-			let he2 = hs2 + Math.floor(Math.random() * 30) + 5;
-			let he3 = hs3 + Math.floor(Math.random() * 30) + 5;
-			let he4 = hs4 + Math.floor(Math.random() * 30) + 5;
-			let he5 = hs5 + Math.floor(Math.random() * 30) + 5;
-			let pt = Math.floor(Math.random() * ((master.invoiceFormats == null) ? 0 : master.invoiceFormats.length));
-			let rn = Math.floor(Math.random() * 10) + 1;
-			s1.push([
-				null, null, sno, Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time),
-				(master.divisions == null) ? null : master.divisions[k1],
-				(master.teams == null) ? null : master.teams[k2],
-				(master.managers == null) ? null : master.managers[k3],
-				(master.applyClients == null) ? null : master.applyClients[k4],
-				`納品先${i + 1}`,
-				rs.substring(hs1, he1),
-				rs.substring(hs2, he2),
-				rs.substring(hs3, he3),
-				rs.substring(hs4, he4),
-				rs.substring(hs5, he5),
-				Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(time2),
-				(master.invoiceFormats == null) ? null : master.invoiceFormats[pt]
-			]);
-			for(let j = 0; j < rn; j ++){
-				let cn = Math.floor(Math.random() * ((master.categories == null) ? 0 : master.categories.length));
-				let unit = unita[Math.floor(Math.random() * 10)];
-				let v3 = Math.floor(Math.random() * 200000) / 100;
-				let v4 = Math.floor(Math.random() * 100) * 50 + 50;
-				let v6 = (Math.floor(Math.random() * 100) * 50 + 50) * (Math.floor(Math.random() * 16) + 1);
-				let ss1 = Math.floor(Math.random() * 100);
-				let ss2 = Math.floor(Math.random() * 100);
-				let ss3 = Math.floor(Math.random() * 100);
-				let ss4 = Math.floor(Math.random() * 100);
-				let se1 = ss1 + Math.floor(Math.random() * 30) + 5;
-				let se2 = ss2 + Math.floor(Math.random() * 30) + 5;
-				let se3 = ss3 + Math.floor(Math.random() * 30) + 5;
-				let se4 = ss4 + Math.floor(Math.random() * 30) + 5;
-				s2.push([`${i + 100000001}`.substring(1), (master.categories == null) ? null : master.categories[cn], rs.substring(ss1, se1), unit, v3, v4, v6, rs.substring(ss2, se2), rs.substring(ss3, se3), rs.substring(ss4, se4)]);
-			}
-		}
-		
-		gs = new GoogleSheets(jwt.drive);
-		gs.create(filename, [
-			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 600, 16, {
-				frozenRowCount: 1,
-				rows: s1,
-				fillRows: function(rowData){
-					rowData.values[4].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range1"}]
-						},
-						strict: true,
-						showCustomUi: true
-					};
-					rowData.values[5].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range2"}]
-						},
-						strict: true,
-						showCustomUi: true
-					};
-					rowData.values[6].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range3"}]
-						},
-						strict: true,
-						showCustomUi: true
-					};
-					rowData.values[7].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range4"}]
-						},
-						strict: true,
-						showCustomUi: true
-					};
-					rowData.values[15].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range5"}]
-						},
-						strict: true,
-						showCustomUi: true
-					};
-				},
-				protectedRanges: [
-					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 15}
-				]}
-			),
-			GoogleSheets.createSheetJson({index: 1, title: "売上明細"}, s2.length + 100, 11, {
-				frozenRowCount: 1,
-				rows: s2,
-				fillRows: function(rowData){
-					rowData.values[1].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range6"}]
-						},
-						strict: true,
-						showCustomUi: true
-					};
-				},
-				protectedRanges: [
-					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 11}
-				]
-			}),
-			GoogleSheets.createSheetJson({index: 2, title: "取込済", hidden: true}, 100, 2, {
-				protectedRanges: [{}]
-			}),
-			GoogleSheets.createSheetJson({index: 3, title: "マスター", hidden: true}, 100, 2, {
-				rows: masterRowData,
-				namedRanges: namedRanges,
-				protectedRanges: [{}]
-			})
-		]).then(res => gd.createPermission(res.spreadsheetId)).then(res => {
-			location.reload();
-		});
-	}, true);
-	
-	document.getElementById("import").addEventListener("click", e => {
-		let importData = [];
-		let checked = document.querySelectorAll('tbody input:checked:not([disabled])');
-		let n = checked.length;
-		let appendValues = [];
-		for(let i = 0; i < n; i++){
-			let input = checked[i];
-			if(importMap.has(input)){
-				let taxRate = 0.1;
-				let tempRow = importMap.get(input);
-				let data = tempRow.slice(2, 16).map(a => (a instanceof Date) ? Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(a).split("/").join("-") : a);
-				data.push(detailValues[tempRow[1]].amount.filter(v => typeof v === "number").reduce((total, v) => total + v, 0) * taxRate);
-				data.push(detailValues[tempRow[1]]);
-				importData.push(data);
-				appendValues.push([tempRow[1], GoogleSheets.now]);
-			}
-		}
-		let formData = new FormData();
-		formData.append("json", JSON.stringify(importData));
-		formData.append("spreadsheets", gs.getId());
-		fetch("{/literal}{url action="import"}{literal}", {
-			method: "POST",
-			body: formData
-		}).then(res => res.json()).then(data => {
-		});
-		gs.update({
-			[GoogleSheets.requestSymbol]: "appendCells",
-			[targetId]: appendValues
-		}).then(res => {
-			gs.getAll().then(reloadBook);
-		});
-	});
+		]).then(res => this.gd.createPermission(res.spreadsheetId)).then(res => {location.reload();});
+	},
+	*deleteBook(id){
+		return this.gd.delete(id).then(res => {location.reload();});
+	}
 });
-
 {/literal}</script>
 {/block}
 
 {block name="body"}
-<button type="button" id="create">新規</button><button type="button" id="create2">ダミー</button><span id="title"></span><button type="button" id="import" style="display: none;">取込</button>
+<button type="button" id="create">新規</button><span id="title"></span><button type="button" id="import" style="display: none;">取込</button>
 <table border="1" id="drive">
 	<thead><th>ファイル名</th><th>種類</th><th>権限</th><th>操作</th></thead>
-	<tbody></tbody>
+	<tbody>
+		{function name="DriveItem"}{template_class name="DriveItem" assign="obj" iterators=[]}{strip}
+		<tr data-role="{$obj.userPermission.role}">
+			<td><a target="_blank" href="https://docs.google.com/spreadsheets/d/{$obj.id}/edit">{$obj.title}</a></td>
+			<td>{$obj.mimeType}</td>
+			<td>{$obj.userPermission.role}</td>
+			<td>
+				<button type="button" data-id="{$obj.id}" data-action="load" data-title="{$obj.title}">読込</button>
+				<button type="button" data-id="{$obj.id}" data-action="delete">削除</button>
+			</td>
+		</tr>
+		{/strip}{/template_class}{/function}
+	</tbody>
 </table>
 <table border="1" id="spreadsheet" style="display: none;">
 	<thead><th>取込</th><th>通し番号</th><th>伝票番号</th><th>売上日付</th><th>部門</th><th>チーム</th><th>当社担当者</th><th>請求先</th><th>納品先</th><th>件名</th><th>備考</th><th>摘要ヘッダー１</th><th>摘要ヘッダー２</th><th>摘要ヘッダー３</th><th>入金予定日</th><th>請求パターン</th></thead>
-	<tbody></tbody>
+	<tbody>
+		{function name="ItemList"}{template_class name="ItemList" assign="obj" iterators=[]}{strip}
+		<tr>
+			<td><input type="checkbox" value="{$obj.id}" /></td>
+			<td>{$obj.id}</td>
+			<td>{$obj.slip_number}</td>
+			<td>{$obj.accounting_date}</td>
+			<td>{$obj.division_name}</td>
+			<td>{$obj.team_name}</td>
+			<td>{$obj.manager_name}</td>
+			<td>{$obj.billing_destination_name}</td>
+			<td>{$obj.delivery_destination}</td>
+			<td>{$obj.subject}</td>
+			<td>{$obj.note}</td>
+			<td>{$obj.header1}</td>
+			<td>{$obj.header2}</td>
+			<td>{$obj.header3}</td>
+			<td>{$obj.payment_date}</td>
+			<td>{$obj.invoice_format}</td>
+		</tr>
+		{/strip}{/template_class}{/function}
+	</tbody>
 </table>
 {/block}
