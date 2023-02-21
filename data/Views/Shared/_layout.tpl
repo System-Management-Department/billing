@@ -7,6 +7,7 @@
 {block name="styles"}
 <link rel="stylesheet" type="text/css" href="/assets/bootstrap/css/bootstrap.min.css" />
 <link rel="stylesheet" type="text/css" href="/assets/bootstrap/font/bootstrap-icons.css" />
+<link rel="stylesheet" type="text/css" href="/assets/common/layout.css" />
 {/block}
 {block name="scripts"}
 <script type="text/javascript" src="/assets/bootstrap/js/bootstrap.min.js"></script>
@@ -123,10 +124,10 @@ class Toaster{
 	<header class="sticky-top">
 		<nav class="navbar py-2 bg-white border-bottom border-success border-2 shadow-sm">
 			<div class="container-fluid">
-				<!--<a class="navbar-brand">
-					<img src="img/logo_30x24.png" width="30" height="24" alt="ダイレクト・ホールディングス" >
-					<span class="navbar-text">売上請求管理システム</span>
-				</a>-->
+				<div class="navbar-brand">
+					<img src="/assets/common/image/logo.svg" width="30" height="24" alt="ダイレクト・ホールディングス" />
+					<span class="navbar-text text-dark fs-6">売上請求管理システム</span>
+				</div>
 				<div class="col text-end">
 					<a href="{url controller="Default" action="logout"}" class="btn btn-primary">ログアウト</a>
 				</div>
