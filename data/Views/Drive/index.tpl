@@ -291,48 +291,88 @@ Flow.start({{/literal}
 						"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "件名", "備考", "摘要ヘッダー１", "摘要ヘッダー２", "摘要ヘッダー３", "入金予定日", "請求パターン"
 					]
 				],
-				fillRows: function(rowData){
-					rowData.values[4].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range1"}]
+				validationRanges: [
+					{
+						range: {
+							startRowIndex: 1,
+							endRowIndex: 100,
+							startColumnIndex: 4,
+							endColumnIndex: 5
 						},
-						strict: true,
-						showCustomUi: true
-					};
-					rowData.values[5].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range2"}]
+						rule: {
+							condition: {
+								type: "ONE_OF_RANGE",
+								values: [{userEnteredValue: "=range1"}]
+							},
+							strict: true,
+							showCustomUi: true
+						}
+					},
+					{
+						range: {
+							startRowIndex: 1,
+							endRowIndex: 100,
+							startColumnIndex: 5,
+							endColumnIndex: 6
 						},
-						strict: true,
-						showCustomUi: true
-					};
-					rowData.values[6].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range3"}]
+						rule: {
+							condition: {
+								type: "ONE_OF_RANGE",
+								values: [{userEnteredValue: "=range2"}]
+							},
+							strict: true,
+							showCustomUi: true
+						}
+					},
+					{
+						range: {
+							startRowIndex: 1,
+							endRowIndex: 100,
+							startColumnIndex: 6,
+							endColumnIndex: 7
 						},
-						strict: true,
-						showCustomUi: true
-					};
-					rowData.values[7].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range4"}]
+						rule: {
+							condition: {
+								type: "ONE_OF_RANGE",
+								values: [{userEnteredValue: "=range3"}]
+							},
+							strict: true,
+							showCustomUi: true
+						}
+					},
+					{
+						range: {
+							startRowIndex: 1,
+							endRowIndex: 100,
+							startColumnIndex: 7,
+							endColumnIndex: 8
 						},
-						strict: true,
-						showCustomUi: true
-					};
-					rowData.values[15].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range5"}]
+						rule: {
+							condition: {
+								type: "ONE_OF_RANGE",
+								values: [{userEnteredValue: "=range4"}]
+							},
+							strict: true,
+							showCustomUi: true
+						}
+					},
+					{
+						range: {
+							startRowIndex: 1,
+							endRowIndex: 100,
+							startColumnIndex: 15,
+							endColumnIndex: 16
 						},
-						strict: true,
-						showCustomUi: true
-					};
-				},
+						rule: {
+							condition: {
+								type: "ONE_OF_RANGE",
+								values: [{userEnteredValue: "=range5"}]
+							},
+							strict: true,
+							showCustomUi: true
+						}
+					}
+				],
 				protectedRanges: [
 					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 15}
 				]
@@ -342,16 +382,24 @@ Flow.start({{/literal}
 				rows: [
 					["通し番号", "カテゴリー", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
 				],
-				fillRows: function(rowData){
-					rowData.values[1].dataValidation = {
-						condition: {
-							type: "ONE_OF_RANGE",
-							values: [{userEnteredValue: "=range6"}]
+				validationRanges: [
+					{
+						range: {
+							startRowIndex: 1,
+							endRowIndex: 500,
+							startColumnIndex: 1,
+							endColumnIndex: 2
 						},
-						strict: true,
-						showCustomUi: true
-					};
-				},
+						rule: {
+							condition: {
+								type: "ONE_OF_RANGE",
+								values: [{userEnteredValue: "=range6"}]
+							},
+							strict: true,
+							showCustomUi: true
+						}
+					}
+				],
 				protectedRanges: [
 					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 11}
 				]

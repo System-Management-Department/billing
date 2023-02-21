@@ -115,6 +115,7 @@ class GoogleSheets{
 			}).then(res => res.json()).then(spreadsheets => {
 				let book = new GoogleSheetsBook(spreadsheets);
 				let requests = [];
+				let requests2 = [];
 				for(let sheet of book){
 					if("namedRanges" in sheetData[sheet.name]){
 						for(let name in sheetData[sheet.name].namedRanges){
@@ -138,6 +139,14 @@ class GoogleSheets{
 										requestingUserCanEdit: true
 									}
 								}
+							});
+						}
+					}
+					if("validationRanges" in sheetData[sheet.name]){
+						for(let range of sheetData[sheet.name].validationRanges){
+							range.range.sheetId = sheet.sheetId;
+							requests2.push({
+								setDataValidation: range
 							});
 						}
 					}
@@ -165,7 +174,7 @@ class GoogleSheets{
 					headers: headers,
 					method: "POST",
 					body: JSON.stringify({
-						requests: requests,
+						requests: requests.concat(requests2),
 						includeSpreadsheetInResponse: false,
 						responseIncludeGridData: false
 					})
@@ -254,6 +263,9 @@ class GoogleSheets{
 			}
 			if("protectedRanges" in options){
 				json[GoogleSheets.updateSymbol].protectedRanges = options.protectedRanges;
+			}
+			if("validationRanges" in options){
+				json[GoogleSheets.updateSymbol].validationRanges = options.validationRanges;
 			}
 			if("frozenRowCount" in options){
 				json.properties.gridProperties.frozenRowCount = options.frozenRowCount;
