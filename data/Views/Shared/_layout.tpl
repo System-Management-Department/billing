@@ -2,87 +2,11 @@
 <html>
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 <link rel="icon" href="/assets/common/image/favicon.ico" />
 {block name="styles"}
 <link rel="stylesheet" type="text/css" href="/assets/bootstrap/css/bootstrap.min.css" />
 <link rel="stylesheet" type="text/css" href="/assets/bootstrap/font/bootstrap-icons.css" />
-<style id="additionalStyle">
-	#mainGrid{
-		display: grid;
-		grid-template-columns: auto 1fr;
-		grid-template-rows: auto auto 1fr;
-		grid-auto-flow: column;
-		position: fixed;
-		top: 0;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		height: auto;
-		width: auto;
-		margin: 0;
-		padding: 0;
-	}
-	#sidebarToggle{
-		display: contents;
-	}
-	.sidebar-section{
-		display: contents;
-		--sidebar-width: 12rem;
-	}
-	#sidebarToggle:checked~.sidebar-section{
-		--sidebar-width: 3rem;
-	}
-	#sidebarToggle:checked~.sidebar-section .sidebar-hidden{
-		display: none;
-	}
-	label[for="sidebarToggle"],#sidebar{
-		white-space: nowrap;
-		width: var(--sidebar-width);
-		transition: width 0.5s;
-		overflow: hidden;
-		overflow-y: auto;
-	}
-	#sidebar .bi::before,.card-header .bi::before{
-		width: 26px;
-		font-size: 18px;
-	}
-	.grid-rowspan-2{
-		grid-row-end: span 2;
-	}
-	.grid-colspan-2{
-		grid-column-end: span 2;
-	}
-	.grid-colspan-3{
-		grid-column-end: span 3;
-	}
-	.grid-colspan-4{
-		grid-column-end: span 4;
-	}
-	.grid-colspan-5{
-		grid-column-end: span 5;
-	}
-	.grid-colspan-6{
-		grid-column-end: span 6;
-	}
-	.grid-colspan-7{
-		grid-column-end: span 7;
-	}
-	.grid-colspan-8{
-		grid-column-end: span 8;
-	}
-	.grid-colspan-9{
-		grid-column-end: span 9;
-	}
-	.grid-colspan-10{
-		grid-column-end: span 10;
-	}
-	.grid-colspan-11{
-		grid-column-end: span 11;
-	}
-	.grid-colspan-12{
-		grid-column-end: span 12;
-	}
-</style>
 {/block}
 {block name="scripts"}
 <script type="text/javascript" src="/assets/bootstrap/js/bootstrap.min.js"></script>
@@ -195,75 +119,24 @@ class Toaster{
 {/literal}</script>
 {/block}
 </head>
-<body>
-	<div id="mainGrid">
-		<input type="checkbox" id="sidebarToggle" tabindex="-1" />
-		<section class="sidebar-section">
-			<label for="sidebarToggle" class="bg-dark text-white text-end px-3 py-1">
-				<i class="bi bi-list"></i>
-			</label>
-			<nav id="sidebar" class="grid-rowspan-2 bg-dark text-white sidebar px-3">
-				<div class="py-2"><img src="/assets/common/image/logo.svg" alt="logo" style="height:1em;width:1em;" /><span class="sidebar-hidden">売上請求管理システム</span>&nbsp;</div>
-				<ul class="nav flex-column">
-					<li class="nav-item">
-						<a class="nav-link text-white active" href="{url controller="Home" action="index"}">
-							<i class="bi bi-house-door"></i><span class="sidebar-hidden">ホーム</span>
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link text-white active" href="{url controller="Drive" action="index"}">
-							<i class="bi bi-house-door"></i><span class="sidebar-hidden">売上取込</span>
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link text-white active" href="{url controller="Sales" action="index"}">
-							<i class="bi bi-house-door"></i><span class="sidebar-hidden">売上入力</span>
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link text-white active" href="{url controller="SalesOutput" action="index"}">
-							<i class="bi bi-house-door"></i><span class="sidebar-hidden">売上伝票出力</span>
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link text-white active" href="{url controller="Billing" action="index"}">
-							<i class="bi bi-house-door"></i><span class="sidebar-hidden">請求締データ</span>
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link text-white active" href="{url controller="Billing" action="closedIndex"}">
-							<i class="bi bi-house-door"></i><span class="sidebar-hidden">請求締データ</span>
-						</a>
-					</li>
-					{if $smarty.session["User.role"] eq "admin"}
-					<li class="nav-item">
-						<a class="nav-link text-white" href="{url controller="Home" action="master"}"><i class="bi bi-gear-wide"></i><span class="sidebar-hidden">マスタ管理</span></a>
-						<div class="collapse show sidebar-hidden">
-							<ul class="ms-3 list-unstyled small">
-								<li><a class="nav-link text-white py-1" href="{url controller="UserMaster" action="index"}">ユーザー</a></li>
-							</ul>
-						</div>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link text-white" href="{url controller="Log" action="index"}">
-							<i class="bi bi-hourglass"></i><span class="sidebar-hidden">操作履歴</span>
-						</a>
-					</li>
-					{/if}
-				</ul>
-			</nav>
-		</section>
-		<div class="bg-dark text-white text-end px-3 py-1">
-			<a href="{url controller="Default" action="logout"}" class="text-white">Logout&ensp;<i class="bi bi-box-arrow-right"></i></a>
-		</div>
-		<div>
-			{block name="title"}{/block}
-			<ol class="breadcrumb"></ol>
-		</div>
-		<div class="overflow-auto px-4 py-4">
-			{block name="body"}{/block}
-		</div>
-	</div>
+<body class="bg-light">
+	<header class="sticky-top">
+		<nav class="navbar py-2 bg-white border-bottom border-success border-2 shadow-sm">
+			<div class="container-fluid">
+				<!--<a class="navbar-brand">
+					<img src="img/logo_30x24.png" width="30" height="24" alt="ダイレクト・ホールディングス" >
+					<span class="navbar-text">売上請求管理システム</span>
+				</a>-->
+				<div class="col text-end">
+					<a href="{url controller="Default" action="logout"}" class="btn btn-primary">ログアウト</a>
+				</div>
+			</div>
+		</nav>
+		<nav aria-label="breadcrumb" class="bg-white shadow-sm">
+			<ol class="breadcrumb p-3"></ol>
+		</nav>
+	</header>
+	<main class="py-4">{block name="body"}{/block}</main>
 	<div style="position:fixed;top:0;bottom:0;right:0;left:0;width:auto;height:auto;margin:0;padding:0;display:grid;grid-template:1fr auto 1fr/1fr auto 1fr;visibility:hidden;">
 		<div class="toast-container" style="grid-column:2;grid-row:2;visibility:visible;"></div>
 	</div>
