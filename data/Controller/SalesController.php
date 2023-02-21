@@ -16,7 +16,7 @@ use Model\SQLite;
 class SalesController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function index(){
-		return new RedirectResponse("*", "list");
+		return new View();
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
@@ -33,28 +33,17 @@ class SalesController extends ControllerBase{
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
-	public function search(){
+	public function edit(){
 		$db = Session::getDB();
-		$sdb = SQLite::cachedData();
-		list($columns, $data) = $db->exportTable("sales_slips", [], "close_processed=0");
-		$sdb->createTable("sales_slips", $columns, $data);
-		return new FileView($sdb->getFileName(), "application/vnd.sqlite3");
+		$v = new View();
+		
+		$query = $db->select("ROW")
+			->addTable("sales_slips")
+			->andWhere("id=?", $this->requestContext->id)
+			->andWhere("close_processed=0");
+		$v["data"] = $query();
+		return $v;
 	}
-	
-	#[\Attribute\AcceptRole("admin", "entry")]
-	public function regist(){
-		$db = Session::getDB();
-		
-		// 検証
-		$result = SalesSlip::checkInsert($db, $_POST, []);
-		
-		if(!$result->hasError()){
-			SalesSlip::execInsert($db, $_POST, $this->requestContext, $result);
-		}
-		
-		return new JsonView($result);
-	}
-	
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function createRed(){
@@ -83,18 +72,32 @@ class SalesController extends ControllerBase{
 		return $v;
 	}
 	
+	#[\Attribute\AcceptRole("admin", "entry")]
+	public function create(){
+		return new View();
+	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
-	public function edit(){
+	public function search(){
 		$db = Session::getDB();
-		$v = new View();
+		$sdb = SQLite::cachedData();
+		list($columns, $data) = $db->exportTable("sales_slips", [], "close_processed=0");
+		$sdb->createTable("sales_slips", $columns, $data);
+		return new FileView($sdb->getFileName(), "application/vnd.sqlite3");
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry")]
+	public function regist(){
+		$db = Session::getDB();
 		
-		$query = $db->select("ROW")
-			->addTable("sales_slips")
-			->andWhere("id=?", $this->requestContext->id)
-			->andWhere("close_processed=0");
-		$v["data"] = $query();
-		return $v;
+		// 検証
+		$result = SalesSlip::checkInsert($db, $_POST, []);
+		
+		if(!$result->hasError()){
+			SalesSlip::execInsert($db, $_POST, $this->requestContext, $result);
+		}
+		
+		return new JsonView($result);
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]

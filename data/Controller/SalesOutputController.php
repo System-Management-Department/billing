@@ -20,6 +20,11 @@ class SalesOutputController extends ControllerBase{
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
+	public function list(){
+		return new View();
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry")]
 	public function search(){
 		$db = Session::getDB();
 		$sdb = SQLite::cachedData();

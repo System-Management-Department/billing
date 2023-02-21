@@ -14,6 +14,11 @@ use Model\SalesSlip;
 class BillingController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function index(){
+		return new View();
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry")]
+	public function list(){
 		$db = Session::getDB();
 		$v = new View();
 		
@@ -27,6 +32,28 @@ class BillingController extends ControllerBase{
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function closedIndex(){
+		return new View();
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry")]
+	public function closedList(){
+		$db = Session::getDB();
+		$v = new View();
+		
+		$query = SalesSlip::getJsonQuery($db)
+			->andWhere("close_processed=1");
+		$v["table"] = $query();
+		
+		return $v;
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry")]
+	public function closedIndex2(){
+		return new View();
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry")]
+	public function closedList2(){
 		$db = Session::getDB();
 		$v = new View();
 		

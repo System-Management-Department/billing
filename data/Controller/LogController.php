@@ -10,7 +10,7 @@ use Model\Logger;
 class LogController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin")]
 	public function index(){
-		return new RedirectResponse("*", "list");
+		return new View();
 	}
 	
 	#[\Attribute\AcceptRole("admin")]
