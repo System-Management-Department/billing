@@ -123,12 +123,20 @@ class Toaster{
 <body class="bg-light">
 	<header class="sticky-top">
 		<nav class="navbar py-2 bg-white border-bottom border-success border-2 shadow-sm">
-			<div class="container-fluid">
-				<div class="navbar-brand">
+			<div class="container-fluid gap-2">
+				<div class="navbar-brand flex-grow-1">
 					<img src="/assets/common/image/logo.svg" width="30" height="24" alt="ダイレクト・ホールディングス" />
 					<span class="navbar-text text-dark fs-6">売上請求管理システム</span>
 				</div>
-				<div class="col text-end">
+				<div class="bi bi-person-circle fs-2"></div>
+				<div>
+					<div class="d-flex gap-3">
+						<div>{$smarty.session["User.department"]}</div>
+						<div class="flex-grow-1">{$smarty.session["User.username"]}</div>
+					</div>
+					<div>{$smarty.session["User.email"]}</div>
+				</div>
+				<div>
 					<a href="{url controller="Default" action="logout"}" class="btn btn-primary">ログアウト</a>
 				</div>
 			</div>
