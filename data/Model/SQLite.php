@@ -87,6 +87,9 @@ class SQLiteCachedData{
 	public function getFileName(){
 		return $this->fileName;
 	}
+	public function getFilemtime(){
+		return filemtime(dirname(DATA_DIR) . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "sqlite" . DIRECTORY_SEPARATOR . "master.sqlite3");
+	}
 	public function createTable($table, $columns, $data){
 		$this->data = $data;
 		$ref = [];

@@ -45,8 +45,16 @@ Flow.start({{/literal}
 		const template = new DriveItem();
 		const obj = yield this.gd.getAll();
 		const tbody = document.querySelector('#drive tbody');
+		const info = this.db.select("OBJECT").addTable("info").setField("key,value").apply();
+		const dateFormatter = new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium", timeStyle: "medium", timeZone: "Asia/Tokyo"});
+
 		let pObj = {};
 		for(let item of obj.items){
+			if("masterUpdate" in item.properties){
+				let timestamp = Number(item.properties.masterUpdate);
+				item.properties.masterUpdate = dateFormatter.format(new Date(timestamp * 1000));
+				item.properties.masterUpdateFlag = (timestamp < info.update.value) ? "update" : null;
+			}
 			template.insertBeforeEnd(tbody, item);
 		}
 		let btns = tbody.querySelectorAll('[data-role]:not([data-role="owner"]) button');
@@ -217,6 +225,7 @@ Flow.start({{/literal}
 	},
 	*createBook(filename){
 		this.gs = new GoogleSheets(this.jwt.drive);
+		const info = this.db.select("OBJECT").addTable("info").setField("key,value").apply();
 		let master = {
 			divisions:      this.db.select("COL").addTable("divisions").addField("name").apply(),
 			teams:          this.db.select("COL").addTable("teams").addField("name").apply(),
@@ -412,7 +421,10 @@ Flow.start({{/literal}
 				namedRanges: namedRanges,
 				protectedRanges: [{}]
 			})
-		]).then(res => this.gd.createPermission(res.spreadsheetId)).then(res => {location.reload();});
+		]).then(res => Promise.all([
+			this.gd.createPermission(res.spreadsheetId),
+			this.gd.setProperty(res.spreadsheetId, {access: "billing", masterUpdate: info.update.value})
+		])).then(res => {location.reload();});
 	},
 	*deleteBook(id){
 		return this.gd.delete(id).then(res => {location.reload();});
@@ -424,14 +436,15 @@ Flow.start({{/literal}
 {block name="body"}
 <button type="button" id="create">新規</button><span id="title"></span><button type="button" id="import" style="display: none;">取込</button>
 <table border="1" id="drive">
-	<thead><th>ファイル名</th><th>種類</th><th>権限</th><th>操作</th></thead>
+	<thead><th>ファイル名</th><th>種類</th><th>権限</th><th>マスター更新日時</th><th>操作</th></thead>
 	<tbody>
 		{function name="DriveItem"}{template_class name="DriveItem" assign="obj" iterators=[]}{strip}
 		<tr data-role="{$obj.userPermission.role}">
 			<td><a target="_blank" href="https://docs.google.com/spreadsheets/d/{$obj.id}/edit">{$obj.title}</a></td>
 			<td>{$obj.mimeType}</td>
 			<td>{$obj.userPermission.role}</td>
-			<td>
+			<td>{$obj.properties.masterUpdate}</td>
+			<td data-master="{$obj.properties.masterUpdateFlag}">
 				<button type="button" data-id="{$obj.id}" data-action="load" data-title="{$obj.title}">読込</button>
 				<button type="button" data-id="{$obj.id}" data-action="delete">削除</button>
 			</td>

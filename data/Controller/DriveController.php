@@ -27,6 +27,7 @@ class DriveController extends ControllerBase{
 			$table[] = ["id" => $k, "name" => $v];
 		}
 		$sdb->createTable("invoice_formats", ["id", "name"], $table);
+		$sdb->createTable("info", ["key", "value"], [["key" => "update", "value" => $sdb->getFilemtime()]]);
 		return new FileView($sdb->getFileName(), "application/vnd.sqlite3");
 	}
 	
