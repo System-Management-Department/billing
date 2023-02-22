@@ -3,7 +3,18 @@
 Flow.start({
 	*[Symbol.iterator](){
 		let db = Flow.DB;
-		let links = db.select("ALL").addTable("breadcrumbs").apply();
+		let links = null;
+		while(links == null){
+			try{
+				links = db.select("ALL").addTable("breadcrumbs").apply();
+			}catch(ex){
+				yield new Promise((resolve, reject) => {
+					setTimeout(() => {
+						resolve(null);
+					}, 100);
+				});
+			}
+		}
 		for(let link of links){
 			let a = document.createElement("a");
 			a.textContent = link.title;

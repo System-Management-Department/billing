@@ -1,12 +1,57 @@
 {block name="styles" append}
 <style type="text/css">{literal}
-body{
-	min-height: 100vh;
-	background: var(--bs-light, white);
+html,
+body {
+  height: 100%;
 }
-.card{
-	width: 320px;
+
+body {
+  display: flex;
+  align-items: center;
+  padding-top: 40px;
+  padding-bottom: 40px;
+  background-color: #f5f5f5;
 }
+
+.form-signin {
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: auto;
+}
+
+.form-signin .checkbox {
+  font-weight: 400;
+}
+
+.form-signin .form-floating:focus-within {
+  z-index: 2;
+}
+
+.form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+  .bd-placeholder-img {
+    font-size: 1.125rem;
+    text-anchor: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+
+  @media (min-width: 768px) {
+    .bd-placeholder-img-lg {
+      font-size: 3.5rem;
+    }
+  }
 {/literal}</style>
 {/block}
 
@@ -48,25 +93,25 @@ document.addEventListener("DOMContentLoaded", function(){
 {/block}
 
 {block name="body"}
-<main class="text-center pt-5">
-	<div class="text-start card mt-5 mx-auto py-3 px-3">
-		<form action="{url action="login"}" method="POST" class="card-body row pb-0">
-			<label class="col-12">メールアドレス</label>
-			<div class="col-12"><input name="email" type="text" class="form-control" /></div>
-			
-			<label class="col-12 mt-3">パスワード</label>
-			<div class="col-12"><input name="password" type="text" class="form-control" style="-webkit-text-security:disc;" /></div>
-			
-			<div class="col-12 mt-3 text-center">
-				<div class="form-check d-inline-block">
-					<input class="form-check-input" type="checkbox" id="checkbox">
-					<label class="form-check-label" for="checkbox">ログイン状態を保持する</label>
-				</div>
-			</div>
-			<div class="text-center col-12 my-3"><button type="submit" class="btn btn-success">ログイン</button></div>
-		</form>
-		<a href="https://docs.google.com/forms/d/e/1FAIpQLSdCVYDHCOvqlJ9ppIw_OUuZogt-LJS4T6fZFXzFaisd5UCbfw/viewform?vc=0&c=0&w=1&flr=0" class="btn text-decoration-underline">パスワードを忘れた方はこちら</a>
-	</div>
-	<div class="mt-5">推奨ブラウザ：GoogleChrome</div>
+<main class="form-signin">
+	<form action="{url action="login"}" method="POST" class="text-center">
+		<img class="mb-4" src="img/signin_logo.png" alt="" width="72" height="57">
+		<h1 class="h3 mb-3 fw-normal">販売管理システム</h1>
+		<div class="form-floating">
+			<input type="email" name="email" class="form-control" placeholder="name@example.com">
+			<label for="floatingInput">Email address</label>
+		</div>
+		<div class="form-floating">
+		  <input type="password" name="password" class="form-control" placeholder="Password">
+		  <label for="floatingPassword">Password</label>
+		</div>
+		<div class="checkbox mb-3">
+			<label>
+				<input type="checkbox" id="checkbox" /> Remember me
+			</label>
+		</div>
+		<button type="submit" class="btn btn-success">ログイン</button>
+		<p class="mt-5 mb-3 text-muted">&copy; Direct-holdings 2023</p>
+	</form>
 </main>
 {/block}
