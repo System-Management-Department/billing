@@ -1,6 +1,7 @@
 class Flow{
 	static DB = new SQLite();
 	static DbName = "";
+	static DbLocked = false;
 	static #p = null;
 	static #i = [];
 	static start( ...p){
@@ -23,5 +24,15 @@ class Flow{
 		}else{
 			Flow.#i = Flow.#i.concat(p);
 		}
+	}
+	static *waitDbUnlock(){
+		while(Flow.DbLocked){
+			yield new Promise((resolve, reject) => {
+				setTimeout(() => {
+					resolve(null);
+				}, 100);
+			});
+		}
+		return Flow.DB;
 	}
 }

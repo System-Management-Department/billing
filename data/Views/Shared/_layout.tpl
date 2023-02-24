@@ -16,6 +16,7 @@
 <script type="text/javascript" src="/assets/common/Flow.js"></script>
 <script type="text/javascript">
 Flow.DbName = "{$smarty.session["User.role"]}";{literal}
+Flow.DbLocked = true;
 Flow.start({{/literal}
 	db: Flow.DB,
 	dbName: "{$smarty.session["User.role"]}",
@@ -23,6 +24,7 @@ Flow.start({{/literal}
 	location: "{url}",{literal}
 	*[Symbol.iterator](){
 		{/literal}{db_download test="Object.keys(this.db.tables).length < 1"}yield* this.dbUpdate();{/db_download}{literal}
+		Flow.DbLocked = false;
 		yield* this.breadcrumbs();
 		yield* this.toast();
 		let prev = localStorage.getItem("session");
