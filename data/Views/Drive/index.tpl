@@ -43,23 +43,19 @@ Flow.start({{/literal}
 	*driveInit(){
 		this.gd = new GoogleDrive(this.jwt.drive);
 		const template = new DriveItem();
-		const obj = yield this.gd.getAll();
+		const obj = yield this.gd.getAll("properties+has+{key='access'+and+value='billing'}");
 		const tbody = document.querySelector('#drive tbody');
 		const info = this.db.select("OBJECT").addTable("info").setField("key,value").apply();
 		const dateFormatter = new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium", timeStyle: "medium", timeZone: "Asia/Tokyo"});
 
 		let pObj = {};
-		for(let item of obj.items){
+		for(let item of obj.files){
 			if("masterUpdate" in item.properties){
 				let timestamp = Number(item.properties.masterUpdate);
 				item.properties.masterUpdate = dateFormatter.format(new Date(timestamp * 1000));
 				item.properties.masterUpdateFlag = (timestamp < info.update.value) ? "update" : null;
 			}
 			template.insertBeforeEnd(tbody, item);
-		}
-		let btns = tbody.querySelectorAll('[data-role]:not([data-role="owner"]) button');
-		for(let i = btns.length - 1; i >= 0; i--){
-			btns[i].parentNode.removeChild(btns[i]);
 		}
 		tbody.addEventListener("click", e => {
 			if(e.target.hasAttribute("data-id") && e.target.hasAttribute("data-action")){
@@ -436,13 +432,12 @@ Flow.start({{/literal}
 {block name="body"}
 <button type="button" id="create">新規</button><span id="title"></span><button type="button" id="import" style="display: none;">取込</button>
 <table border="1" id="drive">
-	<thead><th>ファイル名</th><th>種類</th><th>権限</th><th>マスター更新日時</th><th>操作</th></thead>
+	<thead><th>ファイル名</th><th>種類</th><th>マスター更新日時</th><th>操作</th></thead>
 	<tbody>
 		{function name="DriveItem"}{template_class name="DriveItem" assign="obj" iterators=[]}{strip}
-		<tr data-role="{$obj.userPermission.role}">
-			<td><a target="_blank" href="https://docs.google.com/spreadsheets/d/{$obj.id}/edit">{$obj.title}</a></td>
+		<tr>
+			<td><a target="_blank" href="https://docs.google.com/spreadsheets/d/{$obj.id}/edit">{$obj.name}</a></td>
 			<td>{$obj.mimeType}</td>
-			<td>{$obj.userPermission.role}</td>
 			<td>{$obj.properties.masterUpdate}</td>
 			<td data-master="{$obj.properties.masterUpdateFlag}">
 				<button type="button" data-id="{$obj.id}" data-action="load" data-title="{$obj.title}">読込</button>

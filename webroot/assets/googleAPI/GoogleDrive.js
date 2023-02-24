@@ -3,7 +3,7 @@ class GoogleDrive{
 	constructor(url){
 		this.#url = url;
 	}
-	getAll(){
+	getAll(q = null){
 		return new Promise((resolve, reject) => {
 			let headers = {};
 			fetch(this.#url).then(res => res.json()).then(jwt => {
@@ -16,18 +16,14 @@ class GoogleDrive{
 				})
 			}).then(res => res.json()).then(token => {
 				headers = {Authorization: `Bearer ${token.access_token}`};
-				return fetch(`https://www.googleapis.com/drive/v2/files`, {
+				return fetch((q == null)
+					? `https://www.googleapis.com/drive/v3/files?fields=*`
+					: `https://www.googleapis.com/drive/v3/files?fields=*&q=${q}`, {
 					headers: headers
 				});
 			}).then(res => res.json()).then(dirve => {
-				for(let item of dirve.items){
-					if("properties" in item){
-						let properties = {};
-						for(let prop of item.properties){
-							properties[prop.key] = prop.value;
-						}
-						item.properties = properties;
-					}else{
+				for(let item of dirve.files){
+					if(!("properties" in item)){
 						item.properties = {};
 					}
 				}
