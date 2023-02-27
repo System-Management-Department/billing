@@ -12,10 +12,17 @@
 <script type="text/javascript">
 {call name="ListItem"}{literal}
 Flow.start({{/literal}
-	dbDownloadURL: "{url action="search"}",{literal}
+	dbDownloadURL: "{url action="search"}",
+	location: "{url}",{literal}
+	form: null,
+	y: null,
 	*[Symbol.iterator](){
+		yield* this.init();
 		const db = new SQLite();
-		const buffer = yield fetch(this.dbDownloadURL).then(response => response.arrayBuffer());
+		const buffer = yield fetch(this.dbDownloadURL, {
+			method: "POST",
+			body: new FormData(this.form)
+		}).then(response => response.arrayBuffer());
 		db.import(buffer, "list");
 		const template = new ListItem();
 		
@@ -33,6 +40,40 @@ Flow.start({{/literal}
 			row.detail = JSON.parse(row.detail);
 			template.insertBeforeEnd(document.getElementById("list"), row);
 		}
+		if(this.y != null){
+			document.documentElement.scrollTop = this.y;
+			this.y = null;
+		}
+	},
+	*init(){
+		this.form = document.getElementById("search");
+		const db = yield* Flow.waitDbUnlock();
+		let history = db.select("ROW")
+			.addTable("search_histories")
+			.andWhere("location=?", this.location)
+			.setOrderBy("time DESC")
+			.apply();
+		if(history != null){
+			let {data, label} = JSON.parse(history.json);
+			for(let k in data){
+				for(let v of data[k]){
+					let input = Object.assign(document.createElement("input"), {value: v});
+					input.setAttribute("type", "hidden");
+					input.setAttribute("name", k);
+					this.form.appendChild(input);
+				}
+			}
+			this.y = history.scroll_y;
+			addEventListener("beforeunload", e => {
+				db.updateSet("search_histories", {
+					scroll_y: document.documentElement.scrollTop
+				}, {})
+					.andWhere("location=?", history.location)
+					.andWhere("time=?", history.time)
+					.apply();
+				db.commit();
+			});
+		}
 	}
 });
 {/literal}</script>
@@ -40,6 +81,7 @@ Flow.start({{/literal}
 
 
 {block name="body"}
+<form id="search"></form>
 <div id="list">
 	{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=["i"]}{strip}
 	<div class="mb-3">

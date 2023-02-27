@@ -9,41 +9,96 @@
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/encoding.js/encoding.min.js"></script>
 <script type="text/javascript">
-var data = JSON.parse("{$table|escape:"javascript"}");{literal}
-document.addEventListener("DOMContentLoaded", function(e){
-	let form = document.getElementById("outputlist");
-	let eelement = document.createElement("a");
-	let HTMLEscape = v => (v == null) ? "" : Object.assign(eelement, {textContent: v}).innerHTML;
-	for(let id in data){
-		let item = data[id];
-		item.detail[Symbol.iterator] = detailIterator;
-		let template = {/literal}`{call name="item_template"}`{literal};
-		form.insertAdjacentHTML("beforeend", template);
-	}
-	form.addEventListener("submit", e => {
+{call name="ListItem"}{literal}
+Flow.start({{/literal}
+	dbDownloadURL: "{url action="search"}",
+	location: "{url}",{literal}
+	form: null,
+	y: null,
+	*[Symbol.iterator](){
+		yield* this.init();
+		const db = new SQLite();
+		const buffer = yield fetch(this.dbDownloadURL, {
+			method: "POST",
+			body: new FormData(this.form)
+		}).then(response => response.arrayBuffer());
+		db.import(buffer, "list");
+		const template = new ListItem();
+		const form = document.getElementById("outputlist");
+		
+		let table = db.select("ALL")
+			.addTable("sales_slips")
+			.addField("sales_slips.id,sales_slips.slip_number,sales_slips.subject,sales_slips.detail")
+			.leftJoin("divisions on sales_slips.division=divisions.code")
+			.addField("divisions.name as division_name")
+			.leftJoin("teams on sales_slips.team=teams.code")
+			.addField("teams.name as team_name")
+			.leftJoin("managers on sales_slips.manager=managers.code")
+			.addField("managers.name as manager_name,managers.kana as manager_kana")
+			.apply();
+		for(let row of table){
+			row.detail = JSON.parse(row.detail);
+			template.insertBeforeEnd(form, row);
+		}
+		if(this.y != null){
+			document.documentElement.scrollTop = this.y;
+			this.y = null;
+		}
+		
+		let pObj = {};
+		form.addEventListener("submit", e => { pObj.resolve(e); });
+		do{
+			yield* this.input(pObj, db, form);
+		}while(true);
+	},
+	*init(){
+		this.form = document.getElementById("search");
+		const db = yield* Flow.waitDbUnlock();
+		let history = db.select("ROW")
+			.addTable("search_histories")
+			.andWhere("location=?", this.location)
+			.setOrderBy("time DESC")
+			.apply();
+		if(history != null){
+			let {data, label} = JSON.parse(history.json);
+			for(let k in data){
+				for(let v of data[k]){
+					let input = Object.assign(document.createElement("input"), {value: v});
+					input.setAttribute("type", "hidden");
+					input.setAttribute("name", k);
+					this.form.appendChild(input);
+				}
+			}
+			this.y = history.scroll_y;
+			addEventListener("beforeunload", e => {
+				db.updateSet("search_histories", {
+					scroll_y: document.documentElement.scrollTop
+				}, {})
+					.andWhere("location=?", history.location)
+					.andWhere("time=?", history.time)
+					.apply();
+				db.commit();
+			});
+		}
+	},
+	*input(pObj, db, form){
+		let p = new Promise((resolve, reject) => {Object.assign(pObj, {resolve, reject})});
+		let e = yield p;
+		
 		e.stopPropagation();
 		e.preventDefault();
-		let formData = new FormData(form);
 		
-		fetch(form.getAttribute("action"), {
+		let json = yield fetch(form.getAttribute("action"), {
 			method: form.getAttribute("method"),
-			body: formData
-		}).then(res => res.json()).then(json => {
-			if(json.success){
-				Storage.pushToast("請求締データ", json.messages);
-				location.reload()
-			}else{
+			body: new FormData(form)
+		}).then(res => res.json());
+		if(json.success){
+			for(let message of json.messages){
+				Flow.DB.insertSet("messages", {title: "請求締データ", message: message[0], type: message[1], name: message[2]}, {}).apply();
 			}
-		});
-	});
-	
-	function* detailIterator(){
-		let keys = Object.keys(this).filter(k => k != "length");
-		for(let i = 0; i < this.length; i++){
-			yield keys.reduce((obj, k) => {
-				obj[k] = this[k][i];
-				return obj;
-			}, {});
+			yield Flow.DB.commit();
+			location.reload();
+		}else{
 		}
 	}
 });
@@ -51,45 +106,31 @@ document.addEventListener("DOMContentLoaded", function(e){
 {/block}
 
 {block name="body"}
+<form id="search"></form>
 <form action="{url action="release"}" method="post" id="outputlist">
 	<button type="submit" class="btn btn-success">締解除</button>
-	{function name="item_template"
-		id="$\x7bid\x7d"
-		item=["slip_number" => "$\x7bitem.slip_number\x7d", "subject" => "$\x7bitem.subject\x7d"]
-		ldetail="$\x7bArray.from(item.detail).map(detail => `"
-		rdetail="`).join(\"\")\x7d"
-		detail=[
-			"categoryCode"=> "$\x7bHTMLEscape(detail.categoryCode)\x7d",
-			"itemName"    => "$\x7bHTMLEscape(detail.itemName)\x7d",
-			"unit"        => "$\x7bHTMLEscape(detail.unit)\x7d",
-			"quantity"    => "$\x7bHTMLEscape(detail.quantity)\x7d",
-			"unitPrice"   => "$\x7bHTMLEscape(detail.unitPrice)\x7d",
-			"amount"      => "$\x7bHTMLEscape(detail.amount)\x7d",
-			"data1"       => "$\x7bHTMLEscape(detail.data1)\x7d",
-			"data2"       => "$\x7bHTMLEscape(detail.data2)\x7d",
-			"data3"       => "$\x7bHTMLEscape(detail.data3)\x7d",
-			"circulation" => "$\x7bHTMLEscape(detail.circulation)\x7d"
-		]
-	}
+	{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=["i"]}{strip}
 	<div class="mb-3">
 		<label>
-		<input type="checkbox" name="id[]" value="{$id}" />{$item.slip_number}|{$item.subject}
-		<table>
-		{$ldetail}<tr>
-			<td>{$detail.categoryCode}</td>
-			<td>{$detail.itemName}</td>
-			<td>{$detail.unit}</td>
-			<td>{$detail.quantity}</td>
-			<td>{$detail.unitPrice}</td>
-			<td>{$detail.amount}</td>
-			<td>{$detail.data1}</td>
-			<td>{$detail.data2}</td>
-			<td>{$detail.data3}</td>
-			<td>{$detail.circulation}</td>
-		</tr>{$rdetail}
-		</table>
+			<input type="checkbox" name="id[]" value="{$obj.id}" />{$obj.slip_number}|{$obj.subject}|{$obj.division_name}|{$obj.team_name}|{$obj.manager_name}
+			<table>
+				<tbody>{$obj->beginRepeat($obj.detail.length, "i")}
+					<tr>
+						<td>{$obj.detail.categoryCode[$i]}</td>
+						<td>{$obj.detail.itemName[$i]}</td>
+						<td>{$obj.detail.unit[$i]}</td>
+						<td>{$obj.detail.quantity[$i]}</td>
+						<td>{$obj.detail.unitPrice[$i]}</td>
+						<td>{$obj.detail.amount[$i]}</td>
+						<td>{$obj.detail.data1[$i]}</td>
+						<td>{$obj.detail.data2[$i]}</td>
+						<td>{$obj.detail.data3[$i]}</td>
+						<td>{$obj.detail.circulation[$i]}</td>
+					</tr>
+				{$obj->endRepeat()}</tbody>
+			</table>
 		</label>
 	</div>
-	{/function}
+	{/strip}{/template_class}{/function}
 </form>
 {/block}

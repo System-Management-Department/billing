@@ -4,12 +4,14 @@ use Exception;
 use stdClass;
 use App\ControllerBase;
 use App\View;
+use App\FileView;
 use App\JsonView;
 use App\RedirectResponse;
 use App\Validator;
 use Model\Session;
 use Model\Result;
 use Model\SalesSlip;
+use Model\SQLite;
 
 class BillingController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry")]
@@ -18,16 +20,24 @@ class BillingController extends ControllerBase{
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
-	public function list(){
+	public function search(){
 		$db = Session::getDB();
-		$v = new View();
-		
-		$query = SalesSlip::getJsonQuery($db)
-			->andWhere("output_processed=1")
-			->andWhere("close_processed=0");
-		$v["table"] = $query();
-		
-		return $v;
+		$sdb = SQLite::cachedData();
+		list($columns, $data) = $db->exportTable("sales_slips", [], "0=1 LIMIT 0");
+		$query = $db->select("ALL")->setTable("sales_slips");
+		if(isset($_POST["close_processed"])){
+			$query->andWhere("close_processed=?", $_POST["close_processed"]);
+		}
+		if(isset($_POST["output_processed"])){
+			$query->andWhere("output_processed=?", $_POST["output_processed"]);
+		}
+		$sdb->createTable("sales_slips", $columns, $query());
+		return new FileView($sdb->getFileName(), "application/vnd.sqlite3");
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry")]
+	public function list(){
+		return new View();
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
@@ -37,14 +47,7 @@ class BillingController extends ControllerBase{
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function closedList(){
-		$db = Session::getDB();
-		$v = new View();
-		
-		$query = SalesSlip::getJsonQuery($db)
-			->andWhere("close_processed=1");
-		$v["table"] = $query();
-		
-		return $v;
+		return new View();
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
@@ -54,14 +57,7 @@ class BillingController extends ControllerBase{
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function closedList2(){
-		$db = Session::getDB();
-		$v = new View();
-		
-		$query = SalesSlip::getJsonQuery($db)
-			->andWhere("close_processed=1");
-		$v["table"] = $query();
-		
-		return $v;
+		return new View();
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
