@@ -1,10 +1,269 @@
+{block name="title"}売上データ検索画面{/block}
+
 {block name="scripts" append}
-<script type="text/javascript" src="/assets/common/search.js"></script>
+<style type="text/css">
+[data-search-output="container"]:has([data-search-output="result"] input[type="hidden"]:not([value=""])) [data-search-output="form"],
+[data-search-output="container"] [data-search-output="result"]:has(input[type="hidden"][value=""]){
+	display: none;
+}
+</style>
+{/block}
+
+{block name="scripts" append}
+<script type="text/javascript">
+{call name="ListItem"}{literal}
+Flow.start({{/literal}
+	dbDownloadURL: "{url action="search"}",{literal}
+	strage: null,
+	response: new SQLite(),
+	y: null,
+	*[Symbol.iterator](){
+		const form = document.querySelector('form');
+		yield* this.init(form);
+		form.querySelector('fieldset:disabled').disabled = false;
+		form.addEventListener("submit", e => {
+			e.stopPropagation();
+			e.preventDefault();
+			
+			let formData = new FormData(form);
+			let obj = {data:{}, label:{}};
+			for(let k of formData.keys()){
+				if(k in obj.data){
+					continue;
+				}
+				obj.data[k] = formData.getAll(k);
+			}
+			this.strage.insertSet("search_histories", {
+				location: form.getAttribute("action"),
+				json: JSON.stringify(obj),
+				time: Date.now(),
+				scroll_y: document.documentElement.scrollTop
+			}, {}).apply();
+			this.strage.commit().then(e => {
+				location.href = form.getAttribute("action");
+				location.reload();
+			});
+		});
+		if(this.y != null){
+			document.documentElement.scrollTop = this.y;
+			this.y = null;
+		}
+		
+	},
+	*init(form){
+		this.strage = yield* Flow.waitDbUnlock();
+		let history = this.strage.select("ROW")
+			.addTable("search_histories")
+			.andWhere("location=?", form.getAttribute("action"))
+			.setOrderBy("time DESC")
+			.apply();
+		let {data, label} = yield* this.search(history);
+		if(history != null){
+			for(let input of form.elements){
+				if(!input.hasAttribute("name")){
+					continue;
+				}
+				let name = input.getAttribute("name");
+				if((name in data) && (data[name].length > 0)){
+					input.value = data[name].shift();
+				}
+			}
+			this.y = history.scroll_y;
+			addEventListener("beforeunload", e => {
+				this.strage.updateSet("search_histories", {
+					scroll_y: document.documentElement.scrollTop
+				}, {})
+					.andWhere("location=?", history.location)
+					.andWhere("time=?", history.time)
+					.apply();
+				this.strage.commit();
+			});
+		}
+	},
+	*search(history){
+		let res = {data: null, label: null};
+		let formData = new FormData();
+		if(history != null){
+			let {data, label} = res = JSON.parse(history.json);
+			for(let k in data){
+				for(let v of data[k]){
+					formData.append(k, v);
+				}
+			}
+		}
+		const buffer = yield fetch(this.dbDownloadURL, {
+			method: "POST",
+			body: formData
+		}).then(response => response.arrayBuffer());
+		this.response.import(buffer, "list");
+		
+		let select = document.querySelector('select[name="division"]');
+		let mastarData = this.response.select("ALL")
+			.addTable("divisions")
+			.addField("code,name")
+			.apply();
+		for(let division of mastarData){
+			let option = Object.assign(document.createElement("option"), {textContent: division.name});
+			option.setAttribute("value", division.code);
+			select.appendChild(option);
+		}
+		select = document.querySelector('select[name="team"]');
+		mastarData = this.response.select("ALL")
+			.addTable("teams")
+			.addField("code,name")
+			.apply();
+		for(let team of mastarData){
+			let option = Object.assign(document.createElement("option"), {textContent: team.name});
+			option.setAttribute("value", team.code);
+			select.appendChild(option);
+		}
+		
+		const template = new ListItem();
+		let table = this.response.select("ALL")
+			.addTable("sales_slips")
+			.addField("sales_slips.id,sales_slips.slip_number,sales_slips.subject,sales_slips.accounting_date")
+			.leftJoin("divisions on sales_slips.division=divisions.code")
+			.addField("divisions.name as division_name")
+			.leftJoin("teams on sales_slips.team=teams.code")
+			.addField("teams.name as team_name")
+			.leftJoin("managers on sales_slips.manager=managers.code")
+			.addField("managers.name as manager_name,managers.kana as manager_kana")
+			.apply();
+		let tbody = document.getElementById("list");
+		for(let row of table){
+			template.insertBeforeEnd(tbody, row);
+		}
+		return res;
+	}
+});
+{/literal}</script>
 {/block}
 
 {block name="body"}
-<form action="{url action="list"}"><fieldset disabled>
-	キーワード<input type="text" name="keyword" />
-	<button type="submit">検索</button>
+<form action="{url fragment="list"}" class="container border border-secondary rounded p-4 mb-5 bg-white"><fieldset class="row" disabled>
+	<table class="table w-50">
+		<tbody>
+			<tr>
+				<th scope="row" class="bg-light align-middle ps-4">
+					<label class="form-label ls-1" for="slip_number-input">伝票番号</label>
+				</th>
+				<td>
+					<div class="col-3">
+						<input type="text" name="slip_number" class="form-control" id="slip_number-input" />
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row" class="bg-light  align-middle ps-4">
+					<label class="form-label ls-1" for="salesdate-input">売上日付</label>
+				</th>
+				<td>
+					<div class="col-5">
+						<input type="date" name="accounting_date" class="form-control" id="salesdate-input" />
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row" class="bg-light  align-middle ps-4">
+					<label class="form-label ls-1" for="division-input">部門</label>
+				</th>
+				<td>
+					<div class="col-10">
+						<select name="division" id="division-input" class="form-select"><option value="" selected>選択</option></select>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row" class="bg-light align-middle ps-4">
+					<label class="form-label ls-1" for="team-input">チーム</label>
+				</th>
+				<td>
+					<div class="col-10">
+						<select name="team" id="team-input" class="form-select"><option value="" selected>選択</option></select>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row" class="bg-light align-middle ps-4">
+					<label class="form-label ls-1" for="manager-input">当社担当者</label>
+				</th>
+				<td>
+					<div class="col-10" data-search-output="container">
+						<div class="input-group" data-search-output="form">
+							<input type="search" class="form-control" id="manager-input" placeholder="担当者名・担当者CDで検索">
+							<button type="button" class="btn btn-success">検 索</button>
+						</div>
+						<div class="input-group" data-search-output="result">
+							<div class="form-control"></div>
+							<input type="hidden" name="manager" />
+							<button type="button" class="btn btn-danger">取 消</button>
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row" class="bg-light align-middle ps-4">
+					<label class="form-label ls-1" for="manager-input">請求先</label>
+				</th>
+				<td>
+					<div class="col-10" data-search-output="container">
+						<div class="input-group" data-search-output="form">
+							<input type="search" class="form-control" id="manager-input" placeholder="請求先名・請求先CDで検索">
+							<button type="button" class="btn btn-success">検 索</button>
+						</div>
+						<div class="input-group" data-search-output="result">
+							<div class="form-control"></div>
+							<input type="hidden" name="billing_destination" />
+							<button type="button" class="btn btn-danger">取 消</button>
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row" class="bg-light align-middle ps-4">
+					<label class="form-label ls-1" for="manager-input">商品名</label>
+				</th>
+				<td>
+					<div class="col-10">
+						<input type="text" name="itemName" class="form-control" id="manager-input">
+					</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<div class="col-12 text-center">
+		<button type="submit" class="btn btn-success">検　索</button>
+		<button type="submit" class="btn btn-outline-success">キャンセル</button>
+	</div>
 </fieldset></form>
+<div class="container border border-secondary rounded p-4 bg-white table-responsive">
+	<table class="table table_sticky_list">
+		<thead>
+			<tr>
+				<th class="w-10">伝票番号</th>
+				<th class="w-10">伝票日付</th>
+				<th class="w-20">請求先名</th>
+				<th class="w-10">担当者名</th>
+				<th class="w-15">部門</th>
+				<th class="w-10">チーム</th>
+				<th class="w-20">備考欄</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody id="list">
+			{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=[]}{strip}
+			<tr>
+				<td>{$obj.slip_number}</td>
+				<td>{$obj.accounting_date}</td>
+				<td>{$obj.apply_client_name}</td>
+				<td>{$obj.manager_name}</td>
+				<td>{$obj.division_name}</td>
+				<td>{$obj.team_name}</td>
+				<td>{$obj.note}</td>
+				<td><a href="{url action="edit"}/{$obj.id}" class="bx bxs-edit"></a></td>
+			</tr>
+			{/strip}{/template_class}{/function}
+		</tbody>
+	</table>
+</div>
 {/block}

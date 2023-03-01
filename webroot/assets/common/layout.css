@@ -94,6 +94,56 @@ header .image-text .profession{
 	font-size: 16px;
 }
 
+.table_sticky {
+  display: block;
+  overflow-y: scroll;
+  height: calc(100vh/2);
+  border:1px solid #fff;
+  border-collapse: collapse;
+}
+.table_sticky thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #009EA7;
+  border-top:#FFFFFF;
+  color:#fff;
+  text-align: center;
+}
+.table_sticky_list {
+  display: block;
+  overflow-y: scroll;
+  height: calc(100vh/2);
+  border:1px solid #dedede;
+  border-collapse: collapse;
+}
+.table_sticky_list thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #009EA7;
+  border-top:#dedede;
+  color:#fff;
+  text-align: center;
+}
+.sales_tbl thead{
+  background-color:#009EA7;
+  color:#fff;
+}
+
+.sales_tbl th{
+  text-align: center;
+}
+
+.sales_tbl td{
+  text-align: center;
+}
+
+
+
+
+
+
 .d-contents{
 	display: contents!important;
 }
