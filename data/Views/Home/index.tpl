@@ -1,3 +1,4 @@
+{block name="title"}ホーム{/block}
 {block name="scripts" append}
 <script type="text/javascript">{literal}
 Flow.start({
@@ -9,7 +10,7 @@ Flow.start({
 			a.textContent = link.title;
 			a.setAttribute("class", "btn btn-sm btn-success m-2");
 			a.setAttribute("href", link.url);
-			document.body.appendChild(a);
+			document.querySelector('main').appendChild(a);
 		}
 	}
 });

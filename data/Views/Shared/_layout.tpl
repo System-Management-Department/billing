@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja" class="h-100">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -7,6 +7,7 @@
 {block name="styles"}
 <link rel="stylesheet" type="text/css" href="/assets/bootstrap/css/bootstrap.min.css" />
 <link rel="stylesheet" type="text/css" href="/assets/bootstrap/font/bootstrap-icons.css" />
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 <link rel="stylesheet" type="text/css" href="/assets/common/layout.css" />
 {/block}
 {block name="scripts"}
@@ -60,6 +61,7 @@ Flow.start({{/literal}
 		let query = this.db.select("ALL")
 			.addWith("recursive t as (select *,1 as active from breadcrumbs where url=? UNION ALL select breadcrumbs.*,0 as active from breadcrumbs,t where breadcrumbs.url=t.parent)", this.location)
 			.addTable("t")
+			.andWhere("depth>0")
 			.setOrderBy("depth");
 		let res = query.apply();
 		let breadcrumb = document.querySelector("ol.breadcrumb");
@@ -77,6 +79,12 @@ Flow.start({{/literal}
 			}
 			breadcrumb.appendChild(li);
 		}
+		let firstBread = breadcrumb.querySelector('li');
+		if(firstBread != null){
+			firstBread.insertAdjacentHTML("afterbegin", '<i class="bi bi-gear-fill pe-2"></i>');
+		}else{
+			breadcrumb.innerHTML = '<i class="bi bi-gear-fill pe-2"></i>';
+		}
 	},
 	*toast(){
 		let messages = this.db
@@ -91,6 +99,22 @@ Flow.start({{/literal}
 		}
 	}
 });
+/*
+document.addEventListener("DOMContentLoaded", e => {
+	const sidebar = document.querySelector('nav');
+	const searchBtn = document.querySelector(".search-box");
+	const modeSwitchBtn = document.querySelector(".toggle-switch");
+	const modeText = document.querySelector(".mode-text");
+	const search = e => {  sidebar.classList.remove("close"); };
+	const modeSwitch = e => {
+		document.body.classList.toggle("dark");
+		modeText.textContent = `${document.body.classList.contains("dark") ? "Light" : "Dark"} mode`;
+	};
+	
+	searchBtn.addEventListener("click", search);
+	modeSwitchBtn.addEventListener("click", modeSwitch);
+});
+*/
 class Toaster{
 	static show(messages){
 		let container = document.querySelector('.toast-container');
@@ -122,32 +146,79 @@ class Toaster{
 {/literal}</script>
 {/block}
 </head>
-<body class="bg-light">
-	<header class="sticky-top">
-		<nav class="navbar py-2 bg-white border-bottom border-success border-2 shadow-sm">
-			<div class="container-fluid gap-2">
-				<div class="navbar-brand flex-grow-1">
-					<img src="/assets/common/image/logo.svg" width="30" height="24" alt="ダイレクト・ホールディングス" />
-					<span class="navbar-text text-dark fs-6">売上請求管理システム</span>
-				</div>
-				<div class="bi bi-person-circle fs-2"></div>
-				<div>
-					<div class="d-flex gap-3">
-						<div>{$smarty.session["User.department"]}</div>
-						<div class="flex-grow-1">{$smarty.session["User.username"]}</div>
+<body class="bg-light h-100">
+	<div class="d-flex flex-row h-100 w-100">
+		<nav class="sidebar flex-shrink-0 px-3 py-2">
+			<header class="mt-1 position-relative">
+				<div class="image-text d-flex align-items-center">
+					<div class="d-flex align-items-center justify-content-center p-2">
+						<img src="/assets/common/image/logo.svg" width="40" height="30" alt="ダイレクト・ホールディングス" />
 					</div>
-					<div>{$smarty.session["User.email"]}</div>
+					<div class="text logo-text d-flex flex-column">
+						<div class="name">販売管理システム</div>
+						<div class="profession">Sales Management</div>
+					</div>
 				</div>
-				<div>
-					<a href="{url controller="Default" action="logout"}" class="btn btn-primary">ログアウト</a>
-				</div>
+				<label class="bx bx-chevron-right toggle d-flex align-items-center justify-content-center position-absolute top-50">
+					<input type="checkbox" checked />
+				</label>
+			</header>
+			<div class="menu-bar">
+				<ul class="menu-links px-0 py-3">
+					<li class="nav-link d-flex align-items-center">
+						<a class="d-contents" href="#">
+							<i class="bx bxs-dashboard icon d-flex align-items-center justify-content-center"></i>
+							<span class="text nav-text d-flex flex-column">Dashboard</span>
+						</a>
+					</li>
+					<li class="nav-link d-flex align-items-center">
+						<a class="d-contents" href="#">
+							<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
+							<span class="text nav-text d-flex flex-column">売上処理</span>
+						</a>
+					</li>
+					<li class="nav-link d-flex align-items-center">
+						<a class="d-contents" href="#">
+							<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
+							<span class="text nav-text d-flex flex-column">請求処理</span>
+						</a>
+					</li>
+					<li class="nav-link d-flex align-items-center">
+						<a class="d-contents" href="#">
+							<i class="bx bx-cog icon d-flex align-items-center justify-content-center"></i>
+							<span class="text nav-text d-flex flex-column">マスタ設定</span>
+						</a>
+					</li>
+				</ul>
 			</div>
 		</nav>
-		<nav aria-label="breadcrumb" class="bg-white shadow-sm">
-			<ol class="breadcrumb p-3"></ol>
-		</nav>
-	</header>
-	<main class="py-4">{block name="body"}{/block}</main>
+		<div class="flex-grow-1 overflow-auto">
+			<header class="sticky-top">
+				<nav class="navbar ps-4 py-2 bg-white border-bottom border-success border-2 shadow-sm">
+					<div class="container-fluid gap-2">
+						<div class="navbar-brand flex-grow-1">
+							<span class="navbar-text text-dark">{block name="title"}{/block}</span>
+						</div>
+						<div class="bi bi-person-circle fs-2"></div>
+						<div>
+							<div class="d-flex gap-3">
+								<div>{$smarty.session["User.department"]}</div>
+								<div class="flex-grow-1">{$smarty.session["User.username"]}</div>
+							</div>
+							<div>{$smarty.session["User.email"]}</div>
+						</div>
+						<div>
+							<a href="{url controller="Default" action="logout"}" class="btn btn-primary">ログアウト</a>
+						</div>
+					</div>
+				</nav>
+				<nav aria-label="breadcrumb" class="bg-white shadow-sm">
+					<ol class="breadcrumb p-3"></ol>
+				</nav>
+			</header>
+			<main class="py-4">{block name="body"}{/block}</main>
+		</div>
+	</div>
 	<div style="position:fixed;top:0;bottom:0;right:0;left:0;width:auto;height:auto;margin:0;padding:0;display:grid;grid-template:1fr auto 1fr/1fr auto 1fr;visibility:hidden;">
 		<div class="toast-container" style="grid-column:2;grid-row:2;visibility:visible;"></div>
 	</div>
