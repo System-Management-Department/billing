@@ -148,50 +148,54 @@ class Toaster{
 </head>
 <body class="bg-light h-100">
 	<div class="d-flex flex-row h-100 w-100">
-		<nav class="sidebar flex-shrink-0 px-3 py-2">
-			<header class="mt-1 position-relative">
-				<div class="image-text d-flex align-items-center">
-					<div class="d-flex align-items-center justify-content-center p-2">
-						<img src="/assets/common/image/logo.svg" width="40" height="30" alt="ダイレクト・ホールディングス" />
+		<div class="sidebar flex-shrink-0 py-2">
+			<nav class="px-3">
+				<header class="mt-1 position-relative">
+					<div class="image-text d-flex align-items-center">
+						<div class="d-flex align-items-center justify-content-center p-2">
+							<img src="/assets/common/image/logo.svg" width="40" height="30" alt="ダイレクト・ホールディングス" />
+						</div>
+						<div class="text logo-text d-flex flex-column">
+							<div class="name">販売管理システム</div>
+							<div class="profession">Sales Management</div>
+						</div>
 					</div>
-					<div class="text logo-text d-flex flex-column">
-						<div class="name">販売管理システム</div>
-						<div class="profession">Sales Management</div>
-					</div>
+					<label class="bx bx-chevron-right toggle d-flex align-items-center justify-content-center position-absolute top-50">
+						<input type="checkbox" checked />
+					</label>
+				</header>
+			</nav>
+			<nav class="px-3 overflow-hidden">
+				<div class="menu-bar">
+					<ul class="menu-links px-0 py-3">
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="#">
+								<i class="bx bxs-dashboard icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">Dashboard</span>
+							</a>
+						</li>
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="#">
+								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">売上処理</span>
+							</a>
+						</li>
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="#">
+								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">請求処理</span>
+							</a>
+						</li>
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="#">
+								<i class="bx bx-cog icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">マスタ設定</span>
+							</a>
+						</li>
+					</ul>
 				</div>
-				<label class="bx bx-chevron-right toggle d-flex align-items-center justify-content-center position-absolute top-50">
-					<input type="checkbox" checked />
-				</label>
-			</header>
-			<div class="menu-bar">
-				<ul class="menu-links px-0 py-3">
-					<li class="nav-link d-flex align-items-center">
-						<a class="d-contents" href="#">
-							<i class="bx bxs-dashboard icon d-flex align-items-center justify-content-center"></i>
-							<span class="text nav-text d-flex flex-column">Dashboard</span>
-						</a>
-					</li>
-					<li class="nav-link d-flex align-items-center">
-						<a class="d-contents" href="#">
-							<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
-							<span class="text nav-text d-flex flex-column">売上処理</span>
-						</a>
-					</li>
-					<li class="nav-link d-flex align-items-center">
-						<a class="d-contents" href="#">
-							<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
-							<span class="text nav-text d-flex flex-column">請求処理</span>
-						</a>
-					</li>
-					<li class="nav-link d-flex align-items-center">
-						<a class="d-contents" href="#">
-							<i class="bx bx-cog icon d-flex align-items-center justify-content-center"></i>
-							<span class="text nav-text d-flex flex-column">マスタ設定</span>
-						</a>
-					</li>
-				</ul>
-			</div>
-		</nav>
+			</nav>
+		</div>
 		<div class="flex-grow-1 overflow-auto">
 			<header class="sticky-top">
 				<nav class="navbar ps-4 py-2 bg-white border-bottom border-success border-2 shadow-sm">
