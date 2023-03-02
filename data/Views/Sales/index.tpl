@@ -1,6 +1,6 @@
 {block name="title"}売上データ検索画面{/block}
 
-{block name="scripts" append}
+{block name="styles" append}
 <style type="text/css">
 [data-search-output="container"]:has([data-search-output="result"] input[type="hidden"]:not([value=""])) [data-search-output="form"],
 [data-search-output="container"] [data-search-output="result"]:has(input[type="hidden"][value=""]){
@@ -11,7 +11,9 @@
 
 {block name="scripts" append}
 <script type="text/javascript">
-{call name="ListItem"}{literal}
+{call name="ListItem"}
+{call name="ManagerList"}
+{call name="ApplyClientList"}{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url action="search"}",{literal}
 	strage: null,
@@ -33,6 +35,11 @@ Flow.start({{/literal}
 				}
 				obj.data[k] = formData.getAll(k);
 			}
+			let searchLabels = document.querySelectorAll('[data-search-label]');
+			for(let i = searchLabels.length - 1; i >= 0; i--){
+				let key = searchLabels[i].getAttribute("data-search-label");
+				obj.label[key] = searchLabels[i].innerHTML;
+			}
 			this.strage.insertSet("search_histories", {
 				location: form.getAttribute("action"),
 				json: JSON.stringify(obj),
@@ -44,6 +51,61 @@ Flow.start({{/literal}
 				location.reload();
 			});
 		});
+		
+		const template1 = new ManagerList();
+		const template2 = new ApplyClientList();
+		const changeEvent1 = e => {
+			let table = this.response.select("ALL")
+				.setTable("managers")
+				.orWhere("name like ('%' || ? || '%')", e.currentTarget.value)
+				.orWhere("code like ('%' || ? || '%')", e.currentTarget.value)
+				.apply();
+			let tbody = Object.assign(document.querySelector('#managerModal tbody'), {innerHTML: ""});
+			for(let row of table){
+				template1.insertBeforeEnd(tbody, row);
+			}
+		};
+		const changeEvent2 = e => {
+			let table = this.response.select("ALL")
+				.setTable("apply_clients")
+				.addField("apply_clients.*")
+				.leftJoin("clients on apply_clients.client=clients.code")
+				.addField("clients.name as client_name")
+				.orWhere("apply_clients.name like ('%' || ? || '%')", e.currentTarget.value)
+				.orWhere("apply_clients.unique_name like ('%' || ? || '%')", e.currentTarget.value)
+				.orWhere("apply_clients.short_name like ('%' || ? || '%')", e.currentTarget.value)
+				.orWhere("apply_clients.code like ('%' || ? || '%')", e.currentTarget.value)
+				.apply();
+			let tbody = Object.assign(document.querySelector('#applyClientModal tbody'), {innerHTML: ""});
+			for(let row of table){
+				template2.insertBeforeEnd(tbody, row);
+			}
+		};
+		changeEvent1({currentTarget: document.getElementById("manager-input")});
+		changeEvent2({currentTarget: document.getElementById("applyClient-input")});
+		document.getElementById("manager-input").addEventListener("change", changeEvent1);
+		document.getElementById("applyClient-input").addEventListener("change", changeEvent2);
+		document.querySelector('#managerModal tbody').addEventListener("click", e => {
+			if(e.target.hasAttribute("data-search-modal-value")){
+				document.querySelector('input[name="manager"]').value = e.target.getAttribute("data-search-modal-value");
+				document.querySelector('[data-search-label="manager"]').textContent = e.target.getAttribute("data-search-modal-label");
+			}
+		}, {useCapture: true});
+		document.querySelector('#applyClientModal tbody').addEventListener("click", e => {
+			if(e.target.hasAttribute("data-search-modal-value")){
+				document.querySelector('input[name="billing_destination"]').value = e.target.getAttribute("data-search-modal-value");
+				document.querySelector('[data-search-label="billing_destination"]').textContent = e.target.getAttribute("data-search-modal-label");
+			}
+		}, {useCapture: true});
+		document.querySelector('[data-search-output-reset="manager"]').addEventListener("click", e => {
+			document.querySelector('input[name="manager"]').value = "";
+			document.querySelector('[data-search-label="manager"]').textContent = "";
+		});
+		document.querySelector('[data-search-output-reset="billing_destination"]').addEventListener("click", e => {
+			document.querySelector('input[name="billing_destination"]').value = "";
+			document.querySelector('[data-search-label="billing_destination"]').textContent = "";
+		});
+		
 		if(this.y != null){
 			document.documentElement.scrollTop = this.y;
 			this.y = null;
@@ -66,6 +128,13 @@ Flow.start({{/literal}
 				let name = input.getAttribute("name");
 				if((name in data) && (data[name].length > 0)){
 					input.value = data[name].shift();
+				}
+			}
+			let searchLabels = document.querySelectorAll('[data-search-label]');
+			for(let i = searchLabels.length - 1; i >= 0; i--){
+				let key = searchLabels[i].getAttribute("data-search-label");
+				if(key in label){
+					searchLabels[i].innerHTML = label[key];
 				}
 			}
 			this.y = history.scroll_y;
@@ -191,30 +260,30 @@ Flow.start({{/literal}
 					<div class="col-10" data-search-output="container">
 						<div class="input-group" data-search-output="form">
 							<input type="search" class="form-control" id="manager-input" placeholder="担当者名・担当者CDで検索">
-							<button type="button" class="btn btn-success">検 索</button>
+							<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#managerModal">検 索</button>
 						</div>
 						<div class="input-group" data-search-output="result">
-							<div class="form-control"></div>
-							<input type="hidden" name="manager" />
-							<button type="button" class="btn btn-danger">取 消</button>
+							<div class="form-control" data-search-label="manager"></div>
+							<input type="hidden" name="manager" value="" />
+							<button type="button" class="btn btn-danger" data-search-output-reset="manager">取 消</button>
 						</div>
 					</div>
 				</td>
 			</tr>
 			<tr>
 				<th scope="row" class="bg-light align-middle ps-4">
-					<label class="form-label ls-1" for="manager-input">請求先</label>
+					<label class="form-label ls-1" for="applyClient-input">請求先</label>
 				</th>
 				<td>
 					<div class="col-10" data-search-output="container">
 						<div class="input-group" data-search-output="form">
-							<input type="search" class="form-control" id="manager-input" placeholder="請求先名・請求先CDで検索">
-							<button type="button" class="btn btn-success">検 索</button>
+							<input type="search" class="form-control" id="applyClient-input" placeholder="請求先名・請求先CDで検索">
+							<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#applyClientModal">検 索</button>
 						</div>
 						<div class="input-group" data-search-output="result">
-							<div class="form-control"></div>
-							<input type="hidden" name="billing_destination" />
-							<button type="button" class="btn btn-danger">取 消</button>
+							<div class="form-control" data-search-label="billing_destination"></div>
+							<input type="hidden" name="billing_destination" value="" />
+							<button type="button" class="btn btn-danger" data-search-output-reset="billing_destination">取 消</button>
 						</div>
 					</div>
 				</td>
@@ -265,5 +334,73 @@ Flow.start({{/literal}
 			{/strip}{/template_class}{/function}
 		</tbody>
 	</table>
+</div>
+{/block}
+
+
+{block name="dialogs" append}
+<div class="modal fade" id="managerModal" tabindex="-1">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header flex-row">
+				<div class="text-center">自社担当者選択</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
+			</div>
+			<div class="modal-body">
+				<table class="table table_sticky_list">
+					<thead>
+						<tr>
+							<th>コード</th>
+							<th>担当者名</th>
+							<th>カナ</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						{function name="ManagerList"}{template_class name="ManagerList" assign="obj" iterators=[]}{strip}
+						<tr>
+							<td>{$obj.code}</td>
+							<td>{$obj.name}</td>
+							<td>{$obj.kana}</td>
+							<td><button class="btn btn-success btn-sm" data-bs-dismiss="modal" data-search-modal-value="{$obj.code}" data-search-modal-label="{$obj.name}">選択</button></td>
+						</tr>
+						{/strip}{/template_class}{/function}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="applyClientModal" tabindex="-1">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header flex-row">
+				<div class="text-center">請求先選択</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
+			</div>
+			<div class="modal-body">
+				<table class="table table_sticky_list">
+					<thead>
+						<tr>
+							<th>コード</th>
+							<th>得意先名</th>
+							<th>請求先名</th>
+							<th>カナ</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						{function name="ApplyClientList"}{template_class name="ApplyClientList" assign="obj" iterators=[]}{strip}
+						<tr>
+							<td>{$obj.code}</td>
+							<td>{$obj.client_name}</td>
+							<td>{$obj.name}</td>
+							<td>{$obj.kana}</td>
+							<td><button class="btn btn-success btn-sm" data-bs-dismiss="modal" data-search-modal-value="{$obj.code}" data-search-modal-label="{$obj.name}">選択</button></td>
+						</tr>
+						{/strip}{/template_class}{/function}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
 </div>
 {/block}
