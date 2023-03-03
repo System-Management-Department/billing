@@ -168,30 +168,34 @@ class Toaster{
 			<nav class="px-3 overflow-hidden">
 				<div class="menu-bar">
 					<ul class="menu-links px-0 py-3">
+						<!--
 						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="#">
+							<a class="d-contents" href="{url controller="Dashboard" action="index"}">
 								<i class="bx bxs-dashboard icon d-flex align-items-center justify-content-center"></i>
 								<span class="text nav-text d-flex flex-column">Dashboard</span>
 							</a>
 						</li>
+						-->
 						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="#">
+							<a class="d-contents" href="{url controller="Home" action="sales"}">
 								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
 								<span class="text nav-text d-flex flex-column">売上処理</span>
 							</a>
 						</li>
 						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="#">
+							<a class="d-contents" href="{url controller="Home" action="billing"}">
 								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
 								<span class="text nav-text d-flex flex-column">請求処理</span>
 							</a>
 						</li>
+						{if $smarty.session["User.role"] eq "admin"}
 						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="#">
+							<a class="d-contents" href="{url controller="Home" action="master"}">
 								<i class="bx bx-cog icon d-flex align-items-center justify-content-center"></i>
 								<span class="text nav-text d-flex flex-column">マスタ設定</span>
 							</a>
 						</li>
+						{/if}
 					</ul>
 				</div>
 			</nav>
