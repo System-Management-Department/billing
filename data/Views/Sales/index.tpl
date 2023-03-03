@@ -343,7 +343,7 @@ Flow.start({{/literal}
 	<div class="modal-dialog modal-dialog-centered">
 		<div class="modal-content">
 			<div class="modal-header flex-row">
-				<div class="text-center">自社担当者選択</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
+				<div class="text-center">当社担当者選択</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
 			</div>
 			<div class="modal-body">
 				<table class="table table_sticky_list">
