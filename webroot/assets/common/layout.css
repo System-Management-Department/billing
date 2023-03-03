@@ -94,6 +94,16 @@ header .image-text .profession{
 	font-size: 16px;
 }
 
+.table thead,.table tfoot,.table tbody{
+	counter-reset: grouprowno;
+}
+.table tr{
+	counter-increment: grouprowno;
+}
+.table .table-group-row-no::before{
+	content: counter(grouprowno);
+}
+
 .table_sticky {
   display: block;
   overflow-y: scroll;

@@ -442,7 +442,7 @@ Flow.start({{/literal}
 			<tbody id="list">
 			{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=["i"]}{strip}
 				<tr>
-					<td></td>
+					<td class="table-group-row-no align-middle"></td>
 					<td><select name="_detail[categoryCode][]" class="form-select">
 						<option value="">選択</option>
 						{$obj->beginRepeat($obj.categories.length, "i")}
