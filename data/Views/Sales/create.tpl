@@ -368,7 +368,7 @@ Flow.start({{/literal}
 					</th>
 					<td>
 						<div class="col-6">
-							<select id="invoice_format-input" class="form-select">{foreach from=["" => "選択"]|invoiceFormat item="text" key="value"}
+							<select name="invoice_format" id="invoice_format-input" class="form-select">{foreach from=["" => "選択"]|invoiceFormat item="text" key="value"}
 								<option value="{$value}">{$text}</option>
 							{/foreach}</select>
 							<span class="no-edit clearfix ms-2">請求書見本はこちら</span>
