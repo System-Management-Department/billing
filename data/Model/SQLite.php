@@ -31,6 +31,14 @@ class SQLite{
 		}
 	}
 	
+	public static function getCachedMasterFileName($db){
+		$fileName = dirname(DATA_DIR) . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "sqlite" . DIRECTORY_SEPARATOR . "master.sqlite3";
+		if(!file_exists($fileName)){
+			self::cache($db, "*");
+		}
+		return $fileName;
+	}
+	
 	public static function cachedData(){
 		return new SQLiteCachedData();
 	}

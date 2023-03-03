@@ -1,0 +1,4 @@
+[data-form-output="container"]:has([data-form-output="result"] input[type="hidden"]:not([value=""])) [data-form-output="form"],
+[data-form-output="container"] [data-form-output="result"]:has(input[type="hidden"][value=""]){
+	display: none;
+}

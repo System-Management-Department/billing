@@ -4,11 +4,13 @@ use Exception;
 use stdClass;
 use App\ControllerBase;
 use App\View;
+use App\FileView;
 use App\JsonView;
 use App\RedirectResponse;
 use Model\Session;
 use Model\User;
 use Model\Logger;
+use Model\SQLite;
 
 class DefaultController extends ControllerBase{
 	public function index(){
@@ -39,5 +41,11 @@ class DefaultController extends ControllerBase{
 		}
 		Session::logout();
 		return new RedirectResponse("", "index");
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry")]
+	public function master(){
+		$db = Session::getDB();
+		return new FileView(SQLite::getCachedMasterFileName($db), "application/vnd.sqlite3");
 	}
 }

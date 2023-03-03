@@ -20,19 +20,6 @@ class SalesController extends ControllerBase{
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
-	public function list(){
-		$db = Session::getDB();
-		$v = new View();
-		
-		$query = $db->select("ALL")
-			->addTable("sales_slips")
-			->andWhere("close_processed=0");
-		$v["table"] = $query();
-		
-		return $v;
-	}
-	
-	#[\Attribute\AcceptRole("admin", "entry")]
 	public function edit(){
 		$db = Session::getDB();
 		$v = new View();
