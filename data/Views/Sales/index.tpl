@@ -15,7 +15,8 @@
 {call name="ManagerList"}
 {call name="ApplyClientList"}{literal}
 Flow.start({{/literal}
-	dbDownloadURL: "{url action="search"}",{literal}
+	dbDownloadURL: "{url action="search"}",
+	deleteURL: "{url action="delete"}",{literal}
 	strage: null,
 	response: new SQLite(),
 	y: null,
@@ -202,6 +203,28 @@ Flow.start({{/literal}
 		for(let row of table){
 			template.insertBeforeEnd(tbody, row);
 		}
+		
+		tbody.addEventListener("click", e => {
+			if(e.target.hasAttribute("data-search-delete")){
+				let formData = new FormData();
+				formData.append("id", e.target.getAttribute("data-search-delete"));
+				fetch(this.deleteURL, {
+					method: "POST",
+					body: formData
+				})
+				.then(response => response.json())
+				.then(response => {
+					if(response.success){
+						// フォーム送信 成功
+						for(let message of response.messages){
+							Flow.DB.insertSet("messages", {title: "売上削除", message: message[0], type: message[1], name: message[2]}, {}).apply();
+						}
+						Flow.DB.commit().then(res => { location.reload(); });
+					}
+				});
+			}
+		}, {useCapture: true});
+		
 		return res;
 	}
 });
@@ -329,7 +352,11 @@ Flow.start({{/literal}
 				<td>{$obj.division_name}</td>
 				<td>{$obj.team_name}</td>
 				<td>{$obj.note}</td>
-				<td><a href="{url action="edit"}/{$obj.id}" class="bx bxs-edit"></a></td>
+				<td>
+					<a href="{url action="edit"}/{$obj.id}" class="btn btn-sm bx bxs-edit"></a>
+					<a href="{url action="createRed"}/{$obj.id}" class="btn btn-sm bx bxs-edit"></a>
+					<button type="button" class="btn btn-sm bi bi-trash3" data-search-delete="{$obj.id}"></button>
+				</td>
 			</tr>
 			{/strip}{/template_class}{/function}
 		</tbody>
