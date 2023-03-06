@@ -9,18 +9,48 @@
 <script type="text/javascript" src="/assets/googleAPI/GoogleDrive.js"></script>
 <script type="text/javascript" src="/assets/googleAPI/GoogleSheets.js"></script>
 <script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
-<script type="text/javascript">{literal}
+<script type="text/javascript">
+{if not empty($value)}{call name="ListItem"}{/if}{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url action="master"}",
-	jwt: "{url controller="JWT" action="spreadsheet"}",{literal}
+	jwtDrive: "{url controller="JWT" action="drive"}",
+	jwtSpreadsheet: "{url controller="JWT" action="spreadsheet"}",{literal}
 	db: new SQLite(),
 	newFilename: "無題のスプレッドシート",
 	*[Symbol.iterator](){
 		const buffer = yield fetch(this.dbDownloadURL).then(response => response.arrayBuffer());
 		this.db.import(buffer, "list");
+		if(document.getElementById("create") != null){
+			yield* this.init();
+		}
 		do{
 			yield* this.input();
 		}while(true);
+	},
+	*init(){
+		const info = this.db.select("OBJECT").addTable("info").setField("key,value").apply();
+		let template = new ListItem();
+		let gd = new GoogleDrive(this.jwtDrive);
+		let gs = new GoogleSheets(this.jwtSpreadsheet);
+		document.getElementById("create").addEventListener("click", e => {
+			this.createBook(gs, gd, this.db).then(e => { location.reload(); });
+		});
+		const obj = yield gd.getAll("properties+has+{key='access'+and+value='billing'}");
+		let tbody = document.getElementById("list");
+		tbody.addEventListener("click", e => {
+			if(e.target.hasAttribute("data-search-delete")){
+				gd.delete(e.target.getAttribute("data-search-delete")).then(e => { location.reload(); });
+			}
+		}, {useCapture: true});
+		const dateFormatter = new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium", timeStyle: "medium", timeZone: "Asia/Tokyo"});
+		for(let item of obj.files){
+			if("masterUpdate" in item.properties){
+				let timestamp = Number(item.properties.masterUpdate);
+				item.properties.masterUpdate = dateFormatter.format(new Date(timestamp * 1000));
+				item.properties.masterUpdateFlag = (timestamp < info.update.value) ? "update" : null;
+			}
+			template.insertBeforeEnd(tbody, item);
+		}
 	},
 	*input(){
 		let pObj = {};
@@ -412,4 +442,35 @@ Flow.start({{/literal}
 		</div>
 	</div>
 </fieldset></form>
+{if not empty($value)}
+<div class="container border border-secondary rounded p-4 bg-white table-responsive">
+	<table class="table table_sticky_list">
+		<thead>
+			<tr>
+				<th>ファイル名</th>
+				<th>マスター更新日時</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody id="list">
+			{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=[]}{strip}
+			<tr>
+				<td>{$obj.name}</td>
+				<td>{$obj.properties.masterUpdate}</td>
+				<td>
+					<div class="d-flex gap-2">
+						<a target="_blank" href="https://docs.google.com/spreadsheets/d/{$obj.id}/edit" class="btn btn-success btn-sm">編集</a>
+						<button type="button" class="btn btn-info btn-sm">マスタ更新</button>
+						<button type="button" class="btn btn-danger btn-sm" data-search-delete="{$obj.id}">削除</button>
+					</div>
+				</td>
+			</tr>
+			{/strip}{/template_class}{/function}
+		</tbody>
+	</table>
+	<div class="col-12 text-center">
+		<button type="button" class="btn btn-success" id="create">新　規</button>
+	</div>
+</div>
+{/if}
 {/block}
