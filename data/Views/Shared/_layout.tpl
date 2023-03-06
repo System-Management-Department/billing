@@ -195,6 +195,18 @@ class Toaster{
 								<span class="text nav-text d-flex flex-column">マスタ設定</span>
 							</a>
 						</li>
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="{url controller="Drive" action="x_config"}">
+								<i class="bx bxl-google-cloud icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">サービスアカウント</span>
+							</a>
+						</li>
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="{url controller="Log" action="index"}">
+								<i class="bx bx-history icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">履歴</span>
+							</a>
+						</li>
 						{/if}
 					</ul>
 				</div>
