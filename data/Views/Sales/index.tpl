@@ -191,7 +191,7 @@ Flow.start({{/literal}
 		const template = new ListItem();
 		let table = this.response.select("ALL")
 			.addTable("sales_slips")
-			.addField("sales_slips.id,sales_slips.slip_number,sales_slips.subject,sales_slips.accounting_date")
+			.addField("sales_slips.id,sales_slips.slip_number,sales_slips.subject,sales_slips.accounting_date,sales_slips.note")
 			.leftJoin("divisions on sales_slips.division=divisions.code")
 			.addField("divisions.name as division_name")
 			.leftJoin("teams on sales_slips.team=teams.code")

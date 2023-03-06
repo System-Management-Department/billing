@@ -4,6 +4,7 @@ use Exception;
 use App\View;
 use App\FileView;
 use App\JsonView;
+use App\RedirectResponse;
 use App\ControllerBase;
 use App\MySQL;
 use App\Smarty\SelectionModifiers;
@@ -15,6 +16,9 @@ use Model\SQLite;
 class DriveController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function index(){
+		if(empty($_GET["id"])){
+			return new RedirectResponse("Home", "salesInput");
+		}
 		return new View();
 	}
 	
