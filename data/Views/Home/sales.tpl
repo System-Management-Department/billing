@@ -21,16 +21,6 @@
 				</div>
 			</div>
 		</div>
-
-		<div class="col">
-			<div class="card h-100">
-				<div class="card-body p-4">
-					<h5 class="card-title">請求処理</h5>
-					<p class="card-text">請求書作成に必要なデータを出力します</p>
-					<a href="{url action="billing"}" class="btn btn-success">実行する</a>
-				</div>
-			</div>
-		</div>
 		
 	</div>
 </div>
