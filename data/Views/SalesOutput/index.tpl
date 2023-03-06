@@ -153,6 +153,7 @@ Flow.start({{/literal}
 			.addField("teams.name as team_name")
 			.leftJoin("managers on sales_slips.manager=managers.code")
 			.addField("managers.name as manager_name,managers.kana as manager_kana")
+			.addField("CASE WHEN sales_slips.output_processed=1 THEN 'table-success' ELSE '' END AS table_row_class")
 			.apply();
 		let tbody = document.getElementById("list");
 		for(let row of table){
@@ -252,7 +253,7 @@ Flow.start({{/literal}
 		outputForm.addEventListener("submit", e => {
 			e.stopPropagation();
 			e.preventDefault();
-			pObj.resolve(new FormData(form));
+			pObj.resolve(new FormData(outputForm));
 		}, {signal: controller.signal});
 		
 		document.getElementById("checkall").addEventListener("click", e => {
@@ -482,7 +483,7 @@ Flow.start({{/literal}
 			</thead>
 			<tbody id="list">
 				{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=[]}{strip}
-				<tr>
+				<tr class="{$obj.table_row_class}">
 					<td><input type="checkbox" name="id[]" value="{$obj.id}" checked /></td>
 					<td>{$obj.slip_number}</td>
 					<td>{$obj.accounting_date}</td>
