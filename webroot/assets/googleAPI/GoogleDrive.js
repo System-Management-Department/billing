@@ -14,14 +14,24 @@ class GoogleDrive{
 					method: "POST",
 					body: formData
 				})
-			}).then(res => res.json()).then(token => {
+			}).then(res => {
+				if(res.status == 403){
+					reject(res);
+				}
+				return res.json();
+			}).then(token => {
 				headers = {Authorization: `Bearer ${token.access_token}`};
 				return fetch((q == null)
 					? `https://www.googleapis.com/drive/v3/files?fields=*`
 					: `https://www.googleapis.com/drive/v3/files?fields=*&q=${q}`, {
 					headers: headers
 				});
-			}).then(res => res.json()).then(dirve => {
+			}).then(res => {
+				if(res.status == 403){
+					reject(res);
+				}
+				return res.json();
+			}).then(dirve => {
 				for(let item of dirve.files){
 					if(!("properties" in item)){
 						item.properties = {};

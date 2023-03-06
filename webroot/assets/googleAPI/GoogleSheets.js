@@ -47,7 +47,12 @@ class GoogleSheets{
 				return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${this.#id}?includeGridData=true&fields=sheets(properties,data.rowData.values(effectiveValue,effectiveFormat.textFormat,userEnteredFormat.numberFormat.type))`, {
 					headers: headers
 				});
-			}).then(res => res.json()).then(spreadsheets => {resolve(new GoogleSheetsBook(spreadsheets));}).catch(e => {reject(e);});
+			}).then(res => {
+				if(res.status == 403){
+					reject(res);
+				}
+				return res.json();
+			}).then(spreadsheets => {resolve(new GoogleSheetsBook(spreadsheets));}).catch(e => {reject(e);});
 		});
 	}
 	getRows(sheets){
@@ -112,7 +117,12 @@ class GoogleSheets{
 					method: "POST",
 					body: JSON.stringify({properties:{title:filename,locale:"ja_JP",autoRecalc:"ON_CHANGE",timeZone:"Asia/Tokyo"},sheets:sheets})
 				});
-			}).then(res => res.json()).then(spreadsheets => {
+			}).then(res => {
+				if(res.status == 403){
+					reject(res);
+				}
+				return res.json();
+			}).then(spreadsheets => {
 				let book = new GoogleSheetsBook(spreadsheets);
 				let requests = [];
 				let requests2 = [];
