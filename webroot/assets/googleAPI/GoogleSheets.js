@@ -408,8 +408,10 @@ class GoogleSheetsBook{
 		this.#sheets = [];
 		this.#sheetName = {};
 		this.#namedRanges = {};
-		for(let range of spreadsheets.namedRanges){
-			this.#namedRanges[range.name] = range.namedRangeId;
+		if("namedRanges" in spreadsheets){
+			for(let range of spreadsheets.namedRanges){
+				this.#namedRanges[range.name] = range.namedRangeId;
+			}
 		}
 		for(let sheet of spreadsheets.sheets){
 			this.#sheetName[sheet.properties.title] = this.#sheets.length;
