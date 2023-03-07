@@ -280,7 +280,7 @@ Flow.start({{/literal}
 		
 		// 検索条件を設定
 		if(res instanceof FormData){
-			let checked = form.querySelectorAll('input:checked:not([disabled])');
+			let checked = outputForm.querySelectorAll('input:checked:not([disabled])');
 			this.isChecked.reset(checked);
 		}
 		
