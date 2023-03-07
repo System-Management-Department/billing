@@ -20,8 +20,16 @@ class GoogleSheets{
 				})
 			}).then(res => res.json()).then(token => {
 				headers = {Authorization: `Bearer ${token.access_token}`};
+				let ranges = [];
+				if(Array.isArray(range)){
+					for(let r of range){
+						ranges.push(`ranges=${encodeURI(r)}`);
+					}
+				}else{
+					ranges.push(`ranges=${encodeURI(range)}`);
+				}
 				return Promise.all([
-					fetch(`https://sheets.googleapis.com/v4/spreadsheets/${this.#id}?ranges=${encodeURI(range)}&includeGridData=true&fields=sheets(properties,data.rowData.values(effectiveValue,effectiveFormat.textFormat,userEnteredFormat.numberFormat.type))`, {
+					fetch(`https://sheets.googleapis.com/v4/spreadsheets/${this.#id}?${ranges.join("&")}&includeGridData=true&fields=namedRanges,sheets(properties,data.rowData.values(effectiveValue,effectiveFormat.textFormat,userEnteredFormat.numberFormat.type))`, {
 						headers: headers
 					}),
 					fetch(`https://sheets.googleapis.com/v4/spreadsheets/${this.#id}?fields=sheets(properties)`, {
@@ -44,7 +52,7 @@ class GoogleSheets{
 				})
 			}).then(res => res.json()).then(token => {
 				headers = {Authorization: `Bearer ${token.access_token}`};
-				return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${this.#id}?includeGridData=true&fields=sheets(properties,data.rowData.values(effectiveValue,effectiveFormat.textFormat,userEnteredFormat.numberFormat.type))`, {
+				return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${this.#id}?includeGridData=true&fields=namedRanges,sheets(properties,data.rowData.values(effectiveValue,effectiveFormat.textFormat,userEnteredFormat.numberFormat.type))`, {
 					headers: headers
 				});
 			}).then(res => {
@@ -224,6 +232,28 @@ class GoogleSheets{
 							}
 						});
 					}
+				}else if(sheets[GoogleSheets.requestSymbol] == "updateNamedRange"){
+					for(let sheet in sheets){
+						for(let name in sheets[sheet]){
+							requests.push({
+								updateNamedRange: {
+									namedRange: {
+										namedRangeId: sheets[sheet][name].namedRangeId,
+										name: name,
+										range: {
+											sheetId: sheet,
+											startRowIndex: sheets[sheet][name].startRowIndex,
+											endRowIndex: sheets[sheet][name].endRowIndex,
+											startColumnIndex: sheets[sheet][name].startColumnIndex,
+											endColumnIndex: sheets[sheet][name].endColumnIndex
+										}
+									},
+									fields: "*"
+								}
+							});
+						}
+					}
+					
 				}
 			}
 			fetch(this.#url).then(res => res.json()).then(jwt => {
@@ -370,13 +400,17 @@ class GoogleSheets{
 	}
 }
 class GoogleSheetsBook{
-	#sheets;#sheetName;
+	#sheets;#sheetName;#namedRanges;
 	/**
 	 * @param {Object} spreadsheets https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets
 	 */
 	constructor(spreadsheets, info = null){
 		this.#sheets = [];
 		this.#sheetName = {};
+		this.#namedRanges = {};
+		for(let range of spreadsheets.namedRanges){
+			this.#namedRanges[range.name] = range.namedRangeId;
+		}
 		for(let sheet of spreadsheets.sheets){
 			this.#sheetName[sheet.properties.title] = this.#sheets.length;
 			this.#sheets.push(new GoogleSheetsSheet(sheet));
@@ -401,6 +435,9 @@ class GoogleSheetsBook{
 			let idx = this.#sheetName[key];
 			return this.#sheets[idx];
 		}
+	}
+	getNamedRangeId(name){
+		return this.#namedRanges[name];
 	}
 }
 class GoogleSheetsSheet{

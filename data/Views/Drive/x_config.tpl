@@ -40,6 +40,29 @@ Flow.start({{/literal}
 		tbody.addEventListener("click", e => {
 			if(e.target.hasAttribute("data-search-delete")){
 				gd.delete(e.target.getAttribute("data-search-delete")).then(e => { location.reload(); });
+			}else if(e.target.hasAttribute("data-search-update")){
+				const id = e.target.getAttribute("data-search-update");
+				const sheets = new GoogleSheets(this.jwtSpreadsheet, id);
+				const masterData = this.getMasterData(this.db);
+				const names = Object.keys(masterData.namedRanges);
+				sheets.get(names).then(book => {
+					const sheetId = book.sheet("マスター").sheetId;
+					for(let name of names){
+						masterData.namedRanges[name].namedRangeId = book.getNamedRangeId(name);
+					}
+					return sheets.update({
+						[GoogleSheets.requestSymbol]: "updateCells",
+						[sheetId]: {
+							rowIndex: 0,
+							columnIndex: 0,
+							rowData: masterData.rows
+						}
+					}, {
+						[GoogleSheets.requestSymbol]: "updateNamedRange",
+						[sheetId]: masterData.namedRanges
+					});
+				}).then(e => gd.setProperty(id, {masterUpdate: info.update.value}))
+				.then(e => { location.reload(); });
 			}
 		}, {useCapture: true});
 		const dateFormatter = new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium", timeStyle: "medium", timeZone: "Asia/Tokyo"});
@@ -47,9 +70,13 @@ Flow.start({{/literal}
 			if("masterUpdate" in item.properties){
 				let timestamp = Number(item.properties.masterUpdate);
 				item.properties.masterUpdate = dateFormatter.format(new Date(timestamp * 1000));
-				item.properties.masterUpdateFlag = (timestamp < info.update.value) ? "update" : null;
+				item.properties.masterUpdateFlag = (timestamp < info.update.value) ? "1" : "0";
 			}
 			template.insertBeforeEnd(tbody, item);
+		}
+		const disabled = tbody.querySelectorAll('[data-disabled="0"]');
+		for(let i = disabled.length - 1; i >= 0; i--){
+			disabled[i].disabled = true;
 		}
 	},
 	*input(){
@@ -201,8 +228,7 @@ Flow.start({{/literal}
 			}
 		}
 	},
-	createBook(gs, gd, db){
-		const info = db.select("OBJECT").addTable("info").setField("key,value").apply();
+	getMasterData(db){
 		let master = {
 			divisions:      db.select("COL").addTable("divisions").addField("name").apply(),
 			teams:          db.select("COL").addTable("teams").addField("name").apply(),
@@ -267,6 +293,14 @@ Flow.start({{/literal}
 			}
 		}
 		namedRanges.range6.endRowIndex = masterRowData.length;
+		return {
+			rows: masterRowData,
+			namedRanges: namedRanges
+		};
+	},
+	createBook(gs, gd, db){
+		const info = db.select("OBJECT").addTable("info").setField("key,value").apply();
+		const masterData = this.getMasterData(db);
 		return gs.create(this.newFilename, [
 			GoogleSheets.createSheetJson({index: 0, title: "売上"}, 100, 16, {
 				frozenRowCount: 1,
@@ -394,8 +428,8 @@ Flow.start({{/literal}
 				protectedRanges: [{}]
 			}),
 			GoogleSheets.createSheetJson({index: 3, title: "マスター", hidden: true}, 100, 2, {
-				rows: masterRowData,
-				namedRanges: namedRanges,
+				rows: masterData.rows,
+				namedRanges: masterData.namedRanges,
 				protectedRanges: [{}]
 			})
 		]).then(res => Promise.all([
@@ -460,7 +494,7 @@ Flow.start({{/literal}
 				<td>
 					<div class="d-flex gap-2">
 						<a target="_blank" href="https://docs.google.com/spreadsheets/d/{$obj.id}/edit" class="btn btn-success btn-sm">編集</a>
-						<button type="button" class="btn btn-info btn-sm">マスタ更新</button>
+						<button type="button" class="btn btn-info btn-sm" data-search-update="{$obj.id}" data-disabled="{$obj.properties.masterUpdateFlag}">マスタ更新</button>
 						<button type="button" class="btn btn-danger btn-sm" data-search-delete="{$obj.id}">削除</button>
 					</div>
 				</td>
