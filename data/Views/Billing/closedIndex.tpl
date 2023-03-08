@@ -391,7 +391,7 @@ Flow.start({{/literal}
 </fieldset></form>
 <form id="output" action="{url action="release"}" method="POST"><fieldset disabled>
 	<div class="container border border-secondary rounded p-4 bg-white table-responsive">
-		<table class="table table_sticky_list">
+		<table class="table table_sticky_list" data-scroll-y="list">
 			<thead>
 				<tr>
 					<th></th>
@@ -437,7 +437,7 @@ Flow.start({{/literal}
 				<div class="text-center">当社担当者選択</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
 			</div>
 			<div class="modal-body">
-				<table class="table table_sticky_list" data-scroll-y="list">
+				<table class="table table_sticky_list">
 					<thead>
 						<tr>
 							<th>コード</th>

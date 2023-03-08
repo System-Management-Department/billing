@@ -348,7 +348,7 @@ Flow.start({{/literal}
 	</div>
 </fieldset></form>
 <div class="container border border-secondary rounded p-4 bg-white table-responsive">
-	<table class="table table_sticky_list">
+	<table class="table table_sticky_list" data-scroll-y="list">
 		<thead>
 			<tr>
 				<th class="w-10">伝票番号</th>
@@ -423,7 +423,7 @@ Flow.start({{/literal}
 				<div class="text-center">請求先選択</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
 			</div>
 			<div class="modal-body">
-				<table class="table table_sticky_list" data-scroll-y="list">
+				<table class="table table_sticky_list">
 					<thead>
 						<tr>
 							<th>コード</th>
