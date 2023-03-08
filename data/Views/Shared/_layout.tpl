@@ -212,7 +212,7 @@ class Toaster{
 				</div>
 			</nav>
 		</div>
-		<div class="flex-grow-1 overflow-auto">
+		<div class="flex-grow-1 overflow-auto" data-scroll-y="layout">
 			<header class="sticky-top">
 				<nav class="navbar ps-4 py-2 bg-white border-bottom border-success border-2 shadow-sm">
 					<div class="container-fluid gap-2">

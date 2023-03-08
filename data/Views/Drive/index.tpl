@@ -369,7 +369,7 @@ Flow.start({{/literal}
 </fieldset></form>
 <form id="import" action="{url action="import"}" method="POST"><fieldset disabled>
 	<div class="container border border-secondary rounded p-4 bg-white table-responsive">
-		<table class="table table_sticky_list">
+		<table class="table table_sticky_list" data-scroll-y="list">
 			<thead>
 				<tr>
 					<th></th>

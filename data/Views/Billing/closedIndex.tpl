@@ -51,10 +51,16 @@ Flow.start({{/literal}
 					searchLabels[i].innerHTML = label[key];
 				}
 			}
-			this.y = history.scroll_y;
+			this.y = JSON.parse(history.scroll_y);
 			addEventListener("beforeunload", e => {
+				let sy = {};
+				const scrollY = document.querySelectorAll('[data-scroll-y]');
+				for(let i = scrollY.length - 1; i >= 0; i--){
+					let ele = scrollY[i];
+					sy[ele.getAttribute("data-scroll-y")] = ele.scrollTop;
+				}
 				this.strage.updateSet("search_histories", {
-					scroll_y: document.documentElement.scrollTop
+					scroll_y: JSON.stringify(sy)
 				}, {})
 					.andWhere("location=?", history.location)
 					.andWhere("time=?", history.time)
@@ -142,11 +148,17 @@ Flow.start({{/literal}
 				let key = searchLabels[i].getAttribute("data-search-label");
 				obj.label[key] = searchLabels[i].innerHTML;
 			}
+			let sy = {};
+			const scrollY = document.querySelectorAll('[data-scroll-y]');
+			for(let i = scrollY.length - 1; i >= 0; i--){
+				let ele = scrollY[i];
+				sy[ele.getAttribute("data-scroll-y")] = ele.scrollTop;
+			}
 			this.strage.insertSet("search_histories", {
 				location: form.getAttribute("action"),
 				json: JSON.stringify(obj),
 				time: Date.now(),
-				scroll_y: document.documentElement.scrollTop
+				scroll_y: JSON.stringify(sy)
 			}, {}).apply();
 			this.strage.commit().then(e => {
 				location.href = form.getAttribute("action");
@@ -227,7 +239,14 @@ Flow.start({{/literal}
 		}
 		
 		if(this.y != null){
-			document.documentElement.scrollTop = this.y;
+			const scrollY = document.querySelectorAll('[data-scroll-y]');
+			for(let i = scrollY.length - 1; i >= 0; i--){
+				let ele = scrollY[i];
+				let k = ele.getAttribute("data-scroll-y");
+				if(k in this.y){
+					ele.scrollTop = this.y[k]
+				}
+			}
 			this.y = null;
 		}
 		let res = yield new Promise((resolve, reject) => {Object.assign(pObj, {resolve, reject})});
@@ -273,7 +292,7 @@ Flow.start({{/literal}
 {/block}
 
 {block name="body"}
-<form action="{url fragment="list"}" class="container border border-secondary rounded p-4 mb-5 bg-white"><fieldset class="row" disabled>
+<form action="{url}" class="container border border-secondary rounded p-4 mb-5 bg-white"><fieldset class="row" disabled>
 	<table class="table w-50">
 		<tbody>
 			<tr>
@@ -418,7 +437,7 @@ Flow.start({{/literal}
 				<div class="text-center">当社担当者選択</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
 			</div>
 			<div class="modal-body">
-				<table class="table table_sticky_list">
+				<table class="table table_sticky_list" data-scroll-y="list">
 					<thead>
 						<tr>
 							<th>コード</th>

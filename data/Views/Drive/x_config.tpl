@@ -478,7 +478,7 @@ Flow.start({{/literal}
 </fieldset></form>
 {if not empty($value)}
 <div class="container border border-secondary rounded p-4 bg-white table-responsive">
-	<table class="table table_sticky_list">
+	<table class="table table_sticky_list" data-scroll-y="list">
 		<thead>
 			<tr>
 				<th>ファイル名</th>
