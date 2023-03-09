@@ -2,9 +2,11 @@
 class SmartyBlockTemplateClassObject implements ArrayAccess{
 	public $keys;
 	public $iterators;
-	public function __construct($iterators){
+	public $idx;
+	public function __construct($iterators, $idx){
 		$this->keys = [];
 		$this->iterators = $iterators;
+		$this->idx = $idx;
 	}
 	public function __toString(){
 		$suf = "";
@@ -16,7 +18,7 @@ class SmartyBlockTemplateClassObject implements ArrayAccess{
 			}
 		}
 		$this->keys = [];
-		return "\${values{$suf}}";
+		return "\${values[{$this->idx}]{$suf}}";
 	}
 	#[\ReturnTypeWillChange]
 	public function offsetSet($offset, $value){}
@@ -42,7 +44,7 @@ class SmartyBlockTemplateClassObject implements ArrayAccess{
 				}
 			}
 			$this->keys = [];
-			$n = "values{$suf}";
+			$n = "values[{$this->idx}]{$suf}";
 		}
 		if(is_null($i)){
 			return "\${{[this.symbol]: new Array({$n}).fill(null).map(() => this.html`";
@@ -56,8 +58,17 @@ class SmartyBlockTemplateClassObject implements ArrayAccess{
 
 function smarty_block_template_class($params, $content, Smarty_Internal_Template $template, &$repeat){
 	if(is_null($content)){
-		$template->assign($params["assign"], new SmartyBlockTemplateClassObject($params["iterators"]));
-		foreach($params["iterators"] as $iterator){
+		$iterators = array_key_exists("iterators", $params) ? $params["iterators"] : [];
+		if(is_scalar($params["assign"])){
+			$template->assign($params["assign"], new SmartyBlockTemplateClassObject($iterators, 0));
+		}else{
+			$i = 0;
+			foreach($params["assign"] as $assign){
+				$template->assign($assign, new SmartyBlockTemplateClassObject($iterators, $i));
+				$i++;
+			}
+		}
+		foreach($iterators as $iterator){
 			$template->assign($iterator, $iterator);
 		}
 		return;
@@ -68,7 +79,7 @@ class {$params["name"]}{
 		this.a = document.createElement("a");
 		this.symbol = Symbol("raw");
 	}
-	insertBeforeEnd(element, values){
+	insertBeforeEnd(element, ...values){
 		element.insertAdjacentHTML("beforeend", this.html`{$content}`);
 	}
 	html(callSite, ...substitutions){
