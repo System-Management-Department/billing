@@ -58,6 +58,8 @@ class SalesSlip{
 		$check["subject"]->required("件名を入力してください。");
 		$check["payment_date"]->required("入金予定日を入力してください。")
 			->date("入金予定日を正しく入力してください。");
+		$check["invoice_format"]->required("請求書パターンを入力してください。")
+			->range("請求書パターンを正しく入力してください。", "in", array_keys(SelectionModifiers::invoiceFormat([])));
 	}
 	
 	public static function execImport($db, $q, $context, $result){
@@ -124,6 +126,7 @@ class SalesSlip{
 				"header3" => $q["header3"],
 				"payment_date" => $q["payment_date"],
 				"detail" => $q["detail"],
+				"invoice_format" => $q["invoice_format"],
 			],[
 				"created" => "now()",
 				"modified" => "now()",
@@ -160,6 +163,7 @@ class SalesSlip{
 				"header3" => $q["header3"],
 				"payment_date" => $q["payment_date"],
 				"detail" => $q["detail"],
+				"invoice_format" => $q["invoice_format"],
 			],[
 				"output_processed" => 0,
 				"modified" => "now()",
