@@ -152,14 +152,13 @@ Flow.start({{/literal}
 		const template = new ListItem();
 		let table = this.response.select("ALL")
 			.addTable("sales_slips")
-			.addField("sales_slips.id,sales_slips.slip_number,sales_slips.subject,sales_slips.accounting_date,sales_slips.note")
+			.addField("sales_slips.id,sales_slips.slip_number,sales_slips.subject,sales_slips.accounting_date,sales_slips.note,sales_slips.output_processed")
 			.leftJoin("divisions on sales_slips.division=divisions.code")
 			.addField("divisions.name as division_name")
 			.leftJoin("teams on sales_slips.team=teams.code")
 			.addField("teams.name as team_name")
 			.leftJoin("managers on sales_slips.manager=managers.code")
 			.addField("managers.name as manager_name,managers.kana as manager_kana")
-			.addField("CASE WHEN sales_slips.output_processed=1 THEN 'table-success' ELSE '' END AS table_row_class")
 			.apply();
 		let tbody = document.getElementById("list");
 		for(let row of table){
@@ -502,7 +501,7 @@ Flow.start({{/literal}
 			</thead>
 			<tbody id="list">
 				{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=[]}{strip}
-				<tr class="{$obj.table_row_class}">
+				<tr{$obj->beginRepeat($obj.output_processed)} class="table-success"{$obj->endRepeat()}>
 					<td><input type="checkbox" name="id[]" value="{$obj.id}" checked /></td>
 					<td>{$obj.slip_number}</td>
 					<td>{$obj.accounting_date}</td>

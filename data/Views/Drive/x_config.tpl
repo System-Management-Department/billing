@@ -70,13 +70,9 @@ Flow.start({{/literal}
 			if("masterUpdate" in item.properties){
 				let timestamp = Number(item.properties.masterUpdate);
 				item.properties.masterUpdate = dateFormatter.format(new Date(timestamp * 1000));
-				item.properties.masterUpdateFlag = (timestamp < info.update.value) ? "1" : "0";
+				item.properties.masterUpdateDisabled = (timestamp < info.update.value) ? 0 : 1;
 			}
 			template.insertBeforeEnd(tbody, item);
-		}
-		const disabled = tbody.querySelectorAll('[data-disabled="0"]');
-		for(let i = disabled.length - 1; i >= 0; i--){
-			disabled[i].disabled = true;
 		}
 	},
 	*input(){
@@ -494,7 +490,7 @@ Flow.start({{/literal}
 				<td>
 					<div class="d-flex gap-2">
 						<a target="_blank" href="https://docs.google.com/spreadsheets/d/{$obj.id}/edit" class="btn btn-success btn-sm">編集</a>
-						<button type="button" class="btn btn-info btn-sm" data-search-update="{$obj.id}" data-disabled="{$obj.properties.masterUpdateFlag}">マスタ更新</button>
+						<button type="button" class="btn btn-info btn-sm" data-search-update="{$obj.id}"{$obj->beginRepeat($obj.properties.masterUpdateDisabled)} disabled{$obj->endRepeat()}>マスタ更新</button>
 						<button type="button" class="btn btn-danger btn-sm" data-search-delete="{$obj.id}">削除</button>
 					</div>
 				</td>

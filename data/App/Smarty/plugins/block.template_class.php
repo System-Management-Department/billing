@@ -31,7 +31,7 @@ class SmartyBlockTemplateClassObject implements ArrayAccess{
 		$this->keys[] = $offset;
 		return $this;
 	}
-	public function beginRepeat($n, $i){
+	public function beginRepeat($n, $i = null){
 		if($n instanceof SmartyBlockTemplateClassObject){
 			$suf = "";
 			foreach($this->keys as $key){
@@ -43,6 +43,9 @@ class SmartyBlockTemplateClassObject implements ArrayAccess{
 			}
 			$this->keys = [];
 			$n = "values{$suf}";
+		}
+		if(is_null($i)){
+			return "\${{[this.symbol]: new Array({$n}).fill(null).map(() => this.html`";
 		}
 		return "\${{[this.symbol]: new Array({$n}).fill(null).map((_, {$i}) => this.html`";
 	}
