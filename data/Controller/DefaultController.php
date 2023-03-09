@@ -45,7 +45,6 @@ class DefaultController extends ControllerBase{
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function master(){
-		$db = Session::getDB();
-		return new FileView(SQLite::getCachedMasterFileName($db), "application/vnd.sqlite3");
+		return new FileView(SQLite::getCachedMasterFileName(), "application/vnd.sqlite3");
 	}
 }

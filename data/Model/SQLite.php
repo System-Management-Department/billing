@@ -5,7 +5,7 @@ class SQLite{
 	/**
 	 * マスターの有効なデータをSQLiteにキャッシュ
 	 */
-	public static function cache($db, $target){
+	public static function cache($db, $target = "*"){
 		static $tables = [
 			"divisions"          => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
 			"teams"              => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
@@ -31,10 +31,10 @@ class SQLite{
 		}
 	}
 	
-	public static function getCachedMasterFileName($db){
+	public static function getCachedMasterFileName($db = null){
 		$fileName = dirname(DATA_DIR) . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "sqlite" . DIRECTORY_SEPARATOR . "master.sqlite3";
 		if(!file_exists($fileName)){
-			self::cache($db, "*");
+			self::cache(is_null($db) ? Session::getDB() : $db);
 		}
 		return $fileName;
 	}
