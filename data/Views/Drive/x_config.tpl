@@ -72,6 +72,9 @@ Flow.start({{/literal}
 				item.properties.masterUpdate = dateFormatter.format(new Date(timestamp * 1000));
 				item.properties.masterUpdateDisabled = (timestamp < info.update.value) ? 0 : 1;
 			}
+			if("modifiedTime" in item){
+				item.modifiedTime = dateFormatter.format(new Date(item.modifiedTime));
+			}
 			template.insertBeforeEnd(tbody, item);
 		}
 	},
@@ -478,6 +481,8 @@ Flow.start({{/literal}
 		<thead>
 			<tr>
 				<th>ファイル名</th>
+				<th>更新日時</th>
+				<th>ユーザー名</th>
 				<th>マスター更新日時</th>
 				<th></th>
 			</tr>
@@ -486,6 +491,8 @@ Flow.start({{/literal}
 			{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=[]}{strip}
 			<tr>
 				<td>{$obj.name}</td>
+				<td>{$obj.modifiedTime}</td>
+				<td>{$obj.lastModifyingUser.displayName}</td>
 				<td>{$obj.properties.masterUpdate}</td>
 				<td>
 					<div class="d-flex gap-2">

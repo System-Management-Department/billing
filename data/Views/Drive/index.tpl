@@ -100,6 +100,28 @@ Flow.start({{/literal}
 				return JSON.stringify(state);
 			}
 		});
+		
+		let select = document.querySelector('select[name="division"]');
+		let mastarData = this.response.select("ALL")
+			.addTable("divisions")
+			.addField("code,name")
+			.apply();
+		for(let division of mastarData){
+			let option = Object.assign(document.createElement("option"), {textContent: division.name});
+			option.setAttribute("value", division.code);
+			select.appendChild(option);
+		}
+		select = document.querySelector('select[name="team"]');
+		mastarData = this.response.select("ALL")
+			.addTable("teams")
+			.addField("code,name")
+			.apply();
+		for(let team of mastarData){
+			let option = Object.assign(document.createElement("option"), {textContent: team.name});
+			option.setAttribute("value", team.code);
+			select.appendChild(option);
+		}
+		
 		this.dataList = document.getElementById("list");
 		let parameter = new FormData();
 		do{
