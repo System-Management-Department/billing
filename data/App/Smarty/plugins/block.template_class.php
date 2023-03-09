@@ -18,11 +18,15 @@ class SmartyBlockTemplateClassObject implements ArrayAccess{
 		$this->keys = [];
 		return "\${values{$suf}}";
 	}
+	#[\ReturnTypeWillChange]
 	public function offsetSet($offset, $value){}
+	#[\ReturnTypeWillChange]
 	public function offsetExists($offset) {
 		return true;
 	}
+	#[\ReturnTypeWillChange]
 	public function offsetUnset($offset){}
+	#[\ReturnTypeWillChange]
 	public function offsetGet($offset){
 		$this->keys[] = $offset;
 		return $this;
