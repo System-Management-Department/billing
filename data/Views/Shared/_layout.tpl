@@ -15,6 +15,7 @@
 <script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
 <script type="text/javascript" src="/assets/common/SQLite.js"></script>
 <script type="text/javascript" src="/assets/common/Flow.js"></script>
+<script type="text/javascript" src="/assets/common/Toaster.js"></script>
 <script type="text/javascript">
 Flow.DbName = "{$smarty.session["User.role"]}";{literal}
 Flow.DbLocked = true;
@@ -115,34 +116,6 @@ document.addEventListener("DOMContentLoaded", e => {
 	modeSwitchBtn.addEventListener("click", modeSwitch);
 });
 */
-class Toaster{
-	static show(messages){
-		let container = document.querySelector('.toast-container');
-		let option = {
-			animation: true,
-			autohide: false,
-			delay: 1000
-		};
-		for(let message of messages){
-			let toast = document.createElement("div");
-			let header = document.createElement("div");
-			let body = document.createElement("div");
-			let title = document.createElement("strong");
-			toast.setAttribute("class", message["class"]);
-			header.setAttribute("class", "toast-header");
-			body.setAttribute("class", "toast-body text-white");
-			title.setAttribute("class", "me-auto");
-			body.textContent = message.message;
-			title.textContent = message.title;
-			header.appendChild(title);
-			header.insertAdjacentHTML("beforeend", '<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>');
-			toast.appendChild(header);
-			toast.appendChild(body);
-			container.appendChild(toast);
-			new bootstrap.Toast(toast, option);
-		}
-	}
-}
 {/literal}</script>
 {/block}
 </head>
@@ -239,8 +212,8 @@ class Toaster{
 			<main class="py-4">{block name="body"}{/block}</main>
 		</div>
 	</div>
-	<div style="position:fixed;top:0;bottom:0;right:0;left:0;width:auto;height:auto;margin:0;padding:0;display:grid;grid-template:1fr auto 1fr/1fr auto 1fr;visibility:hidden;">
-		<div class="toast-container" style="grid-column:2;grid-row:2;visibility:visible;"></div>
+	<div class="position-fixed top-0 bottom-0 start-0 end-0 w-auto h-auto m-0 p-0 d-grid grid-template-toast invisible zindex-toast">
+		<div class="position-relative toast-container visible grid-area-2-2"></div>
 	</div>
 	{block name="dialogs"}{javascript_notice}{/block}
 </body>

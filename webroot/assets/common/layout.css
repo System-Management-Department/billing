@@ -149,7 +149,17 @@ header .image-text .profession{
   text-align: center;
 }
 
+.grid-area-2-2{
+	grid-area: 2 / 2;
+}
 
+.grid-template-toast{
+	grid-template: 1fr auto 1fr/1fr auto 1fr;
+}
+
+.zindex-toast{
+	z-index: 1090;
+}
 
 
 
