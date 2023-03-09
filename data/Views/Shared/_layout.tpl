@@ -7,7 +7,7 @@
 {block name="styles"}
 <link rel="stylesheet" type="text/css" href="/assets/bootstrap/css/bootstrap.min.css" />
 <link rel="stylesheet" type="text/css" href="/assets/bootstrap/font/bootstrap-icons.css" />
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" type="text/css" href="/assets/boxicons/css/boxicons.min.css" />
 <link rel="stylesheet" type="text/css" href="/assets/common/layout.css" />
 {/block}
 {block name="scripts"}

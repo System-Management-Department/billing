@@ -5,7 +5,7 @@
 {/block}
 
 {block name="scripts" append}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/8.0.20/jsrsasign-all-min.js"></script>
+<script type="text/javascript" src="/assets/jsrsasign/jsrsasign-all-min.js"></script>
 <script type="text/javascript" src="/assets/googleAPI/GoogleDrive.js"></script>
 <script type="text/javascript" src="/assets/googleAPI/GoogleSheets.js"></script>
 <script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
