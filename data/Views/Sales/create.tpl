@@ -16,7 +16,7 @@ Flow.start({{/literal}
 	form: null,
 	detail: null,
 	detailList: null,
-	detailParameter: null,
+	categories: null,
 	title: "売上データ登録",
 	template: new ListItem(),
 	template1: new ManagerList(),
@@ -63,12 +63,11 @@ Flow.start({{/literal}
 			team.appendChild(option);
 		}
 		
-		master = this.response.select("ALL").setTable("categories").apply();
-		this.detailParameter = {categories: master};
+		this.categories = this.response.select("ALL").setTable("categories").apply();
 		let detailData = JSON.parse(this.detail.value);
 		let detailKeys = Object.keys(detailData).filter(k => Array.isArray(detailData[k]));
 		for(let i = 0; i < detailData.length; i++){
-			this.template.insertBeforeEnd(this.detailList, Object.assign({}, this.detailParameter));
+			this.template.insertBeforeEnd(this.detailList, this.categories, {});
 		}
 		
 		master = this.response.select("ALL")
@@ -154,7 +153,7 @@ Flow.start({{/literal}
 			this.form.querySelector('[data-form-label="billing_destination"]').textContent = "";
 		}, {signal: controller.signal});
 		document.getElementById("add_detail_row").addEventListener("click", e => {
-			this.template.insertBeforeEnd(this.detailList, this.detailParameter);
+			this.template.insertBeforeEnd(this.detailList, this.categories, {});
 		}, {signal: controller.signal});
 		this.detailList.addEventListener("change", e => {
 			let checked = this.detailList.querySelectorAll('tr:has([data-form-remove]:checked)');
@@ -440,14 +439,14 @@ Flow.start({{/literal}
 				<tr><th colspan="12"><button type="button" class="btn btn-primary bx bxs-message-add" id="add_detail_row">明細行を追加</button></th></tr>
 			</tfoot>
 			<tbody id="list">
-			{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=["i"]}{strip}
+			{function name="ListItem"}{template_class name="ListItem" assign=["categories", "obj"] iterators=["i"]}{strip}
 				<tr>
 					<td class="table-group-row-no align-middle"></td>
 					<td><select name="_detail[categoryCode][]" class="form-select">
 						<option value="">選択</option>
-						{$obj->beginRepeat($obj.categories.length, "i")}
-						<option value="{$obj.categories[$i].code}">{$obj.categories[$i].name}</option>
-						{$obj->endRepeat()}
+						{$categories->beginRepeat($categories.length, "i")}
+						<option value="{$categories[$i].code}">{$categories[$i].name}</option>
+						{$categories->endRepeat()}
 					</select></td>
 					<td><input type="text" name="_detail[itemName][]" class="form-control" /></td>
 					<td><input type="text" name="_detail[unit][]" class="form-control" /></td>
