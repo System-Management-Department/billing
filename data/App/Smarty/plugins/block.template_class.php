@@ -34,17 +34,17 @@ class SmartyBlockTemplateClassObject implements ArrayAccess{
 		return $this;
 	}
 	public function beginRepeat($n, $i = null){
-		if($n instanceof SmartyBlockTemplateClassObject){
+		if($n instanceof self){
 			$suf = "";
-			foreach($this->keys as $key){
-				if(in_array($key, $this->iterators)){
+			foreach($n->keys as $key){
+				if(in_array($key, $n->iterators)){
 					$suf .= "[{$key}]";
 				}else{
 					$suf .= is_numeric($key) ? "[{$key}]" : "[\"{$key}\"]";
 				}
 			}
-			$this->keys = [];
-			$n = "values[{$this->idx}]{$suf}";
+			$n->keys = [];
+			$n = "values[{$n->idx}]{$suf}";
 		}
 		if(is_null($i)){
 			return "\${{[this.symbol]: new Array({$n}).fill(null).map(() => this.html`";
