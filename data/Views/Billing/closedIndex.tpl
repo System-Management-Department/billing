@@ -165,6 +165,12 @@ Flow.start({{/literal}
 				location.reload();
 			});
 		});
+		form.addEventListener("reset", e => {
+			document.querySelector('input[name="manager"]').value = "";
+			document.querySelector('[data-search-label="manager"]').textContent = "";
+			document.querySelector('input[name="billing_destination"]').value = "";
+			document.querySelector('[data-search-label="billing_destination"]').textContent = "";
+		});
 		
 		const template1 = new ManagerList();
 		const template2 = new ApplyClientList();
@@ -386,7 +392,7 @@ Flow.start({{/literal}
 	<div class="col-12 text-center">
 		<input type="hidden" name="close_processed" value="1" />
 		<button type="submit" class="btn btn-success">検　索</button>
-		<button type="submit" class="btn btn-outline-success">キャンセル</button>
+		<button type="reset" class="btn btn-outline-success">キャンセル</button>
 	</div>
 </fieldset></form>
 <form id="output" action="{url action="release"}" method="POST"><fieldset disabled>
