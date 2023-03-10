@@ -16,9 +16,9 @@ class LogController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin")]
 	public function list(){
 		$curdate = null;
-		if($_SERVER["REQUEST_METHOD"] == "POST"){
+		if($_SERVER["REQUEST_METHOD"] == "GET"){
 			try{
-				$curdate = new DateTime($_POST["date"]);
+				$curdate = new DateTime($_GET["date"]);
 			}catch(\Exception $ex){
 			}
 		}

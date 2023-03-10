@@ -1,8 +1,4 @@
-{block name="title"}
-<nav class="navbar navbar-light bg-light">
-	<h2 class="container-fluid px-4">操作履歴</h2>
-</nav>
-{/block}
+{block name="title"}操作履歴{/block}
 
 {block name="styles" append}
 <link rel="stylesheet" type="text/css" href="/assets/flatpickr/flatpickr.min.css" />
@@ -109,19 +105,6 @@ document.addEventListener("DOMContentLoaded", function(){
 	}, 200);
 	document.getElementById("datagrid").appendChild(loading);
 	
-	const additionalStyle = document.getElementById("additionalStyle");
-	const styleSheet = additionalStyle.sheet;
-	let n = styleSheet.cssRules.length;
-	let mainlist = document.getElementById("mainlist");
-	let rect = mainlist.getBoundingClientRect();
-	styleSheet.insertRule(`#mainlist{
-		height: calc(100vh - ${rect.y + window.pageYOffset}px - 1.5rem);
-	}`, n++);
-	
-	flatpickr('#search input[name="date"]');
-	document.querySelector('#search input[name="date"]').addEventListener("change", function(){
-		document.getElementById("search").submit();
-	});
 });
 {/literal}</script>
 {/block}
@@ -131,17 +114,12 @@ document.addEventListener("DOMContentLoaded", function(){
 <input type="hidden" name="lastdata" value="" />
 <input type="hidden" name="date" value="{$curdate|escape:"html"}" />
 </form>
-<form id="search" action="{url}" method="POST" class="container-fluid row px-0">
-	<div class="col-12 col-md-6 col-lg-4">
-		<input type="text" name="date" value="{$curdate|escape:"html"}" class="form-control bg-white" placeholder="日付を選択してください" />
-	</div>
-</form>
 <div class="pt-4">
 	<div id="mainlist">
 		<div id="headergrid">
 			<div>操作日時</div>
 			<div>操作</div>
-			<div>画面・ファイル名</div>
+			<div></div>
 			<div>ユーザー名</div>
 		</div>
 		<div id="datagrid">
