@@ -253,7 +253,20 @@ class GoogleSheets{
 							});
 						}
 					}
-					
+				}else if(sheets[GoogleSheets.requestSymbol] == "insertRows"){
+					for(let sheet in sheets){
+						requests.push({
+							insertDimension: {
+								range: {
+									sheetId: sheet,
+									startIndex: sheets[sheet].startIndex,
+									endIndex: sheets[sheet].endIndex,
+									dimension: "ROWS"
+								},
+								inheritFromBefore: false
+							}
+						});
+					}
 				}
 			}
 			fetch(this.#url).then(res => res.json()).then(jwt => {

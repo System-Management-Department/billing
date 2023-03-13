@@ -47,10 +47,21 @@ Flow.start({{/literal}
 				const names = Object.keys(masterData.namedRanges);
 				sheets.get(names).then(book => {
 					const sheetId = book.sheet("マスター").sheetId;
+					const size = book.sheet("マスター").range.length;
+					let rowsUpdate = {};
+					if(size < masterData.rows.length){
+						rowsUpdate = {
+							[GoogleSheets.requestSymbol]: "insertRows",
+							[sheetId]: {
+								startIndex: 0,
+								endIndex: (masterData.rows.length - size)
+							}
+						};
+					}
 					for(let name of names){
 						masterData.namedRanges[name].namedRangeId = book.getNamedRangeId(name);
 					}
-					return sheets.update({
+					return sheets.update(rowsUpdate, {
 						[GoogleSheets.requestSymbol]: "updateCells",
 						[sheetId]: {
 							rowIndex: 0,
@@ -232,7 +243,7 @@ Flow.start({{/literal}
 			divisions:      db.select("COL").addTable("divisions").addField("name").apply(),
 			teams:          db.select("COL").addTable("teams").addField("name").apply(),
 			managers:       db.select("COL").addTable("managers").addField("name").apply(),
-			applyClients:   db.select("COL").addTable("apply_clients").addField("name").apply(),
+			applyClients:   db.select("COL").addTable("apply_clients").addField("unique_name").apply(),
 			invoiceFormats: db.select("COL").addTable("invoice_formats").addField("name").apply(),
 			categories:     db.select("COL").addTable("categories").addField("name").apply()
 		};
@@ -426,7 +437,7 @@ Flow.start({{/literal}
 			GoogleSheets.createSheetJson({index: 2, title: "取込済", hidden: true}, 100, 2, {
 				protectedRanges: [{}]
 			}),
-			GoogleSheets.createSheetJson({index: 3, title: "マスター", hidden: true}, 100, 2, {
+			GoogleSheets.createSheetJson({index: 3, title: "マスター", hidden: true}, Math.max(100, masterData.rows.length), 2, {
 				rows: masterData.rows,
 				namedRanges: masterData.namedRanges,
 				protectedRanges: [{}]
