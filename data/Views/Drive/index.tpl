@@ -410,7 +410,7 @@ Flow.start({{/literal}
 					<td><input type="checkbox" name="id[]" value="{$obj.id}" checked /></td>
 					<td>{$obj.slip_number}</td>
 					<td>{$obj.accounting_date}</td>
-					<td>{$obj.apply_client_name}</td>
+					<td>{$obj.billing_destination_name}</td>
 					<td>{$obj.manager_name}</td>
 					<td>{$obj.division_name}</td>
 					<td>{$obj.team_name}</td>
