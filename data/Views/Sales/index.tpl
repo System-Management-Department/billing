@@ -425,7 +425,7 @@ Flow.start({{/literal}
 	</div>
 </div>
 <div class="modal fade" id="applyClientModal" tabindex="-1">
-	<div class="modal-dialog modal-dialog-centered">
+	<div class="modal-dialog modal-dialog-centered modal-lg">
 		<div class="modal-content">
 			<div class="modal-header flex-row">
 				<div class="text-center">請求先選択</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
