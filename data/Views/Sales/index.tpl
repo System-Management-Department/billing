@@ -223,6 +223,8 @@ Flow.start({{/literal}
 			.addField("teams.name as team_name")
 			.leftJoin("managers on sales_slips.manager=managers.code")
 			.addField("managers.name as manager_name,managers.kana as manager_kana")
+			.leftJoin("apply_clients on sales_slips.billing_destination=apply_clients.code")
+			.addField("apply_clients.name as apply_client_name")
 			.apply();
 		let tbody = document.getElementById("list");
 		for(let row of table){
