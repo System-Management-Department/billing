@@ -11,7 +11,8 @@
 {call name="ManagerList"}
 {call name="ApplyClientList"}{literal}
 Flow.start({{/literal}
-	dbDownloadURL: "{url controller="Default" action="master"}",{literal}
+	dbDownloadURL: "{url controller="Default" action="master"}",
+	success: "{url action="index"}",{literal}
 	response: new SQLite(),
 	form: null,
 	detail: null,
@@ -40,7 +41,7 @@ Flow.start({{/literal}
 	 */
 	*init(){
 		const buffer = yield fetch(this.dbDownloadURL).then(response => response.arrayBuffer());
-		this.response.import(buffer, "list");;
+		this.response.import(buffer, "list");
 		let master, checked;
 		this.form = document.querySelector('form');
 		this.detail = this.form.querySelector('[name="detail"]');

@@ -11,7 +11,8 @@
 {call name="ManagerList"}
 {call name="ApplyClientList"}{literal}
 Flow.start({{/literal}
-	dbDownloadURL: "{url controller="Default" action="master"}",{literal}
+	dbDownloadURL: "{url controller="Default" action="master"}",
+	success: "{url controller="Home" action="salesInput"}",{literal}
 	response: new SQLite(),
 	form: null,
 	detail: null,
