@@ -108,7 +108,7 @@ Flow.start({{/literal}
 			.apply();
 		for(let division of mastarData){
 			let option = Object.assign(document.createElement("option"), {textContent: division.name});
-			option.setAttribute("value", division.code);
+			option.setAttribute("value", division.name);
 			select.appendChild(option);
 		}
 		select = document.querySelector('select[name="team"]');
@@ -118,7 +118,7 @@ Flow.start({{/literal}
 			.apply();
 		for(let team of mastarData){
 			let option = Object.assign(document.createElement("option"), {textContent: team.name});
-			option.setAttribute("value", team.code);
+			option.setAttribute("value", team.name);
 			select.appendChild(option);
 		}
 		
