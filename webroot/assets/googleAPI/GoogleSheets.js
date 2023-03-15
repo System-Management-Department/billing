@@ -326,6 +326,12 @@ class GoogleSheets{
 			if("frozenColumnCount" in options){
 				json.properties.gridProperties.frozenColumnCount = options.frozenColumnCount;
 			}
+			if("gridData" in options){
+				if(!("data" in json)){
+					json.data = [];
+				}
+				json.data.push(options.gridData);
+			}
 		}
 		return json;
 	}
