@@ -51,7 +51,7 @@ class DeleteListItem{
 			.addField("json_extract(t.value, '$.quantity') as quantity")
 			.addField("json_extract(t.value, '$.unitPrice') as unitPrice")
 			.addField("json_extract(t.value, '$.circulation') as circulation")
-			.leftJoin("categories on json_extract(t.value, '$.categoryCode')=categories.code")
+			.leftJoin("categories on cast(json_extract(t.value, '$.categoryCode') as text)=categories.code")
 			.addField("categories.name as category")
 			.apply();
 		let modalBody = Object.assign(document.querySelector('#deleteModal .modal-body'), {innerHTML: ""});
