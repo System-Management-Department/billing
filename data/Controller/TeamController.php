@@ -41,8 +41,7 @@ class TeamController extends ControllerBase{
 		return $v;
 	}
 
-
-	#[\Attribute\AcceptRole("admin", "entry")]
+	#[\Attribute\AcceptRole("admin")]
 	public function regist(){
 		$db = Session::getDB();
 		
@@ -56,7 +55,7 @@ class TeamController extends ControllerBase{
 		return new JsonView($result);
 	}
 	
-	#[\Attribute\AcceptRole("admin", "entry")]
+	#[\Attribute\AcceptRole("admin")]
 	public function update(){
 		$db = Session::getDB();
 		
@@ -70,7 +69,7 @@ class TeamController extends ControllerBase{
 		return new JsonView($result);
 	}
 	
-	#[\Attribute\AcceptRole("admin", "entry")]
+	#[\Attribute\AcceptRole("admin")]
 	public function delete(){
 		$db = Session::getDB();
 		$result = new Result();

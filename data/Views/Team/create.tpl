@@ -129,7 +129,11 @@ Flow.start({{/literal}
 			let name = input.hasAttribute("name") ? input.getAttribute("name") : input.getAttribute("data-form-name");
 			if(name in messages){
 				input.classList.add("is-invalid");
-				//input.parentNode.querySelector('.invalid-feedback').textContent = messages[name];
+				try{
+					input.parentNode.querySelector('.invalid-feedback').textContent = messages[name];
+				}catch(e){
+					console.log(e);
+				}
 			}else{
 				input.classList.remove("is-invalid");
 			}
@@ -165,6 +169,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-10">
 							<input type="text" name="name" class="form-control" id="name-input" autocomplete="off" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -175,6 +180,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-10">
 							<input type="text" name="kana" class="form-control" id="kana-input" autocomplete="off" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -183,8 +189,9 @@ Flow.start({{/literal}
 						<label class="form-label ls-1" for="location_zip-input">郵便番号　<span class="text-danger fw-light">※</span></label>
 					</th>
 					<td>
-						<div class="col-3">
+						<div class="col-6">
 							<input type="text" name="location_zip" class="form-control" id="location_zip-input" autocomplete="off" />
+							<div class="invalid-feedback"></div>
 						</div>
 						<span class="no-edit clearfix ms-2">ハイフン無しで入力</span>
 					</td>
@@ -198,6 +205,7 @@ Flow.start({{/literal}
 							<select name="location_address1" id="prefectures_list-input" class="form-select">{foreach from=["" => "選択"]|prefectures item="text" key="value"}
 								<option value="{$value}">{$text}</option>
 							{/foreach}</select>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -208,6 +216,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-10">
 							<input type="text" name="location_address2" class="form-control" id="location_address2-input" autocomplete="off" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -231,6 +240,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-5">
 							<input type="text" name="phone" class="form-control" id="phone-input" autocomplete="off" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>

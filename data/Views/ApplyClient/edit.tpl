@@ -165,7 +165,11 @@ Flow.start({{/literal}
 			let name = input.hasAttribute("name") ? input.getAttribute("name") : input.getAttribute("data-form-name");
 			if(name in messages){
 				input.classList.add("is-invalid");
-				//input.parentNode.querySelector('.invalid-feedback').textContent = messages[name];
+				try{
+					input.parentNode.querySelector('.invalid-feedback').textContent = messages[name];
+				}catch(e){
+					console.log(e);
+				}
 			}else{
 				input.classList.remove("is-invalid");
 			}
@@ -203,11 +207,12 @@ Flow.start({{/literal}
 								<input type="search" data-form-name="client" class="form-control" id="client-input" placeholder="得意先CD、得意先名で検索" />
 								<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#clientModal">検 索</button>
 							</div>
-							<div class="input-group" data-form-output="result">
+							<div class="input-group" data-form-output="result" data-form-name="client">
 								<div class="form-control" data-form-label="client"></div>
 								<input type="hidden" name="client" value="{$data.client|escape:"html"}" />
 								<button type="button" class="btn btn-danger" data-form-output-reset="client">取 消</button>
 							</div>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -218,6 +223,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-10">
 							<input type="text" name="name" class="form-control" id="name-input" autocomplete="off" value="{$data.name|escape:"html"}" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -228,6 +234,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-10">
 							<input type="text" name="kana" class="form-control" id="kana-input" autocomplete="off" value="{$data.kana|escape:"html"}" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -238,6 +245,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-10">
 							<input type="text" name="short_name" class="form-control" id="short_name-input" autocomplete="off" value="{$data.short_name|escape:"html"}" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -246,8 +254,9 @@ Flow.start({{/literal}
 						<label class="form-label ls-1" for="location_zip-input">郵便番号　<span class="text-danger fw-light">※</span></label>
 					</th>
 					<td>
-						<div class="col-3">
+						<div class="col-6">
 							<input type="text" name="location_zip" class="form-control" id="location_zip-input" autocomplete="off" value="{$data.location_zip|escape:"html"}" />
+							<div class="invalid-feedback"></div>
 						</div>
 						<span class="no-edit clearfix ms-2">ハイフン無しで入力</span>
 					</td>
@@ -261,6 +270,7 @@ Flow.start({{/literal}
 							<select name="location_address1" id="prefectures_list-input" class="form-select">{foreach from=["" => "選択"]|prefectures item="text" key="value"}
 								<option value="{$value}"{if $data.location_address1 eq $value} selected{/if}>{$text}</option>
 							{/foreach}</select>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -271,6 +281,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-10">
 							<input type="text" name="location_address2" class="form-control" id="location_address2-input" autocomplete="off" value="{$data.location_address2|escape:"html"}" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -383,6 +394,7 @@ Flow.start({{/literal}
 							<select name="invoice_format" id="invoice_format-input" class="form-select">{foreach from=["" => "選択"]|invoiceFormat item="text" key="value"}
 								<option value="{$value}"{if $data.invoice_format eq $value} selected{/if}>{$text}</option>
 							{/foreach}</select>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -395,6 +407,7 @@ Flow.start({{/literal}
 							<select name="tax_round" id="tax_round-input" class="form-select">{foreach from=["" => "選択"]|taxRound item="text" key="value"}
 								<option value="{$value}"{if $data.tax_round eq $value} selected{/if}>{$text}</option>
 							{/foreach}</select>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -407,6 +420,7 @@ Flow.start({{/literal}
 							<select name="tax_processing" id="tax_processing-input" class="form-select">{foreach from=["" => "選択"]|taxProcessing item="text" key="value"}
 								<option value="{$value}"{if $data.tax_processing eq $value} selected{/if}>{$text}</option>
 							{/foreach}</select>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -419,6 +433,7 @@ Flow.start({{/literal}
 							<select name="close_processing" id="close_processing-input" class="form-select">{foreach from=["" => "選択"]|closeProcessing item="text" key="value"}
 								<option value="{$value}"{if $data.close_processing eq $value} selected{/if}>{$text}</option>
 							{/foreach}</select>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -431,6 +446,7 @@ Flow.start({{/literal}
 							<select name="close_date" id="close_date-input" class="form-select">{foreach from=["99" => "末日"]|closeDate item="text" key="value"}
 								<option value="{$value}"{if $data.close_date eq $value} selected{/if}>{$text}</option>
 							{/foreach}</select>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -443,6 +459,7 @@ Flow.start({{/literal}
 							<select name="payment_cycle" id="payment_cycle-input" class="form-select">{foreach from=["" => "選択"]|monthList item="text" key="value"}
 								<option value="{$value}"{if $data.payment_cycle eq $value} selected{/if}>{$text}</option>
 							{/foreach}</select>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -455,6 +472,7 @@ Flow.start({{/literal}
 							<select name="payment_date" id="payment_date-input" class="form-select">{foreach from=["99" => "末日"]|closeDate item="text" key="value"}
 								<option value="{$value}"{if $data.payment_date eq $value} selected{/if}>{$text}</option>
 							{/foreach}</select>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
