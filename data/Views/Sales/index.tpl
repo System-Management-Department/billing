@@ -531,7 +531,7 @@ Flow.start({{/literal}
 	</div>
 </div>
 <div class="modal fade" id="deleteModal" tabindex="-1">
-	<div class="modal-dialog modal-dialog-centered">
+	<div class="modal-dialog modal-dialog-centered modal-lg">
 		<div class="modal-content">
 			<div class="modal-header flex-row">
 				<div class="text-center text-danger">本当に削除しますか？</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
@@ -549,7 +549,7 @@ Flow.start({{/literal}
 						<tr><th scope="row" class="bg-light align-middle ps-4">備考欄</th><td>{$header.note}</td></tr>
 					</tbody>
 				</table>
-				<table class="table table_sticky_list">
+				<table class="table table_sticky_list" style="height: max(10rem, calc(80vh - 25rem));">
 					<thead>
 						<tr>
 							<th>商品カテゴリー</th>
