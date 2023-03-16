@@ -13,7 +13,72 @@
 <script type="text/javascript">
 {call name="ListItem"}
 {call name="ManagerList"}
-{call name="ApplyClientList"}{literal}
+{call name="ApplyClientList"}
+{call name="DeleteModal"}{literal}
+class DeleteListItem{
+	#url;#id;#db;#pObj;#template;
+	constructor(url, id, db, pObj){
+		this.#url = url;
+		this.#id = id;
+		this.#db = db;
+		this.#pObj = pObj;
+		this.#template = new DeleteModal();
+	}
+	*[Symbol.iterator](){
+		let header = this.#db.select("ROW")
+			.addTable("sales_slips")
+			.addField("sales_slips.*")
+			.andWhere("id=?", Number(this.#id))
+			.leftJoin("divisions on sales_slips.division=divisions.code")
+			.addField("divisions.name as division_name")
+			.leftJoin("teams on sales_slips.team=teams.code")
+			.addField("teams.name as team_name")
+			.leftJoin("managers on sales_slips.manager=managers.code")
+			.addField("managers.name as manager_name,managers.kana as manager_kana")
+			.leftJoin("apply_clients on sales_slips.billing_destination=apply_clients.code")
+			.addField("apply_clients.name as apply_client_name")
+			.apply();
+		let detail = this.#db.select("ALL")
+			.addTable("sales_slips")
+			.andWhere("sales_slips.id=?", Number(this.#id))
+			.addTable("json_each(json_table(sales_slips.detail)) t")
+			.addField("json_extract(t.value, '$.unit') as unit")
+			.addField("json_extract(t.value, '$.data1') as data1")
+			.addField("json_extract(t.value, '$.data2') as data2")
+			.addField("json_extract(t.value, '$.data3') as data3")
+			.addField("json_extract(t.value, '$.amount') as amount")
+			.addField("json_extract(t.value, '$.itemName') as itemName")
+			.addField("json_extract(t.value, '$.quantity') as quantity")
+			.addField("json_extract(t.value, '$.unitPrice') as unitPrice")
+			.addField("json_extract(t.value, '$.circulation') as circulation")
+			.leftJoin("categories on json_extract(t.value, '$.categoryCode')=categories.code")
+			.addField("categories.name as category")
+			.apply();
+		let modalBody = Object.assign(document.querySelector('#deleteModal .modal-body'), {innerHTML: ""});
+		this.#template.insertBeforeEnd(modalBody, header, detail);
+		
+		let res = yield new Promise((resolve, reject) => { Object.assign(this.#pObj, {resolve: resolve, reject: reject}); });
+		this.#pObj.value = false;
+		if(res){
+			let formData = new FormData();
+			formData.append("id", this.#id);
+			fetch(this.#url, {
+				method: "POST",
+				body: formData
+			})
+			.then(response => response.json())
+			.then(response => {
+				if(response.success){
+					// フォーム送信 成功
+					for(let message of response.messages){
+						Flow.DB.insertSet("messages", {title: "売上削除", message: message[0], type: message[1], name: message[2]}, {}).apply();
+					}
+					Flow.DB.commit().then(res => { location.reload(); });
+				}
+			});
+		}
+	}
+}
 Flow.start({{/literal}
 	dbDownloadURL: "{url action="search"}",
 	deleteURL: "{url action="delete"}",{literal}
@@ -231,26 +296,34 @@ Flow.start({{/literal}
 			template.insertBeforeEnd(tbody, row);
 		}
 		
+		this.response.create_function("json_table", {
+			length: 1,
+			apply(dummy, args){
+				let data = JSON.parse(args[0]);
+				let keys = Object.keys(data).filter(k => Array.isArray(data[k]));
+				let res = [];
+				for(let i = 0; i < data.length; i++){
+					let row = {};
+					for(let k of keys){
+						row[k] = data[k][i];
+					}
+					res.push(row);
+				}
+				return JSON.stringify(res);
+			}
+		});
+		let pObj = {value: false};
 		tbody.addEventListener("click", e => {
 			if(e.target.hasAttribute("data-search-delete")){
-				let formData = new FormData();
-				formData.append("id", e.target.getAttribute("data-search-delete"));
-				fetch(this.deleteURL, {
-					method: "POST",
-					body: formData
-				})
-				.then(response => response.json())
-				.then(response => {
-					if(response.success){
-						// フォーム送信 成功
-						for(let message of response.messages){
-							Flow.DB.insertSet("messages", {title: "売上削除", message: message[0], type: message[1], name: message[2]}, {}).apply();
-						}
-						Flow.DB.commit().then(res => { location.reload(); });
-					}
-				});
+				co(new DeleteListItem(this.deleteURL, e.target.getAttribute("data-search-delete"), this.response, pObj));
 			}
 		}, {useCapture: true});
+		document.getElementById("deleteModal").addEventListener("hidden.bs.modal", e => {
+			pObj.resolve(pObj.value);
+		});
+		document.getElementById("deleteModalYes").addEventListener("click", e => {
+			pObj.value = true;
+		});
 		
 		return res;
 	}
@@ -382,7 +455,7 @@ Flow.start({{/literal}
 				<td>
 					<a href="{url action="edit"}/{$obj.id}" class="btn btn-sm bx bxs-edit"></a>
 					<a href="{url action="createRed"}/{$obj.id}" class="btn btn-sm bx bxs-edit"></a>
-					<button type="button" class="btn btn-sm bi bi-trash3" data-search-delete="{$obj.id}"></button>
+					<button type="button" class="btn btn-sm bi bi-trash3" data-search-delete="{$obj.id}" data-bs-toggle="modal" data-bs-target="#deleteModal"></button>
 				</td>
 			</tr>
 			{/strip}{/template_class}{/function}
@@ -453,6 +526,65 @@ Flow.start({{/literal}
 						{/strip}{/template_class}{/function}
 					</tbody>
 				</table>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="deleteModal" tabindex="-1">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header flex-row">
+				<div class="text-center text-danger">本当に削除しますか？</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
+			</div>
+			<div class="modal-body">
+				{function name="DeleteModal"}{template_class name="DeleteModal" assign=["header", "detail"] iterators=["i"]}{strip}
+				<table class="table">
+					<tbody>
+						<tr><th scope="row" class="bg-light align-middle ps-4">伝票番号</th><td>{$header.slip_number}</td></tr>
+						<tr><th scope="row" class="bg-light align-middle ps-4">伝票日付</th><td>{$header.accounting_date}</td></tr>
+						<tr><th scope="row" class="bg-light align-middle ps-4">請求先名</th><td>{$header.apply_client_name}</td></tr>
+						<tr><th scope="row" class="bg-light align-middle ps-4">担当者名</th><td>{$header.manager_name}</td></tr>
+						<tr><th scope="row" class="bg-light align-middle ps-4">部門</th><td>{$header.division_name}</td></tr>
+						<tr><th scope="row" class="bg-light align-middle ps-4">チーム</th><td>{$header.team_name}</td></tr>
+						<tr><th scope="row" class="bg-light align-middle ps-4">備考欄</th><td>{$header.note}</td></tr>
+					</tbody>
+				</table>
+				<table class="table table_sticky_list">
+					<thead>
+						<tr>
+							<th>商品カテゴリー</th>
+							<th>内容（摘要）</th>
+							<th>単位</th>
+							<th>数量</th>
+							<th>単価</th>
+							<th>金額</th>
+							<th>{$header.header1}</th>
+							<th>{$header.header2}</th>
+							<th>{$header.header3}</th>
+							<th>発行部数</th>
+						</tr>
+					</thead>
+					<tbody>{$detail->beginRepeat($detail.length, $i)}
+						<tr>
+							<td>{$detail[$i].category}</td>
+							<td>{$detail[$i].itemName}</td>
+							<td>{$detail[$i].unit}</td>
+							<td>{$detail[$i].quantity}</td>
+							<td>{$detail[$i].unitPrice}</td>
+							<td>{$detail[$i].amount}</td>
+							<td>{$detail[$i].data1}</td>
+							<td>{$detail[$i].data2}</td>
+							<td>{$detail[$i].data3}</td>
+							<td>{$detail[$i].circulation}</td>
+						</tr>
+					{$detail->endRepeat()}</tbody>
+				</table>
+				{$header.name}
+				{/strip}{/template_class}{/function}
+			</div>
+			<div class="modal-footer justify-content-evenly">
+				<button type="button" class="btn btn-success rounded-pill w-25 d-inline-flex" data-bs-dismiss="modal" id="deleteModalYes"><div class="flex-grow-1"></div>はい<div class="flex-grow-1"></div></button>
+				<button type="button" class="btn btn-outline-success rounded-pill w-25 d-inline-flex" data-bs-dismiss="modal"><div class="flex-grow-1"></div>いいえ<div class="flex-grow-1"></div></button>
 			</div>
 		</div>
 	</div>
