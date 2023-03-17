@@ -205,8 +205,9 @@ document.addEventListener("DOMContentLoaded", e => {
 						</div>
 					</div>
 				</nav>
-				<nav aria-label="breadcrumb" class="bg-white shadow-sm">
-					<ol class="breadcrumb p-3"></ol>
+				<nav class="d-flex align-items-center bg-white shadow-sm">
+					<ol class="breadcrumb p-3 mb-0 flex-grow-1"></ol>
+					<div class="px-3">{block name="tools"}{/block}</div>
 				</nav>
 			</header>
 			<main class="py-4">{block name="body"}{/block}</main>
