@@ -55,7 +55,7 @@ class DeleteListItem{
 			.addField("categories.name as category")
 			.apply();
 		let modalBody = Object.assign(document.querySelector('#deleteModal .modal-body'), {innerHTML: ""});
-		this.#template.insertBeforeEnd(modalBody, header, detail);
+		this.#template.insertBeforeEnd(modalBody, header, detail, {func: new Intl.NumberFormat(), format(value){ return (typeof value === 'number') ? this.func.format(value) : value; }});
 		
 		let res = yield new Promise((resolve, reject) => { Object.assign(this.#pObj, {resolve: resolve, reject: reject}); });
 		this.#pObj.value = false;
@@ -545,7 +545,7 @@ Flow.start({{/literal}
 				<div class="text-center text-danger">本当に削除しますか？</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
 			</div>
 			<div class="modal-body">
-				{function name="DeleteModal"}{template_class name="DeleteModal" assign=["header", "detail"] iterators=["i"]}{strip}
+				{function name="DeleteModal"}{template_class name="DeleteModal" assign=["header", "detail", "numberFormat"] iterators=["i"]}{strip}
 				<table class="table">
 					<tbody>
 						<tr><th scope="row" class="bg-light align-middle ps-4">伝票番号</th><td>{$header.slip_number}</td></tr>
@@ -577,13 +577,13 @@ Flow.start({{/literal}
 							<td>{$detail[$i].category}</td>
 							<td>{$detail[$i].itemName}</td>
 							<td>{$detail[$i].unit}</td>
-							<td>{$detail[$i].quantity}</td>
-							<td>{$detail[$i].unitPrice}</td>
-							<td>{$detail[$i].amount}</td>
+							<td class="text-end">{$numberFormat.format|template_invoke:$detail[$i].quantity}</td>
+							<td class="text-end">{$numberFormat.format|template_invoke:$detail[$i].unitPrice}</td>
+							<td class="text-end">{$numberFormat.format|template_invoke:$detail[$i].amount}</td>
 							<td>{$detail[$i].data1}</td>
 							<td>{$detail[$i].data2}</td>
 							<td>{$detail[$i].data3}</td>
-							<td>{$detail[$i].circulation}</td>
+							<td class="text-end">{$numberFormat.format|template_invoke:$detail[$i].circulation}</td>
 						</tr>
 					{$detail->endRepeat()}</tbody>
 				</table>
