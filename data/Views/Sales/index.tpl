@@ -439,7 +439,13 @@ Flow.start({{/literal}
 				<th class="w-15">部門</th>
 				<th class="w-10">チーム</th>
 				<th class="w-20">備考欄</th>
-				<th></th>
+				<th>
+					<div class="d-flex">
+						<div class="flex-fill text-center">編集</div>
+						<div class="flex-fill text-center">赤伝</div>
+						<div class="flex-fill text-center">削除</div>
+					</div>
+				</th>
 			</tr>
 		</thead>
 		<tbody id="list">
@@ -453,9 +459,11 @@ Flow.start({{/literal}
 				<td>{$obj.team_name}</td>
 				<td>{$obj.note}</td>
 				<td>
-					<a href="{url action="edit"}/{$obj.id}" class="btn btn-sm bx bxs-edit"></a>
-					<a href="{url action="createRed"}/{$obj.id}" class="btn btn-sm bx bxs-edit"></a>
-					<button type="button" class="btn btn-sm bi bi-trash3" data-search-delete="{$obj.id}" data-bs-toggle="modal" data-bs-target="#deleteModal"></button>
+					<div class="d-flex">
+						<div class="flex-fill text-center"><a href="{url action="edit"}/{$obj.id}" class="btn btn-sm bx bxs-edit">編集</a></div>
+						<div class="flex-fill text-center"><a href="{url action="createRed"}/{$obj.id}" class="btn btn-sm bx bxs-edit">赤伝</a></div>
+						<div class="flex-fill text-center"><button type="button" class="btn btn-sm bi bi-trash3" data-search-delete="{$obj.id}" data-bs-toggle="modal" data-bs-target="#deleteModal">削除</button></div>
+					</div>
 				</td>
 			</tr>
 			{/strip}{/template_class}{/function}
