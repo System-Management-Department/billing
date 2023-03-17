@@ -259,7 +259,10 @@ Flow.start({{/literal}
 			let name = input.hasAttribute("name") ? input.getAttribute("name") : input.getAttribute("data-form-name");
 			if(name in messages){
 				input.classList.add("is-invalid");
-				//input.parentNode.querySelector('.invalid-feedback').textContent = messages[name];
+				let feedback = input.parentNode.querySelector('.invalid-feedback');
+				if(feedback != null){
+					feedback.textContent = messages[name];
+				}
 			}else{
 				input.classList.remove("is-invalid");
 			}
@@ -284,7 +287,8 @@ Flow.start({{/literal}
 					</th>
 					<td>
 						<div class="col-3">
-						<input type="text" name="slip_number" class="form-control" id="slip_number-input" autocomplete="off" />
+							<input type="text" name="slip_number" class="form-control" id="slip_number-input" autocomplete="off" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -294,7 +298,8 @@ Flow.start({{/literal}
 					</th>
 					<td>
 						<div class="col-5">
-						<input type="date" name="accounting_date" class="form-control" id="salesdate-input" autocomplete="off" />
+							<input type="date" name="accounting_date" class="form-control" id="salesdate-input" autocomplete="off" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -307,6 +312,7 @@ Flow.start({{/literal}
 							<select name="division" id="division-input" class="form-select">
 								<option value="" selected>選択</option>
 							</select>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -319,6 +325,7 @@ Flow.start({{/literal}
 							<select name="team" id="team-input" class="form-select">
 								<option value="" selected>選択</option>
 							</select>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -332,11 +339,12 @@ Flow.start({{/literal}
 								<input type="search" data-form-name="manager" class="form-control" id="manager-input" placeholder="担当者名・担当者CDで検索" />
 								<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#managerModal">検 索</button>
 							</div>
-							<div class="input-group" data-form-output="result">
+							<div class="input-group" data-form-output="result" data-form-name="manager">
 								<div class="form-control" data-form-label="manager"></div>
 								<input type="hidden" name="manager" value="" />
 								<button type="button" class="btn btn-danger" data-form-output-reset="manager">取 消</button>
 							</div>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -347,6 +355,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-10">
 							<input type="text" name="subject" class="form-control" id="subject-input" autocomplete="off" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -356,7 +365,8 @@ Flow.start({{/literal}
 					</th>
 					<td>
 						<div class="col-5">
-						<input type="date" name="payment_date" class="form-control" id="payment_date-input" autocomplete="off" />
+							<input type="date" name="payment_date" class="form-control" id="payment_date-input" autocomplete="off" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -371,6 +381,7 @@ Flow.start({{/literal}
 							<select name="invoice_format" id="invoice_format-input" class="form-select">{foreach from=["" => "選択"]|invoiceFormat item="text" key="value"}
 								<option value="{$value}">{$text}</option>
 							{/foreach}</select>
+							<div class="invalid-feedback"></div>
 							<span class="no-edit clearfix ms-2">請求書見本はこちら</span>
 						</div>
 					</td>
@@ -385,11 +396,12 @@ Flow.start({{/literal}
 								<input type="search" data-form-name="billing_destination" class="form-control" id="applyClient-input" placeholder="請求先CD、会社名で検索" />
 								<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#applyClientModal">検 索</button>
 							</div>
-							<div class="input-group" data-form-output="result">
+							<div class="input-group" data-form-output="result" data-form-name="billing_destination">
 								<div class="form-control" data-form-label="billing_destination"></div>
 								<input type="hidden" name="billing_destination" value="" />
 								<button type="button" class="btn btn-danger" data-form-output-reset="billing_destination">取 消</button>
 							</div>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -400,6 +412,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-10">
 							<input type="text" name="delivery_destination" class="form-control" id="slip_number-input" autocomplete="off" />
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
@@ -410,6 +423,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-10">
 							<textarea name="note" class="form-control" id="note-input" autocomplete="off"></textarea>
+							<div class="invalid-feedback"></div>
 						</div>
 					</td>
 				</tr>
