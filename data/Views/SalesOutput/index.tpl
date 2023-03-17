@@ -489,7 +489,7 @@ Flow.start({{/literal}
 	</table>
 	<div class="col-12 text-center">
 		<button type="submit" class="btn btn-success">検　索</button>
-		<button type="reset" class="btn btn-outline-success">キャンセル</button>
+		<button type="reset" class="btn btn-outline-success">リセット</button>
 	</div>
 </fieldset></form>
 <form id="output" action="{url action="output"}" method="POST"><fieldset disabled>
@@ -523,8 +523,8 @@ Flow.start({{/literal}
 			</tbody>
 		</table>
 		<div class="col-12 text-center">
-			<button type="reset" class="btn btn-success">すべてチェック</button>
-			<button type="button" id="checkall" class="btn btn-success">すべてチェックを外す</button>
+			<button type="reset" class="btn btn-outline-success">すべてチェック</button>
+			<button type="button" id="checkall" class="btn btn-outline-success">すべてチェックを外す</button>
 			<button type="submit" class="btn btn-success">出　力</button>
 		</div>
 	</div>

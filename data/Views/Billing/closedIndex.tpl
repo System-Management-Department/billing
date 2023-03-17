@@ -394,7 +394,7 @@ Flow.start({{/literal}
 	<div class="col-12 text-center">
 		<input type="hidden" name="close_processed" value="1" />
 		<button type="submit" class="btn btn-success">検　索</button>
-		<button type="reset" class="btn btn-outline-success">キャンセル</button>
+		<button type="reset" class="btn btn-outline-success">リセット</button>
 	</div>
 </fieldset></form>
 <form id="output" action="{url action="release"}" method="POST"><fieldset disabled>
@@ -428,8 +428,8 @@ Flow.start({{/literal}
 			</tbody>
 		</table>
 		<div class="col-12 text-center">
-			<button type="reset" class="btn btn-success">すべてチェック</button>
-			<button type="button" id="checkall" class="btn btn-success">すべてチェックを外す</button>
+			<button type="reset" class="btn btn-outline-success">すべてチェック</button>
+			<button type="button" id="checkall" class="btn btn-outline-success">すべてチェックを外す</button>
 			<button type="submit" class="btn btn-success">締解除</button>
 		</div>
 	</div>
