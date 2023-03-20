@@ -350,7 +350,7 @@ Flow.start({{/literal}
 								type: "ONE_OF_RANGE",
 								values: [{userEnteredValue: "=range2"}]
 							},
-							strict: true,
+							strict: false,
 							showCustomUi: true
 						}
 					},
