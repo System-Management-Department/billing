@@ -1,12 +1,7 @@
 {block name="title"}売上データ検索画面{/block}
 
 {block name="styles" append}
-<style type="text/css">
-[data-search-output="container"]:has([data-search-output="result"] input[type="hidden"]:not([value=""])) [data-search-output="form"],
-[data-search-output="container"] [data-search-output="result"]:has(input[type="hidden"][value=""]){
-	display: none;
-}
-</style>
+<link rel="stylesheet" type="text/css" href="/assets/common/list.css" />
 {/block}
 
 {block name="scripts" append}

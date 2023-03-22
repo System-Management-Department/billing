@@ -1,14 +1,5 @@
 {block name="title"}売上データ取り込み画面{/block}
 
-{block name="styles" append}
-<style type="text/css">
-[data-search-output="container"]:has([data-search-output="result"] input[type="hidden"]:not([value=""])) [data-search-output="form"],
-[data-search-output="container"] [data-search-output="result"]:has(input[type="hidden"][value=""]){
-	display: none;
-}
-</style>
-{/block}
-
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/googleAPI/GoogleSheets.js"></script>
 <script type="text/javascript" src="/assets/googleAPI/GoogleDrive.js"></script>
