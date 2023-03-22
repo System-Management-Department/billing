@@ -9,8 +9,7 @@
 <script type="text/javascript" src="/assets/googleAPI/GoogleDrive.js"></script>
 <script type="text/javascript" src="/assets/googleAPI/GoogleSheets.js"></script>
 <script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
-<script type="text/javascript">
-{if not empty($value)}{call name="ListItem"}{/if}{literal}
+<script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url action="master"}",
 	jwtDrive: "{url controller="JWT" action="drive"}",
@@ -29,7 +28,7 @@ Flow.start({{/literal}
 	},
 	*init(){
 		const info = this.db.select("OBJECT").addTable("info").setField("key,value").apply();
-		let template = new ListItem();
+		let template = new Template();
 		let gd = new GoogleDrive(this.jwtDrive);
 		let gs = new GoogleSheets(this.jwtSpreadsheet);
 		document.getElementById("create").addEventListener("click", e => {
@@ -86,7 +85,7 @@ Flow.start({{/literal}
 			if("modifiedTime" in item){
 				item.modifiedTime = dateFormatter.format(new Date(item.modifiedTime));
 			}
-			template.insertBeforeEnd(tbody, item);
+			tbody.insertAdjacentHTML("beforeend", template.listItem(item));
 		}
 	},
 	*input(){
@@ -504,8 +503,7 @@ Flow.start({{/literal}
 				<th></th>
 			</tr>
 		</thead>
-		<tbody id="list">
-			{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=[]}{strip}
+		<tbody id="list">{predefine name="listItem" assign="obj"}
 			<tr>
 				<td>{$obj.name}</td>
 				<td>{$obj.modifiedTime}</td>
@@ -514,13 +512,12 @@ Flow.start({{/literal}
 				<td>
 					<div class="d-flex gap-2">
 						<a target="_blank" href="https://docs.google.com/spreadsheets/d/{$obj.id}/edit" class="btn btn-success btn-sm">編集</a>
-						<button type="button" class="btn btn-info btn-sm" data-search-update="{$obj.id}"{$obj->beginRepeat($obj.properties.masterUpdateDisabled)} disabled{$obj->endRepeat()}>マスタ更新</button>
+						<button type="button" class="btn btn-info btn-sm" data-search-update="{$obj.id}"{predef_repeat loop=$obj.properties.masterUpdateDisabled} disabled{/predef_repeat}>マスタ更新</button>
 						<button type="button" class="btn btn-danger btn-sm" data-search-delete="{$obj.id}">削除</button>
 					</div>
 				</td>
 			</tr>
-			{/strip}{/template_class}{/function}
-		</tbody>
+		{/predefine}</tbody>
 	</table>
 	<div class="col-12 text-center">
 		<button type="button" class="btn btn-success" id="create">新　規</button>

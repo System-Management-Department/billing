@@ -3,15 +3,14 @@
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/googleAPI/GoogleSheets.js"></script>
 <script type="text/javascript" src="/assets/googleAPI/GoogleDrive.js"></script>
-<script type="text/javascript">
-{call name="ListItem"}{literal}
+<script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url action="master"}",
 	id: "{$smarty.get.id}",
 	jwt: "{url controller="JWT" action="spreadsheet"}",{literal}
 	response: new SQLite(),
 	gs: null,
-	template: new ListItem(),
+	template: new Template(),
 	dataList: null,
 	isChecked: {
 		length: 1,
@@ -176,10 +175,7 @@ Flow.start({{/literal}
 			}
 		}
 		let table = query.apply();
-		this.dataList.innerHTML = "";
-		for(let row of table){
-			this.template.insertBeforeEnd(this.dataList, row);
-		}
+		this.dataList.innerHTML = table.map(row => this.template.listItem(row)).join("");
 	},
 	*input(targetId){
 		let pObj = {};
@@ -395,8 +391,7 @@ Flow.start({{/literal}
 					<th class="w-20">備考欄</th>
 				</tr>
 			</thead>
-			<tbody id="list">
-				{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=[]}{strip}
+			<tbody id="list">{predefine name="listItem" assign="obj"}
 				<tr>
 					<td><input type="checkbox" name="id[]" value="{$obj.id}" checked /></td>
 					<td>{$obj.slip_number}</td>
@@ -407,8 +402,7 @@ Flow.start({{/literal}
 					<td>{$obj.team_name}</td>
 					<td>{$obj.note}</td>
 				</tr>
-				{/strip}{/template_class}{/function}
-			</tbody>
+			{/predefine}</tbody>
 		</table>
 		<div class="col-12 text-center">
 			<button type="reset" class="btn btn-success">すべてチェック</button>
