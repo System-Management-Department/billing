@@ -10,11 +10,7 @@
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript">
-{call name="ListItem"}
-{call name="ManagerList"}
-{call name="ApplyClientList"}
-{call name="DeleteModal"}{literal}
+<script type="text/javascript">{literal}
 class DeleteListItem{
 	#url;#id;#db;#pObj;#template;
 	constructor(url, id, db, pObj){
@@ -22,7 +18,7 @@ class DeleteListItem{
 		this.#id = id;
 		this.#db = db;
 		this.#pObj = pObj;
-		this.#template = new DeleteModal();
+		this.#template = new Template({func: new Intl.NumberFormat(), format(value){ return (typeof value === 'number') ? this.func.format(value) : value; }});
 	}
 	*[Symbol.iterator](){
 		let header = this.#db.select("ROW")
@@ -54,8 +50,7 @@ class DeleteListItem{
 			.leftJoin("categories on cast(json_extract(t.value, '$.categoryCode') as text)=categories.code")
 			.addField("categories.name as category")
 			.apply();
-		let modalBody = Object.assign(document.querySelector('#deleteModal .modal-body'), {innerHTML: ""});
-		this.#template.insertBeforeEnd(modalBody, header, detail, {func: new Intl.NumberFormat(), format(value){ return (typeof value === 'number') ? this.func.format(value) : value; }});
+		document.querySelector('#deleteModal .modal-body').innerHTML = this.#template.deleteModal(header, detail);
 		
 		let res = yield new Promise((resolve, reject) => { Object.assign(this.#pObj, {resolve: resolve, reject: reject}); });
 		this.#pObj.value = false;
@@ -85,6 +80,7 @@ Flow.start({{/literal}
 	strage: null,
 	response: new SQLite(),
 	y: null,
+	template: new Template(),
 	*[Symbol.iterator](){
 		const form = document.querySelector('form');
 		yield* this.init(form);
@@ -130,18 +126,13 @@ Flow.start({{/literal}
 			document.querySelector('[data-search-label="billing_destination"]').textContent = "";
 		});
 		
-		const template1 = new ManagerList();
-		const template2 = new ApplyClientList();
 		const changeEvent1 = e => {
 			let table = this.response.select("ALL")
 				.setTable("managers")
 				.orWhere("name like ('%' || ? || '%')", e.currentTarget.value)
 				.orWhere("code like ('%' || ? || '%')", e.currentTarget.value)
 				.apply();
-			let tbody = Object.assign(document.querySelector('#managerModal tbody'), {innerHTML: ""});
-			for(let row of table){
-				template1.insertBeforeEnd(tbody, row);
-			}
+			document.querySelector('#managerModal tbody').innerHTML = table.map(row => this.template.managerList(row)).join("");
 		};
 		const changeEvent2 = e => {
 			let table = this.response.select("ALL")
@@ -154,10 +145,7 @@ Flow.start({{/literal}
 				.orWhere("apply_clients.short_name like ('%' || ? || '%')", e.currentTarget.value)
 				.orWhere("apply_clients.code like ('%' || ? || '%')", e.currentTarget.value)
 				.apply();
-			let tbody = Object.assign(document.querySelector('#applyClientModal tbody'), {innerHTML: ""});
-			for(let row of table){
-				template2.insertBeforeEnd(tbody, row);
-			}
+			document.querySelector('#applyClientModal tbody').innerHTML = table.map(row => this.template.applyClientList(row)).join("");
 		};
 		changeEvent1({currentTarget: document.getElementById("manager-input")});
 		changeEvent2({currentTarget: document.getElementById("applyClient-input")});
@@ -278,7 +266,6 @@ Flow.start({{/literal}
 			select.appendChild(option);
 		}
 		
-		const template = new ListItem();
 		let table = this.response.select("ALL")
 			.addTable("sales_slips")
 			.addField("sales_slips.id,sales_slips.slip_number,sales_slips.subject,sales_slips.accounting_date,sales_slips.note")
@@ -292,9 +279,7 @@ Flow.start({{/literal}
 			.addField("apply_clients.name as apply_client_name")
 			.apply();
 		let tbody = document.getElementById("list");
-		for(let row of table){
-			template.insertBeforeEnd(tbody, row);
-		}
+		tbody.insertAdjacentHTML("beforeend", table.map(row => this.template.listItem(row)).join(""));
 		
 		this.response.create_function("json_table", {
 			length: 1,
@@ -448,8 +433,7 @@ Flow.start({{/literal}
 				</th>
 			</tr>
 		</thead>
-		<tbody id="list">
-			{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=[]}{strip}
+		<tbody id="list">{predefine name="listItem" assign="obj"}
 			<tr>
 				<td>{$obj.slip_number}</td>
 				<td>{$obj.accounting_date}</td>
@@ -466,8 +450,7 @@ Flow.start({{/literal}
 					</div>
 				</td>
 			</tr>
-			{/strip}{/template_class}{/function}
-		</tbody>
+		{/predefine}</tbody>
 	</table>
 </div>
 {/block}
@@ -490,16 +473,14 @@ Flow.start({{/literal}
 							<th></th>
 						</tr>
 					</thead>
-					<tbody>
-						{function name="ManagerList"}{template_class name="ManagerList" assign="obj" iterators=[]}{strip}
+					<tbody>{predefine name="managerList" assign="obj"}
 						<tr>
 							<td>{$obj.code}</td>
 							<td>{$obj.name}</td>
 							<td>{$obj.kana}</td>
 							<td><button class="btn btn-success btn-sm" data-bs-dismiss="modal" data-search-modal-value="{$obj.code}" data-search-modal-label="{$obj.name}">選択</button></td>
 						</tr>
-						{/strip}{/template_class}{/function}
-					</tbody>
+					{/predefine}</tbody>
 				</table>
 			</div>
 		</div>
@@ -522,8 +503,7 @@ Flow.start({{/literal}
 							<th></th>
 						</tr>
 					</thead>
-					<tbody>
-						{function name="ApplyClientList"}{template_class name="ApplyClientList" assign="obj" iterators=[]}{strip}
+					<tbody>{predefine name="applyClientList" assign="obj"}
 						<tr>
 							<td>{$obj.code}</td>
 							<td>{$obj.client_name}</td>
@@ -531,8 +511,7 @@ Flow.start({{/literal}
 							<td>{$obj.kana}</td>
 							<td><button class="btn btn-success btn-sm" data-bs-dismiss="modal" data-search-modal-value="{$obj.code}" data-search-modal-label="{$obj.name}">選択</button></td>
 						</tr>
-						{/strip}{/template_class}{/function}
-					</tbody>
+					{/predefine}</tbody>
 				</table>
 			</div>
 		</div>
@@ -544,8 +523,7 @@ Flow.start({{/literal}
 			<div class="modal-header flex-row">
 				<div class="text-center text-danger">本当に削除しますか？</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
 			</div>
-			<div class="modal-body">
-				{function name="DeleteModal"}{template_class name="DeleteModal" assign=["header", "detail", "numberFormat"] iterators=["i"]}{strip}
+			<div class="modal-body">{predefine name="deleteModal" constructor="numberFormat" assign=["header", "detail"]}
 				<table class="table">
 					<tbody>
 						<tr><th scope="row" class="bg-light align-middle ps-4">伝票番号</th><td>{$header.slip_number}</td></tr>
@@ -572,24 +550,23 @@ Flow.start({{/literal}
 							<th>発行部数</th>
 						</tr>
 					</thead>
-					<tbody>{$detail->beginRepeat($detail.length, $i)}
+					<tbody>{predef_repeat loop=$detail.length index="i"}
 						<tr>
 							<td>{$detail[$i].category}</td>
 							<td>{$detail[$i].itemName}</td>
 							<td>{$detail[$i].unit}</td>
-							<td class="text-end">{$numberFormat.format|template_invoke:$detail[$i].quantity}</td>
-							<td class="text-end">{$numberFormat.format|template_invoke:$detail[$i].unitPrice}</td>
-							<td class="text-end">{$numberFormat.format|template_invoke:$detail[$i].amount}</td>
+							<td class="text-end">{$numberFormat.format|predef_invoke:$detail[$i].quantity}</td>
+							<td class="text-end">{$numberFormat.format|predef_invoke:$detail[$i].unitPrice}</td>
+							<td class="text-end">{$numberFormat.format|predef_invoke:$detail[$i].amount}</td>
 							<td>{$detail[$i].data1}</td>
 							<td>{$detail[$i].data2}</td>
 							<td>{$detail[$i].data3}</td>
-							<td class="text-end">{$numberFormat.format|template_invoke:$detail[$i].circulation}</td>
+							<td class="text-end">{$numberFormat.format|predef_invoke:$detail[$i].circulation}</td>
 						</tr>
-					{$detail->endRepeat()}</tbody>
+					{/predef_repeat}</tbody>
 				</table>
 				{$header.name}
-				{/strip}{/template_class}{/function}
-			</div>
+			{/predefine}</div>
 			<div class="modal-footer justify-content-evenly">
 				<button type="button" class="btn btn-success rounded-pill w-25 d-inline-flex" data-bs-dismiss="modal" id="deleteModalYes"><div class="flex-grow-1"></div>はい<div class="flex-grow-1"></div></button>
 				<button type="button" class="btn btn-outline-success rounded-pill w-25 d-inline-flex" data-bs-dismiss="modal"><div class="flex-grow-1"></div>いいえ<div class="flex-grow-1"></div></button>

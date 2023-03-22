@@ -11,10 +11,7 @@
 
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/encoding.js/encoding.min.js"></script>
-<script type="text/javascript">
-{call name="ListItem"}
-{call name="ManagerList"}
-{call name="ApplyClientList"}{literal}
+<script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url action="search"}",{literal}
 	strage: null,
@@ -35,6 +32,7 @@ Flow.start({{/literal}
 			}
 		}
 	},
+	template: new Template(),
 	*[Symbol.iterator](){
 		const form = document.querySelector('form');
 		yield* this.init(form);
@@ -141,7 +139,6 @@ Flow.start({{/literal}
 			select.appendChild(option);
 		}
 		
-		const template = new ListItem();
 		let table = this.response.select("ALL")
 			.addTable("sales_slips")
 			.addField("sales_slips.id,sales_slips.slip_number,sales_slips.subject,sales_slips.accounting_date,sales_slips.note")
@@ -154,10 +151,7 @@ Flow.start({{/literal}
 			.leftJoin("apply_clients on sales_slips.billing_destination=apply_clients.code")
 			.addField("apply_clients.name as apply_client_name")
 			.apply();
-		let tbody = document.getElementById("list");
-		for(let row of table){
-			template.insertBeforeEnd(tbody, row);
-		}
+		document.getElementById("list").insertAdjacentHTML("beforeend", table.map(row => this.template.listItem(row)).join(""));
 		
 		return res;
 	},
@@ -208,18 +202,13 @@ Flow.start({{/literal}
 			document.querySelector('[data-search-label="billing_destination"]').textContent = "";
 		});
 		
-		const template1 = new ManagerList();
-		const template2 = new ApplyClientList();
 		const changeEvent1 = e => {
 			let table = this.response.select("ALL")
 				.setTable("managers")
 				.orWhere("name like ('%' || ? || '%')", e.currentTarget.value)
 				.orWhere("code like ('%' || ? || '%')", e.currentTarget.value)
 				.apply();
-			let tbody = Object.assign(document.querySelector('#managerModal tbody'), {innerHTML: ""});
-			for(let row of table){
-				template1.insertBeforeEnd(tbody, row);
-			}
+			document.querySelector('#managerModal tbody').innerHTML = table.map(row => this.template.managerList(row)).join("");
 		};
 		const changeEvent2 = e => {
 			let table = this.response.select("ALL")
@@ -232,10 +221,7 @@ Flow.start({{/literal}
 				.orWhere("apply_clients.short_name like ('%' || ? || '%')", e.currentTarget.value)
 				.orWhere("apply_clients.code like ('%' || ? || '%')", e.currentTarget.value)
 				.apply();
-			let tbody = Object.assign(document.querySelector('#applyClientModal tbody'), {innerHTML: ""});
-			for(let row of table){
-				template2.insertBeforeEnd(tbody, row);
-			}
+			document.querySelector('#applyClientModal tbody').innerHTML = table.map(row => this.template.applyClientList(row)).join("");
 		};
 		changeEvent1({currentTarget: document.getElementById("manager-input")});
 		changeEvent2({currentTarget: document.getElementById("applyClient-input")});
@@ -549,8 +535,7 @@ Flow.start({{/literal}
 					<th class="w-20">備考欄</th>
 				</tr>
 			</thead>
-			<tbody id="list">
-				{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=[]}{strip}
+			<tbody id="list">{predefine name="listItem" assign="obj"}
 				<tr>
 					<td><input type="checkbox" name="id[]" value="{$obj.id}" checked /></td>
 					<td>{$obj.slip_number}</td>
@@ -561,8 +546,7 @@ Flow.start({{/literal}
 					<td>{$obj.team_name}</td>
 					<td>{$obj.note}</td>
 				</tr>
-				{/strip}{/template_class}{/function}
-			</tbody>
+			{/predefine}</tbody>
 		</table>
 		<div class="col-12 text-center">
 			<button type="reset" class="btn btn-outline-success">すべてチェック</button>
@@ -591,16 +575,14 @@ Flow.start({{/literal}
 							<th></th>
 						</tr>
 					</thead>
-					<tbody>
-						{function name="ManagerList"}{template_class name="ManagerList" assign="obj" iterators=[]}{strip}
+					<tbody>{predefine name="managerList" assign="obj"}
 						<tr>
 							<td>{$obj.code}</td>
 							<td>{$obj.name}</td>
 							<td>{$obj.kana}</td>
 							<td><button class="btn btn-success btn-sm" data-bs-dismiss="modal" data-search-modal-value="{$obj.code}" data-search-modal-label="{$obj.name}">選択</button></td>
 						</tr>
-						{/strip}{/template_class}{/function}
-					</tbody>
+					{/predefine}</tbody>
 				</table>
 			</div>
 		</div>
@@ -623,8 +605,7 @@ Flow.start({{/literal}
 							<th></th>
 						</tr>
 					</thead>
-					<tbody>
-						{function name="ApplyClientList"}{template_class name="ApplyClientList" assign="obj" iterators=[]}{strip}
+					<tbody>{predefine name="applyClientList" assign="obj"}
 						<tr>
 							<td>{$obj.code}</td>
 							<td>{$obj.client_name}</td>
@@ -632,8 +613,7 @@ Flow.start({{/literal}
 							<td>{$obj.kana}</td>
 							<td><button class="btn btn-success btn-sm" data-bs-dismiss="modal" data-search-modal-value="{$obj.code}" data-search-modal-label="{$obj.name}">選択</button></td>
 						</tr>
-						{/strip}{/template_class}{/function}
-					</tbody>
+					{/predefine}</tbody>
 				</table>
 			</div>
 		</div>

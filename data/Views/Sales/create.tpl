@@ -6,10 +6,7 @@
 
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
-<script type="text/javascript">
-{call name="ListItem"}
-{call name="ManagerList"}
-{call name="ApplyClientList"}{literal}
+<script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url controller="Default" action="master"}",
 	success: "{url controller="Home" action="salesInput"}",{literal}
@@ -19,9 +16,7 @@ Flow.start({{/literal}
 	detailList: null,
 	categories: null,
 	title: "売上データ登録",
-	template: new ListItem(),
-	template1: new ManagerList(),
-	template2: new ApplyClientList(),
+	template: null,
 	modalList1: null,
 	modalList2: null,
 	
@@ -65,17 +60,18 @@ Flow.start({{/literal}
 		}
 		
 		this.categories = this.response.select("ALL").setTable("categories").apply();
+		this.template = new Template(this.categories);
 		let detailData = JSON.parse(this.detail.value);
 		let detailKeys = Object.keys(detailData).filter(k => Array.isArray(detailData[k]));
 		for(let i = 0; i < detailData.length; i++){
-			this.template.insertBeforeEnd(this.detailList, this.categories, {});
+			this.detailList.insertAdjacentHTML("beforeend",this.template.listItem({}));
 		}
 		
 		master = this.response.select("ALL")
 			.setTable("managers")
 			.apply();
 		for(let row of master){
-			this.template1.insertBeforeEnd(this.modalList1, row);
+			this.modalList1.insertAdjacentHTML("beforeend",this.template.managerList(row));
 		}
 		master = this.response.select("ALL")
 			.setTable("apply_clients")
@@ -84,7 +80,7 @@ Flow.start({{/literal}
 			.addField("clients.name as client_name")
 			.apply();
 		for(let row of master){
-			this.template2.insertBeforeEnd(this.modalList2, row);
+			this.modalList2.insertAdjacentHTML("beforeend",this.template.applyClientList(row));
 		}
 		
 		return {next: "input", args: []};
@@ -114,7 +110,7 @@ Flow.start({{/literal}
 				.apply();
 			this.modalList1.innerHTML = "";
 			for(let row of table){
-				this.template1.insertBeforeEnd(this.modalList1, row);
+				this.modalList1.insertAdjacentHTML("beforeend",this.template.managerList(row));
 			}
 		}, {signal: controller.signal});
 		document.getElementById("applyClient-input").addEventListener("change", e => {
@@ -130,7 +126,7 @@ Flow.start({{/literal}
 				.apply();
 			this.modalList2.innerHTML = "";
 			for(let row of table){
-				this.template2.insertBeforeEnd(this.modalList2, row);
+				this.modalList2.insertAdjacentHTML("beforeend",this.template.applyClientList(row));
 			}
 		}, {signal: controller.signal});
 		this.modalList1.addEventListener("click", e => {
@@ -154,7 +150,7 @@ Flow.start({{/literal}
 			this.form.querySelector('[data-form-label="billing_destination"]').textContent = "";
 		}, {signal: controller.signal});
 		document.getElementById("add_detail_row").addEventListener("click", e => {
-			this.template.insertBeforeEnd(this.detailList, this.categories, {});
+			this.detailList.insertAdjacentHTML("beforeend",this.template.listItem({}));
 		}, {signal: controller.signal});
 		this.detailList.addEventListener("change", e => {
 			let checked = this.detailList.querySelectorAll('tr:has([data-form-remove]:checked)');
@@ -453,15 +449,14 @@ Flow.start({{/literal}
 			<tfoot>
 				<tr><th colspan="12"><button type="button" class="btn btn-primary bx bxs-message-add" id="add_detail_row">明細行を追加</button></th></tr>
 			</tfoot>
-			<tbody id="list">
-			{function name="ListItem"}{template_class name="ListItem" assign=["categories", "obj"] iterators=["i"]}{strip}
+			<tbody id="list">{predefine name="listItem" constructor="categories" assign="obj"}
 				<tr>
 					<td class="table-group-row-no align-middle"></td>
 					<td><select name="_detail[categoryCode][]" class="form-select">
 						<option value="">選択</option>
-						{$categories->beginRepeat($categories.length, "i")}
+						{predef_repeat loop=$categories.length index="i"}
 						<option value="{$categories[$i].code}">{$categories[$i].name}</option>
-						{$categories->endRepeat()}
+						{/predef_repeat}
 					</select></td>
 					<td><input type="text" name="_detail[itemName][]" class="form-control" /></td>
 					<td><input type="text" name="_detail[unit][]" class="form-control" /></td>
@@ -474,8 +469,7 @@ Flow.start({{/literal}
 					<td><input type="text" name="_detail[circulation][]" class="form-control" /></td>
 					<td><label class="btn bi bi-trash3"><input type="checkbox" data-form-remove="" class="d-contents" /></label></td>
 				</tr>
-			{/strip}{/template_class}{/function}
-			</tbody>
+			{/predefine}</tbody>
 		</table>
 	</div>
 	<div class="grid-colspan-12 text-center">
@@ -502,16 +496,14 @@ Flow.start({{/literal}
 							<th></th>
 						</tr>
 					</thead>
-					<tbody>
-						{function name="ManagerList"}{template_class name="ManagerList" assign="obj" iterators=[]}{strip}
+					<tbody>{predefine name="managerList" assign="obj"}
 						<tr>
 							<td>{$obj.code}</td>
 							<td>{$obj.name}</td>
 							<td>{$obj.kana}</td>
 							<td><button class="btn btn-success btn-sm" data-bs-dismiss="modal" data-search-modal-value="{$obj.code}" data-search-modal-label="{$obj.name}">選択</button></td>
 						</tr>
-						{/strip}{/template_class}{/function}
-					</tbody>
+					{/predefine}</tbody>
 				</table>
 			</div>
 		</div>
@@ -534,8 +526,7 @@ Flow.start({{/literal}
 							<th></th>
 						</tr>
 					</thead>
-					<tbody>
-						{function name="ApplyClientList"}{template_class name="ApplyClientList" assign="obj" iterators=[]}{strip}
+					<tbody>{predefine name="applyClientList" assign="obj"}
 						<tr>
 							<td>{$obj.code}</td>
 							<td>{$obj.client_name}</td>
@@ -543,8 +534,7 @@ Flow.start({{/literal}
 							<td>{$obj.kana}</td>
 							<td><button class="btn btn-success btn-sm" data-bs-dismiss="modal" data-search-modal-value="{$obj.code}" data-search-modal-label="{$obj.name}">選択</button></td>
 						</tr>
-						{/strip}{/template_class}{/function}
-					</tbody>
+					{/predefine}</tbody>
 				</table>
 			</div>
 		</div>

@@ -1,5 +1,104 @@
 <!DOCTYPE html>
 <html lang="ja" class="h-100">
+{capture name="body"}<body class="bg-light h-100">
+	<div class="d-flex flex-row h-100 w-100">
+		<div class="sidebar flex-shrink-0 py-2">
+			<nav class="px-3">
+				<header class="mt-1 position-relative">
+					<div class="image-text d-flex align-items-center">
+						<div class="d-flex align-items-center justify-content-center p-2">
+							<img src="/assets/common/image/logo.svg" width="40" height="30" alt="ダイレクト・ホールディングス" />
+						</div>
+						<div class="text logo-text d-flex flex-column">
+							<div class="name">販売管理システム</div>
+							<div class="profession">Sales Management</div>
+						</div>
+					</div>
+					<label class="bx bx-chevron-right toggle d-flex align-items-center justify-content-center position-absolute top-50">
+						<input type="checkbox" checked />
+					</label>
+				</header>
+			</nav>
+			<nav class="px-3 overflow-hidden">
+				<div class="menu-bar">
+					<ul class="menu-links px-0 py-3">
+						<!--
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="{url controller="Dashboard" action="index"}">
+								<i class="bx bxs-dashboard icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">Dashboard</span>
+							</a>
+						</li>
+						-->
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="{url controller="Home" action="sales"}">
+								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">売上処理</span>
+							</a>
+						</li>
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="{url controller="Home" action="billing"}">
+								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">請求処理</span>
+							</a>
+						</li>
+						{if $smarty.session["User.role"] eq "admin"}
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="{url controller="Home" action="master"}">
+								<i class="bx bx-cog icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">マスタ設定</span>
+							</a>
+						</li>
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="{url controller="Drive" action="x_config"}">
+								<i class="bx bxl-google-cloud icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">サービスアカウント</span>
+							</a>
+						</li>
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="{url controller="Log" action="index"}">
+								<i class="bx bx-history icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">履歴</span>
+							</a>
+						</li>
+						{/if}
+					</ul>
+				</div>
+			</nav>
+		</div>
+		<div class="flex-grow-1 overflow-auto" data-scroll-y="layout">
+			<header class="sticky-top">
+				<nav class="navbar ps-4 py-2 bg-white border-bottom border-success border-2 shadow-sm">
+					<div class="container-fluid gap-2">
+						<div class="navbar-brand flex-grow-1">
+							<span class="navbar-text text-dark">{block name="title"}{/block}</span>
+						</div>
+						<div class="bi bi-person-circle fs-2"></div>
+						<div>
+							<div class="d-flex gap-3">
+								<div>{$smarty.session["User.department"]}</div>
+								<div class="flex-grow-1">{$smarty.session["User.username"]}</div>
+							</div>
+							<div>{$smarty.session["User.email"]}</div>
+						</div>
+						<div>
+							<a href="{url controller="Default" action="logout"}" class="btn btn-primary">ログアウト</a>
+						</div>
+					</div>
+				</nav>
+				<nav class="d-flex align-items-center bg-white shadow-sm">
+					<ol class="breadcrumb p-3 mb-0 flex-grow-1"></ol>
+					<div class="px-3">{block name="tools"}{/block}</div>
+				</nav>
+			</header>
+			<main class="py-4">{block name="body"}{/block}</main>
+		</div>
+	</div>
+	<div class="position-fixed top-0 bottom-0 start-0 end-0 w-auto h-auto m-0 p-0 d-grid grid-template-toast invisible zindex-toast">
+		<div class="position-relative toast-container visible grid-area-2-2"></div>
+	</div>
+	{block name="dialogs"}{javascript_notice}{/block}
+</body>{/capture}
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -17,6 +116,7 @@
 <script type="text/javascript" src="/assets/common/Flow.js"></script>
 <script type="text/javascript" src="/assets/common/Toaster.js"></script>
 <script type="text/javascript">
+{predef_flash}
 Flow.DbName = "{$smarty.session["User.role"]}";{literal}
 Flow.DbLocked = true;
 Flow.start({{/literal}
@@ -119,103 +219,5 @@ document.addEventListener("DOMContentLoaded", e => {
 {/literal}</script>
 {/block}
 </head>
-<body class="bg-light h-100">
-	<div class="d-flex flex-row h-100 w-100">
-		<div class="sidebar flex-shrink-0 py-2">
-			<nav class="px-3">
-				<header class="mt-1 position-relative">
-					<div class="image-text d-flex align-items-center">
-						<div class="d-flex align-items-center justify-content-center p-2">
-							<img src="/assets/common/image/logo.svg" width="40" height="30" alt="ダイレクト・ホールディングス" />
-						</div>
-						<div class="text logo-text d-flex flex-column">
-							<div class="name">販売管理システム</div>
-							<div class="profession">Sales Management</div>
-						</div>
-					</div>
-					<label class="bx bx-chevron-right toggle d-flex align-items-center justify-content-center position-absolute top-50">
-						<input type="checkbox" checked />
-					</label>
-				</header>
-			</nav>
-			<nav class="px-3 overflow-hidden">
-				<div class="menu-bar">
-					<ul class="menu-links px-0 py-3">
-						<!--
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Dashboard" action="index"}">
-								<i class="bx bxs-dashboard icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">Dashboard</span>
-							</a>
-						</li>
-						-->
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Home" action="sales"}">
-								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">売上処理</span>
-							</a>
-						</li>
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Home" action="billing"}">
-								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">請求処理</span>
-							</a>
-						</li>
-						{if $smarty.session["User.role"] eq "admin"}
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Home" action="master"}">
-								<i class="bx bx-cog icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">マスタ設定</span>
-							</a>
-						</li>
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Drive" action="x_config"}">
-								<i class="bx bxl-google-cloud icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">サービスアカウント</span>
-							</a>
-						</li>
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Log" action="index"}">
-								<i class="bx bx-history icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">履歴</span>
-							</a>
-						</li>
-						{/if}
-					</ul>
-				</div>
-			</nav>
-		</div>
-		<div class="flex-grow-1 overflow-auto" data-scroll-y="layout">
-			<header class="sticky-top">
-				<nav class="navbar ps-4 py-2 bg-white border-bottom border-success border-2 shadow-sm">
-					<div class="container-fluid gap-2">
-						<div class="navbar-brand flex-grow-1">
-							<span class="navbar-text text-dark">{block name="title"}{/block}</span>
-						</div>
-						<div class="bi bi-person-circle fs-2"></div>
-						<div>
-							<div class="d-flex gap-3">
-								<div>{$smarty.session["User.department"]}</div>
-								<div class="flex-grow-1">{$smarty.session["User.username"]}</div>
-							</div>
-							<div>{$smarty.session["User.email"]}</div>
-						</div>
-						<div>
-							<a href="{url controller="Default" action="logout"}" class="btn btn-primary">ログアウト</a>
-						</div>
-					</div>
-				</nav>
-				<nav class="d-flex align-items-center bg-white shadow-sm">
-					<ol class="breadcrumb p-3 mb-0 flex-grow-1"></ol>
-					<div class="px-3">{block name="tools"}{/block}</div>
-				</nav>
-			</header>
-			<main class="py-4">{block name="body"}{/block}</main>
-		</div>
-	</div>
-	<div class="position-fixed top-0 bottom-0 start-0 end-0 w-auto h-auto m-0 p-0 d-grid grid-template-toast invisible zindex-toast">
-		<div class="position-relative toast-container visible grid-area-2-2"></div>
-	</div>
-	{block name="dialogs"}{javascript_notice}{/block}
-</body>
+{$smarty.capture.body}
 </html>
