@@ -22,7 +22,14 @@ Flow.start({{/literal}
 		["manager", "当社担当者コード"],
 		["manager_name", "当社担当者名"],
 		["manager_kana", "当社担当者カナ"],
-		["billing_destination", "請求先"],
+		["billing_destination", "請求先コード"],
+		["apply_client_name", "請求先名"],
+		["apply_client_kana", "請求先カナ"],
+		["apply_client_short_name", "請求先略式名称"],
+		["client_code", "得意先コード"],
+		["client_name", "得意先名"],
+		["client_kana", "得意先カナ"],
+		["client_short_name", "得意先略式名称"],
 		["delivery_destination", "納品先"],
 		["subject", "件名"],
 		["note", "備考"],
@@ -313,6 +320,15 @@ Flow.start({{/literal}
 				.addField("teams.name as team_name")
 				.leftJoin("managers on sales_slips.manager=managers.code")
 				.addField("managers.name as manager_name,managers.kana as manager_kana")
+				.leftJoin("apply_clients on sales_slips.billing_destination=apply_clients.code")
+				.addField("apply_clients.name as apply_client_name")
+				.addField("apply_clients.kana as apply_client_kana")
+				.addField("apply_clients.short_name as apply_client_short_name")
+				.addField("apply_clients.client as client_code")
+				.leftJoin("clients on apply_clients.client=clients.code")
+				.addField("clients.name as client_name")
+				.addField("clients.kana as client_kana")
+				.addField("clients.short_name as client_short_name")
 				.andWhere("is_checked(sales_slips.id)=1")
 				.apply();
 			for(let item of table){
