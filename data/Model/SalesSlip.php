@@ -45,7 +45,7 @@ class SalesSlip{
 			->date("売上日付を正しく入力してください。");
 		$check["division"]->required("部門を入力してください。")
 			->range("部門を正しく入力してください。", "in", ($db->select("COL")->setTable("divisions")->setField("code"))());
-		$check["team"]->required("チームを入力してください。")
+		$check["team"] //->required("チームを入力してください。")
 			->range("チームを正しく入力してください。", "in", ($db->select("COL")->setTable("teams")->setField("code"))());
 		$check["manager"]->required("当社担当者を入力してください。")
 			->range("当社担当者を正しく入力してください。", "in", ($db->select("COL")->setTable("managers")->setField("code"))());

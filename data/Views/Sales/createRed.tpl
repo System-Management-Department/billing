@@ -355,7 +355,7 @@ Flow.start({{/literal}
 						</div>
 					</td>
 				</tr>
-				<tr>
+				<tr hidden>
 					<th scope="row" class="bg-light align-middle ps-4">
 						<label class="form-label ls-1" for="team-input">チーム</label>
 					</th>

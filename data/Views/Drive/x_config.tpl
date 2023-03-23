@@ -406,7 +406,7 @@ Flow.start({{/literal}
 					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 15}
 				],
 				gridData: {
-					columnMetadata: [{hiddenByUser:true},{pixelSize:66},{pixelSize:81},{pixelSize:74},{pixelSize:96},{pixelSize:96},{pixelSize:96},{pixelSize:336},{pixelSize:336},{pixelSize:342},{pixelSize:490},{pixelSize:132},{pixelSize:132},{pixelSize:132},{pixelSize:74},{pixelSize:94}]
+					columnMetadata: [{hiddenByUser:true},{pixelSize:66},{pixelSize:81},{pixelSize:74},{pixelSize:96},{hiddenByUser:true},{pixelSize:96},{pixelSize:336},{pixelSize:336},{pixelSize:342},{pixelSize:490},{pixelSize:132},{pixelSize:132},{pixelSize:132},{pixelSize:74},{pixelSize:94}]
 				}
 			}),
 			GoogleSheets.createSheetJson({index: 1, title: "売上明細"}, 500, 11, {
