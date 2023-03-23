@@ -334,21 +334,25 @@ Flow.start({{/literal}
 			for(let item of table){
 				let xElement1 = xDoc.createElement("伝票");
 				for(let [k, attr] of this.attrEntries1){
-					xElement1.setAttribute(attr, item[k]);
+					if(item[k] != null){
+						xElement1.setAttribute(attr, item[k]);
+					}
 				}
 				let detail = JSON.parse(item.detail);
 				for(let i = 0; i < detail.length; i++){
 					let xElement2 = xDoc.createElement("明細");
 					for(let [k, attr] of this.attrEntries2){
-						xElement2.setAttribute(attr, detail[k][i]);
+						if(detail[k][i] != null){
+							xElement2.setAttribute(attr, detail[k][i]);
+						}
 					}
-					if(item["header1"] != null){
+					if((item["header1"] != null) && (detail["data1"] != null)){
 						xElement2.setAttribute("摘要:" + item["header1"].replace(/[\x00-\x2f\x3a-\x40\x5b-\x5e\x60\x7b-\x7f]+/g, "-").replace(/^(?=[0-9\.\-])/, "_"), detail["data1"]);
 					}
-					if(item["header2"] != null){
+					if((item["header2"] != null) && (detail["data2"] != null)){
 						xElement2.setAttribute("摘要:" + item["header2"].replace(/[\x00-\x2f\x3a-\x40\x5b-\x5e\x60\x7b-\x7f]+/g, "-").replace(/^(?=[0-9\.\-])/, "_"), detail["data2"]);
 					}
-					if(item["header3"] != null){
+					if((item["header3"] != null) && (detail["data3"] != null)){
 						xElement2.setAttribute("摘要:" + item["header3"].replace(/[\x00-\x2f\x3a-\x40\x5b-\x5e\x60\x7b-\x7f]+/g, "-").replace(/^(?=[0-9\.\-])/, "_"), detail["data3"]);
 					}
 					xElement1.appendChild(xElement2);
@@ -361,10 +365,23 @@ Flow.start({{/literal}
 				body: res
 			}).then(res => res.json());
 			if(response.success){
-				let blob = new Blob([xSerializer.serializeToString(xDoc)], {type: "application/xml"});
+				let blob;
+				let downloadName;
+				yield fetch("/assets/common/salesOutput.xsl").then(res => res.text()).then(text => {
+					const parser = new DOMParser();
+					const proc = new XSLTProcessor();
+					proc.importStylesheet(parser.parseFromString(text, "application/xml"));
+					const tDoc = proc.transformToDocument(xDoc);
+					blob = new Blob([xSerializer.serializeToString(tDoc)], {type: "text/html"});
+					downloadName = "output.html";
+				}).catch(e => {
+					blob = new Blob([xSerializer.serializeToString(xDoc)], {type: "application/xml"});
+					downloadName = "output.xml";
+				});
+				
 				let a = document.createElement("a");
 				a.setAttribute("href", URL.createObjectURL(blob));
-				a.setAttribute("download", "output.xml");
+				a.setAttribute("download", downloadName);
 				a.click();
 				
 				for(let message of response.messages){
