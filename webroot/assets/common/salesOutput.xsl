@@ -35,6 +35,7 @@
 						<th>支払期日</th>
 						
 						<th>カテゴリーコード</th>
+						<th>カテゴリー名</th>
 						<th>商品名</th>
 						<th>単位</th>
 						<th>数量</th>
@@ -130,11 +131,12 @@
 								<xsl:attribute name="rowspan"><xsl:value-of select="count(明細) + 1" /></xsl:attribute>
 								<xsl:value-of select="@支払期日" />
 							</td>
-							<td colspan="7"></td>
+							<td colspan="8" style="display: none;"></td>
 						</tr>
 						<xsl:for-each select="明細">
 							<tr>
 								<td><xsl:value-of select="@カテゴリーコード" /></td>
+								<td><xsl:value-of select="@カテゴリー名" /></td>
 								<td><xsl:value-of select="@商品名" /></td>
 								<td><xsl:value-of select="@単位" /></td>
 								<td><xsl:value-of select="@数量" /></td>

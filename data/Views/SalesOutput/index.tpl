@@ -309,7 +309,10 @@ Flow.start({{/literal}
 			let xSerializer = new XMLSerializer();
 			let xDoc = xParser.parseFromString('<?xml version="1.0" encoding="UTF-8"?>\n<売上 xmlns:摘要="/data"/>', "application/xml");
 			let xRoot = xDoc.documentElement;
-			
+			let categories = this.response.select("OBJECT")
+				.addTable("categories")
+				.addField("code,name")
+				.apply();
 			this.isChecked.reset(outputForm.querySelectorAll('input:checked:not([disabled])'));
 			let table = this.response.select("ALL")
 				.addTable("sales_slips")
@@ -346,6 +349,9 @@ Flow.start({{/literal}
 							xElement2.setAttribute(attr, detail[k][i]);
 						}
 					}
+					if(detail.categoryCode[i] in categories){
+						xElement2.setAttribute("カテゴリー名", categories[detail.categoryCode[i]].name);
+					}
 					if((item["header1"] != null) && (detail["data1"] != null)){
 						xElement2.setAttribute("摘要:" + item["header1"].replace(/[\x00-\x2f\x3a-\x40\x5b-\x5e\x60\x7b-\x7f]+/g, "-").replace(/^(?=[0-9\.\-])/, "_"), detail["data1"]);
 					}
@@ -368,9 +374,8 @@ Flow.start({{/literal}
 				let blob;
 				let downloadName;
 				yield fetch("/assets/common/salesOutput.xsl").then(res => res.text()).then(text => {
-					const parser = new DOMParser();
 					const proc = new XSLTProcessor();
-					proc.importStylesheet(parser.parseFromString(text, "application/xml"));
+					proc.importStylesheet(xParser.parseFromString(text, "application/xml"));
 					const tDoc = proc.transformToDocument(xDoc);
 					blob = new Blob([xSerializer.serializeToString(tDoc)], {type: "text/html"});
 					downloadName = "output.html";
