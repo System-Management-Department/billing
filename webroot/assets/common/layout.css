@@ -12,6 +12,9 @@ body{
 	--toggle-color: #fff;
 	--text-color: #ccc;
 }
+header, .sidebar{
+	user-select: none;
+}
 .sidebar{
 	width: 230px;
 	background: var(--sidebar-color);
