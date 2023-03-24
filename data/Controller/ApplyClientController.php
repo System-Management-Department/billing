@@ -8,6 +8,7 @@ use App\FileView;
 use App\JsonView;
 use App\RedirectResponse;
 use App\Validator;
+use App\Smarty\SelectionModifiers;
 use Model\ApplyClient;
 use Model\Session;
 use Model\Result;
@@ -63,6 +64,24 @@ class ApplyClientController extends ControllerBase{
 	public function create(){
 		return new View();
 	}
+	
+	#[\Attribute\AcceptRole("admin")]
+	public function upload(){
+		$v = new View();
+		$v["modifiers"] = [
+			"closeProcessing" => SelectionModifiers::closeProcessing([]),
+			"prefectures"     => SelectionModifiers::prefectures([]),
+			"invoiceFormat"   => SelectionModifiers::invoiceFormat([]),
+			"taxRound"        => SelectionModifiers::taxRound([]),
+			"taxProcessing"   => SelectionModifiers::taxProcessing([]),
+			"closeDate"       => SelectionModifiers::closeDate([]),
+			"monthList"       => SelectionModifiers::monthList([]),
+			"unitPriceType"   => SelectionModifiers::unitPriceType([]),
+			"existence"       => SelectionModifiers::existence([]),
+		];
+		return $v;
+	}
+	
 	
 	#[\Attribute\AcceptRole("admin")]
 	public function regist(){

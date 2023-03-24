@@ -153,10 +153,13 @@ Flow.start({{/literal}
 {/literal}</script>
 {/block}
 
+{block name="tools"}
+	<button type="button" class="btn btn-success">CSV出力</button>
+	<a href="{url action="upload"}" class="btn btn-success me-5">CSV取込</a>
+	<a href="{url action="create"}" class="btn btn-success">新しい請求先の追加</a>
+{/block}
+
 {block name="body"}
-<div class="container grid-colspan-12 text-end p-0 mb-2">
-	<a href="{url controller="ApplyClient" action="create"}" class="btn btn-success">新しい請求先の追加</a>
-</div>
 <form action="{url}" class="container border border-secondary rounded p-4 mb-5 bg-white"><fieldset class="row" disabled>
 	<table class="table w-50">
 		<tbody>
