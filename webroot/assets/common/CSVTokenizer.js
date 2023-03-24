@@ -77,6 +77,9 @@ class CSVTokenizer{
 			if(obj.d == CSVTokenizer.delimiter){
 				return Object.assign(obj, {state: "noQuot"});
 			}
+			if(obj.d == CSVTokenizer.separator){
+				return Object.assign(obj, {state: "noQuot"});
+			}
 			throw "";
 		}
 		obj.sb += obj.c;
