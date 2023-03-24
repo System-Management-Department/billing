@@ -5,9 +5,7 @@
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
-<script type="text/javascript">
-{call name="clientList"}{literal}
+<script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url controller="Default" action="master"}",
 	success: "{url controller="ApplyClient" action="index"}",{literal}
@@ -17,9 +15,8 @@ Flow.start({{/literal}
 	detailList: null,
 	detailParameter: null,
 	title: "請求先（納品先）編集",
-	template2: new clientList(),
-	modalList1: null,
-	modalList2: null,
+	template: new Template(),
+	modalList: null,
 	
 	/**
 	 * 状態を監視
@@ -40,19 +37,14 @@ Flow.start({{/literal}
 		this.response.import(buffer, "list");
 		let master, checked;;
 		this.form = document.querySelector('form');
-		this.modalList2 = document.querySelector('#clientModal tbody');
+		this.modalList = document.querySelector('#clientModal tbody');
 
 		checked = this.form.querySelector('[name="client"]');
 		master = this.response.select("ALL")
 			.setTable("clients")
 			.addField("clients.*")
 			.apply();
-		for(let row of master){
-			if(checked.value == row.code){
-				this.form.querySelector('[data-form-label="client"]').textContent = `${row.name}`;
-			}
-			this.template2.insertBeforeEnd(this.modalList2, row);
-		}
+		this.modalList.innerHTML = master.map(row => this.template.clientList(row)).join("");
 		
 		return {next: "input", args: []};
 	},
@@ -81,12 +73,9 @@ Flow.start({{/literal}
 				.orWhere("clients.short_name like ('%' || ? || '%')", e.currentTarget.value)
 				.orWhere("clients.code like ('%' || ? || '%')", e.currentTarget.value)
 				.apply();
-			this.modalList2.innerHTML = "";
-			for(let row of table){
-				this.template2.insertBeforeEnd(this.modalList2, row);
-			}
+			this.modalList.innerHTML = table.map(row => this.template.clientList(row)).join("");
 		}, {signal: controller.signal});
-		this.modalList2.addEventListener("click", e => {
+		this.modalList.addEventListener("click", e => {
 			if(e.target.hasAttribute("data-search-modal-value")){
 				this.form.querySelector('input[name="client"]').value = e.target.getAttribute("data-search-modal-value");
 				this.form.querySelector('[data-form-label="client"]').textContent = e.target.getAttribute("data-search-modal-label");
@@ -595,16 +584,14 @@ Flow.start({{/literal}
 							<th></th>
 						</tr>
 					</thead>
-					<tbody>
-						{function name="clientList"}{template_class name="clientList" assign="obj" iterators=[]}{strip}
+					<tbody>{predefine name="clientList" assign="obj"}
 						<tr>
 							<td>{$obj.code}</td>
 							<td>{$obj.name}</td>
 							<td>{$obj.kana}</td>
 							<td><button class="btn btn-success btn-sm" data-bs-dismiss="modal" data-search-modal-value="{$obj.code}" data-search-modal-label="{$obj.name}">選択</button></td>
 						</tr>
-						{/strip}{/template_class}{/function}
-					</tbody>
+					{/predefine}</tbody>
 				</table>
 			</div>
 		</div>

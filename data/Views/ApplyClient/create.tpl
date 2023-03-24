@@ -5,9 +5,7 @@
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
-<script type="text/javascript">
-{call name="clientList"}{literal}
+<script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url controller="Default" action="master"}",
 	success: "{url controller="ApplyClient" action="index"}",{literal}
@@ -17,9 +15,8 @@ Flow.start({{/literal}
 	detailList: null,
 	detailParameter: null,
 	title: "請求先（納品先）登録",
-	template2: new clientList(),
-	modalList1: null,
-	modalList2: null,
+	template: new Template(),
+	modalList: null,
 	
 	/**
 	 * 状態を監視
@@ -41,14 +38,12 @@ Flow.start({{/literal}
 		let master;
 		this.form = document.querySelector('form');
 		this.detail = this.form.querySelector('[name="detail"]');
-		this.modalList2 = document.querySelector('#clientModal tbody');
+		this.modalList = document.querySelector('#clientModal tbody');
 		master = this.response.select("ALL")
 			.setTable("clients")
 			.addField("clients.*")
 			.apply();
-		for(let row of master){
-			this.template2.insertBeforeEnd(this.modalList2, row);
-		}
+		this.modalList.innerHTML = master.map(row => this.template.clientList(row)).join("");
 		
 		return {next: "input", args: []};
 	},
@@ -77,12 +72,9 @@ Flow.start({{/literal}
 				.orWhere("clients.short_name like ('%' || ? || '%')", e.currentTarget.value)
 				.orWhere("clients.code like ('%' || ? || '%')", e.currentTarget.value)
 				.apply();
-			this.modalList2.innerHTML = "";
-			for(let row of table){
-				this.template2.insertBeforeEnd(this.modalList2, row);
-			}
+			this.modalList.innerHTML = table.map(row => this.template.clientList(row)).join("");
 		}, {signal: controller.signal});
-		this.modalList2.addEventListener("click", e => {
+		this.modalList.addEventListener("click", e => {
 			if(e.target.hasAttribute("data-search-modal-value")){
 				this.form.querySelector('input[name="client"]').value = e.target.getAttribute("data-search-modal-value");
 				this.form.querySelector('[data-form-label="client"]').textContent = e.target.getAttribute("data-search-modal-label");
@@ -265,7 +257,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-6">
 							<select name="location_address1" id="prefectures_list-input" class="form-select">{foreach from=["" => "選択"]|prefectures item="text" key="value"}
-								<option value="{$value}">{$text}</option>
+								<option value="{$value}"{if $value eq "東京都"} selected{/if}>{$text}</option>
 							{/foreach}</select>
 							<div class="invalid-feedback"></div>
 						</div>
@@ -389,7 +381,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-6">
 							<select name="invoice_format" id="invoice_format-input" class="form-select">{foreach from=["" => "選択"]|invoiceFormat item="text" key="value"}
-								<option value="{$value}">{$text}</option>
+								<option value="{$value}"{if $value eq 1} selected{/if}>{$text}</option>
 							{/foreach}</select>
 							<div class="invalid-feedback"></div>
 						</div>
@@ -454,7 +446,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-6">
 							<select name="payment_cycle" id="payment_cycle-input" class="form-select">{foreach from=["" => "選択"]|monthList item="text" key="value"}
-								<option value="{$value}">{$text}</option>
+								<option value="{$value}"{if $value eq 1} selected{/if}>{$text}</option>
 							{/foreach}</select>
 							<div class="invalid-feedback"></div>
 						</div>
@@ -593,34 +585,17 @@ Flow.start({{/literal}
 							<th></th>
 						</tr>
 					</thead>
-					<tbody>
-						{function name="clientList"}{template_class name="clientList" assign="obj" iterators=[]}{strip}
+					<tbody>{predefine name="clientList" assign="obj"}
 						<tr>
 							<td>{$obj.code}</td>
 							<td>{$obj.name}</td>
 							<td>{$obj.kana}</td>
 							<td><button class="btn btn-success btn-sm" data-bs-dismiss="modal" data-search-modal-value="{$obj.code}" data-search-modal-label="{$obj.name}">選択</button></td>
 						</tr>
-						{/strip}{/template_class}{/function}
-					</tbody>
+					{/predefine}</tbody>
 				</table>
 			</div>
 		</div>
 	</div>
 </div>
-{/block}
-
-{block name="scripts" append}
-<script type="text/javascript">
-	function loadFinished(){
-		var select = document.getElementById("prefectures_list-input");
-		select.options[13].selected = true;
-		select = document.getElementById("payment_cycle-input");
-		select.options[1].selected = true;
-		select = document.getElementById("invoice_format-input");
-		select.options[1].selected = true;
-	}
-
-	window.onload = loadFinished;
-</script>
 {/block}

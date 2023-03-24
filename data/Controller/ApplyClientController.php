@@ -21,20 +21,42 @@ class ApplyClientController extends ControllerBase{
 	
 	#[\Attribute\AcceptRole("admin")]
 	public function edit(){
-		// return new View();
 		$db = Session::getDB();
-		$v = new View();
 		
 		$query = $db->select("ROW")
 			->addTable("apply_clients")
+			->andWhere("delete_flag=0")
 			->andWhere("code=?", $this->requestContext->id);
-		$v["data"] = $query();
+		$data = $query();
+		
+		if(empty($data)){
+			// 表示可能な情報がなければ一覧へリダイレクト
+			return new RedirectResponse("*", "index");
+		}
+		
+		$v = new View();
+		$v["data"] = $data;
 		return $v;
 	}
 
 	#[\Attribute\AcceptRole("admin")]
-	public function list(){
-		return new View();
+	public function detail(){
+		$db = Session::getDB();
+		
+		$query = $db->select("ROW")
+			->addTable("apply_clients")
+			->andWhere("delete_flag=0")
+			->andWhere("code=?", $this->requestContext->id);
+		$data = $query();
+		
+		if(empty($data)){
+			// 表示可能な情報がなければ一覧へリダイレクト
+			return new RedirectResponse("*", "index");
+		}
+		
+		$v = new View();
+		$v["data"] = $data;
+		return $v;
 	}
 	
 	#[\Attribute\AcceptRole("admin")]
@@ -42,33 +64,6 @@ class ApplyClientController extends ControllerBase{
 		return new View();
 	}
 	
-	// #[\Attribute\AcceptRole("admin", "entry")]
-	// public function search(){
-	// 	$db = Session::getDB();
-	// 	$sdb = SQLite::cachedData();
-	// 	list($columns, $data) = $db->exportTable("apply_clients", [], "0=1 LIMIT 0");
-	// 	$query = $db->select("ALL")
-	// 		->setTable("apply_clients")
-	// 		->andWhere("delete_flag=0");
-
-	// 	$parameter = false;
-	// 	if(!empty($_POST["code"])){
-	// 		$parameter = true;
-	// 		$query->andWhere("code=?", $_POST["code"]);
-	// 	}
-	// 	if(!empty($_POST["name"])){
-	// 		$parameter = true;
-	// 		$query->andWhere("name like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["name"]));
-	// 	}
-	// 	if(!empty($_POST["phone"])){
-	// 		$parameter = true;
-	// 		$query->andWhere("phone like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["phone"]));
-	// 	}
-
-	// 	// $sdb->createTable("apply_clients", $columns, $parameter ? $query() : []);
-	// 	return new FileView($sdb->getFileName(), "application/vnd.sqlite3");
-	// }
-
 	#[\Attribute\AcceptRole("admin")]
 	public function regist(){
 		$db = Session::getDB();
