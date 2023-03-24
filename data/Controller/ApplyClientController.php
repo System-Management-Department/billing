@@ -120,4 +120,14 @@ class ApplyClientController extends ControllerBase{
 		
 		return new JsonView($result);
 	}
+	
+	#[\Attribute\AcceptRole("admin")]
+	public function import(){
+		$db = Session::getDB();
+		$result = new Result();
+		
+		ApplyClient::execImport($db, $_POST["json"], $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
 }

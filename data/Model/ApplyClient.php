@@ -196,4 +196,59 @@ class ApplyClient{
 			@Logger::record($db, "削除", ["apply_clients" => $code]);
 		}
 	}
+	
+	public static function execImport($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$deleteQuery = $db->delete("apply_clients");
+			$deleteQuery();
+			$table = $db->getJsonArray2Tabel(["apply_clients" => [
+				"code" => "$.code",
+				"client" => "$.client",
+				"unique_name" => "$.name",
+				"name" => "$.name",
+				"kana" => "$.kana",
+				"short_name" => "$.short_name",
+				"location_zip" => "$.location_zip",
+				"location_address1" => "$.location_address1",
+				"location_address2" => "$.location_address2",
+				"location_address3" => "$.location_address3",
+				"phone" => "$.phone",
+				"fax" => "$.fax",
+				"email" => "$.email",
+				"homepage" => "$.homepage",
+				"transactee" => "$.transactee",
+				"transactee_honorific" => "$.transactee_honorific",
+				"unit_price_type" => "$.unit_price_type",
+				"tax_round" => "$.tax_round",
+				"tax_processing" => "$.tax_processing",
+				"close_processing" => "$.close_processing",
+				"close_date" => "$.close_date",
+				"salse_with_ruled_lines" => "$.salse_with_ruled_lines",
+				"delivery_with_ruled_lines" => "$.delivery_with_ruled_lines",
+				"receipt_with_ruled_lines" => "$.receipt_with_ruled_lines",
+				"invoice_with_ruled_lines" => "$.invoice_with_ruled_lines",
+				"receivables_balance" => "$.receivables_balance",
+				"note" => "$.note",
+				"payment_date" => "$.payment_date",
+				"payment_cycle" => "$.payment_cycle",
+				"invoice_format" => "$.invoice_format",
+			]], "t");
+			$insertQuery = $db->insertSelect("apply_clients", "code, client, unique_name, name, kana, short_name, location_zip, location_address1, location_address2, location_address3, phone, fax, email, homepage, transactee, transactee_honorific, unit_price_type, tax_round, tax_processing, close_processing, close_date, salse_with_ruled_lines, delivery_with_ruled_lines, receipt_with_ruled_lines, invoice_with_ruled_lines, receivables_balance, note, payment_date, payment_cycle, invoice_format, created, modified, delete_flag")
+				->addTable($table, $q)
+				->addField("code, client, unique_name, name, kana, short_name, location_zip, location_address1, location_address2, location_address3, phone, fax, email, homepage, transactee, transactee_honorific, unit_price_type, tax_round, tax_processing, close_processing, close_date, salse_with_ruled_lines, delivery_with_ruled_lines, receipt_with_ruled_lines, invoice_with_ruled_lines, receivables_balance, note, payment_date, payment_cycle, invoice_format")
+				->addField("now(), now(), 0");
+			$insertQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("インポートに失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("インポートが完了しました。", "INFO", "");
+			@SQLite::cache($db, "apply_clients");
+			@Logger::record($db, "インポート", ["apply_clients" => []]);
+		}
+	}
 }
