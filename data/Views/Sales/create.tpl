@@ -2,6 +2,15 @@
 
 {block name="styles" append}
 <link rel="stylesheet" type="text/css" href="/assets/common/form.css" />
+<style type="text/css">{literal}
+body [data-visible]{
+	display: none;
+}
+body:has(#invoice_format-input [value="2"]:checked) [data-visible="v2"],
+body:has(#invoice_format-input [value="3"]:checked) [data-visible="v3"]{
+	display: table-cell;
+}
+{/literal}</style>
 {/block}
 
 {block name="scripts" append}
@@ -439,10 +448,10 @@ Flow.start({{/literal}
 					<th>数量</th>
 					<th>単価</th>
 					<th>金額</th>
-					<th class="py-0 align-middle"><input type="text" name="header1" class="form-control form-control-sm" placeholder="摘要ヘッダー１" autocomplete="off" /></th>
-					<th class="py-0 align-middle"><input type="text" name="header2" class="form-control form-control-sm" placeholder="摘要ヘッダー２" autocomplete="off" /></th>
-					<th class="py-0 align-middle"><input type="text" name="header3" class="form-control form-control-sm" placeholder="摘要ヘッダー３" autocomplete="off" /></th>
-					<th>発行部数</th>
+					<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header1" class="form-control form-control-sm" placeholder="摘要ヘッダー１" autocomplete="off" /></th>
+					<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header2" class="form-control form-control-sm" placeholder="摘要ヘッダー２" autocomplete="off" /></th>
+					<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header3" class="form-control form-control-sm" placeholder="摘要ヘッダー３" autocomplete="off" /></th>
+					<th data-visible="v2">発行部数</th>
 					<th></th>
 				</tr>
 			</thead>
@@ -463,10 +472,10 @@ Flow.start({{/literal}
 					<td><input type="text" name="_detail[quantity][]" class="form-control" /></td>
 					<td><input type="text" name="_detail[unitPrice][]" class="form-control" /></td>
 					<td><input type="text" name="_detail[amount][]" class="form-control" /></td>
-					<td><input type="text" name="_detail[data1][]" class="form-control" /></td>
-					<td><input type="text" name="_detail[data2][]" class="form-control" /></td>
-					<td><input type="text" name="_detail[data3][]" class="form-control" /></td>
-					<td><input type="text" name="_detail[circulation][]" class="form-control" /></td>
+					<td data-visible="v3"><input type="text" name="_detail[data1][]" class="form-control" /></td>
+					<td data-visible="v3"><input type="text" name="_detail[data2][]" class="form-control" /></td>
+					<td data-visible="v3"><input type="text" name="_detail[data3][]" class="form-control" /></td>
+					<td data-visible="v2"><input type="text" name="_detail[circulation][]" class="form-control" /></td>
 					<td><label class="btn bi bi-trash3"><input type="checkbox" data-form-remove="" class="d-contents" /></label></td>
 				</tr>
 			{/predefine}</tbody>
