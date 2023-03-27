@@ -116,6 +116,7 @@ class Team{
 	}
 	
 	public static function execDelete($db, $q, $context, $result){
+		$code = $q["id"];
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("teams", [
@@ -134,6 +135,41 @@ class Team{
 			$result->addMessage("削除が完了しました。", "INFO", "");
 			@SQLite::cache($db, "teams");
 			@Logger::record($db, "削除", ["teams" => $q["code"]]);
+		}
+	}
+	
+	public static function execImport($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$deleteQuery = $db->delete("teams");
+			$deleteQuery();
+			$table = $db->getJsonArray2Tabel(["teams" => [
+				"code" => "$.code",
+				"name" => "$.name",
+				"kana" => "$.kana",
+				"location_zip" => "$.location_zip",
+				"location_address1" => "$.location_address1",
+				"location_address2" => "$.location_address2",
+				"location_address3" => "$.location_address3",
+				"phone" => "$.phone",
+				"fax" => "$.fax",
+				"note" => "$.note",
+			]], "t");
+			$insertQuery = $db->insertSelect("teams", "code, name, kana, location_zip, location_address1, location_address2, location_address3, phone, fax, note, created, modified, delete_flag")
+				->addTable($table, $q)
+				->addField("code, name, kana, location_zip, location_address1, location_address2, location_address3, phone, fax, note")
+				->addField("now(), now(), 0");
+			$insertQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("インポートに失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("インポートが完了しました。", "INFO", "");
+			@SQLite::cache($db, "teams");
+			@Logger::record($db, "インポート", ["teams" => []]);
 		}
 	}
 }

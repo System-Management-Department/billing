@@ -10,15 +10,13 @@
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript">
-{call name="ListItem"}
-{literal}
+<script type="text/javascript">{literal}
 Flow.start({{/literal}
-	dbDownloadURL: "{url controller="Default" action="master"}",
-	deleteURL: "{url action="delete"}",{literal}
+	dbDownloadURL: "{url controller="Default" action="master"}",{literal}
 	strage: null,
 	response: new SQLite(),
 	y: null,
+	template: new Template(),
 	*[Symbol.iterator](){
 		const form = document.querySelector('form');
 		yield* this.init(form);
@@ -34,84 +32,66 @@ Flow.start({{/literal}
 			}
 			this.y = null;
 		}
-		
 	},
 	*init(form){
-		let {data, label} = yield* this.search(history);
-		if(history != null){
-			let searchLabels = document.querySelectorAll('[data-search-label]');
-			for(let i = searchLabels.length - 1; i >= 0; i--){
-				let key = searchLabels[i].getAttribute("data-search-label");
-				if(key in label){
-					searchLabels[i].innerHTML = label[key];
-				}
-			}
-			addEventListener("beforeunload", e => {
-				let sy = {};
-				const scrollY = document.querySelectorAll('[data-scroll-y]');
-				for(let i = scrollY.length - 1; i >= 0; i--){
-					let ele = scrollY[i];
-					sy[ele.getAttribute("data-scroll-y")] = ele.scrollTop;
-				}
-				this.strage.updateSet("search_histories", {
-					scroll_y: JSON.stringify(sy)
-				}, {})
-					.andWhere("location=?", history.location)
-					.andWhere("time=?", history.time)
-					.apply();
-				this.strage.commit();
-			});
-		}
-	},
-	*search(history){
-		let res = {data: null, label: null};
-		const buffer = yield fetch(this.dbDownloadURL, {
-			method: "POST",
-		}).then(response => response.arrayBuffer());
+		this.strage = yield* Flow.waitDbUnlock();
+		const buffer = yield fetch(this.dbDownloadURL).then(response => response.arrayBuffer());
 		this.response.import(buffer, "list");
 		
-		
-		const template = new ListItem();
-		let table = this.response.select("ALL")
-			.addTable("teams")
-			.addField("teams.code,teams.name,teams.phone")
-			.apply();
-		let tbody = document.getElementById("list");
-		for(let row of table){
-			template.insertBeforeEnd(tbody, row);
-		}
-		
-		tbody.addEventListener("click", e => {
-			if(e.target.hasAttribute("data-search-delete")){
-				let formData = new FormData();
-				formData.append("id", e.target.getAttribute("data-search-delete"));
-				fetch(this.deleteURL, {
-					method: "POST",
-					body: formData
-				})
-				.then(response => response.json())
-				.then(response => {
-					if(response.success){
-						// フォーム送信 成功
-						for(let message of response.messages){
-							Flow.DB.insertSet("messages", {title: "得意先削除", message: message[0], type: message[1], name: message[2]}, {}).apply();
-						}
-						Flow.DB.commit().then(res => { location.reload(); });
+		yield* this.search();
+		let csvKeys = [
+			"code", "name", "kana", "location_zip", "location_address1", "location_address2", "location_address3", "phone", "fax", "note"
+		];
+		let csvData = masterData = this.response.select("ALL").addTable("teams").apply();
+		csvData.unshift({
+			code: "チームコード",
+			name: "チーム名",
+			kana: "チーム名カナ",
+			location_zip: "郵便番号",
+			location_address1: "都道府県",
+			location_address2: "市区町村・番地",
+			location_address3: "建物名",
+			phone: "電話番号",
+			fax: "FAX",
+			note: "備考",
+		});
+		let blob = new Blob([
+			new Uint8Array([0xef, 0xbb, 0xbf]),
+			csvData.map(row => {
+				let res = [];
+				for(let k of csvKeys){
+					let v = row[k];
+					if(v == null){
+						res.push("");
+					}else if(typeof v === "string" && v.match(/[,"\r\n]/)){
+						res.push(`"${v.split('"').join('""')}"`);
+					}else{
+						res.push(`${v}`);
 					}
-				});
-			}
-		}, {useCapture: true});
+				}
+				return res.join(",");
+			}).join("\r\n")
+		], {type: "text/csv"});
+		document.getElementById("export").setAttribute("href", URL.createObjectURL(blob));
 		
-		return res;
+	},
+	*search(){
+		let query = this.response.select("ALL")
+			.addTable("teams");
+		let table = query.apply();
+		document.getElementById("list").innerHTML = table.map(row => this.template.listItem(row)).join("");
 	}
 });
 {/literal}</script>
 {/block}
 
+{block name="tools"}
+	<a class="btn btn-success" id="export" download="teams.csv">CSV出力</a>
+	<a href="{url action="upload"}" class="btn btn-success me-5">CSV取込</a>
+	<a href="{url action="create"}" class="btn btn-success">新しい部門の追加</a>
+{/block}
+
 {block name="body"}
-<div class="container grid-colspan-12 text-end p-0 mb-2">
-	<a href="{url controller="Team" action="create"}" class="btn btn-success">新しいチームの追加</a>
-</div>
 <div class="container border border-secondary rounded p-4 bg-white table-responsive">
 	<table class="table table_sticky_list">
 		<thead>
@@ -122,18 +102,16 @@ Flow.start({{/literal}
 				<th></th>
 			</tr>
 		</thead>
-		<tbody id="list">
-			{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=[]}{strip}
+		<tbody id="list">{predefine name="listItem" assign="obj"}
 			<tr>
 				<td>{$obj.code}</td>
 				<td>{$obj.name}</td>
 				<td>{$obj.phone}</td>
 				<td>
-					<a href="{url action="edit"}/{$obj.code}" class="btn btn-sm bx bxs-edit"></a>
+					<a href="{url action="detail"}/{$obj.code}" class="btn btn-sm btn-info">詳細</a>
 				</td>
 			</tr>
-			{/strip}{/template_class}{/function}
-		</tbody>
+		{/predefine}</tbody>
 	</table>
 </div>
 {/block}
