@@ -118,7 +118,7 @@ class Division{
 	}
 	
 	public static function execDelete($db, $q, $context, $result){
-		$code = $context->id;
+		$code = $q["id"];
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("divisions", [
@@ -137,6 +137,42 @@ class Division{
 			$result->addMessage("削除が完了しました。", "INFO", "");
 			@SQLite::cache($db, "divisions");
 			@Logger::record($db, "削除", ["divisions" => $code]);
+		}
+	}
+	
+	public static function execImport($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$deleteQuery = $db->delete("divisions");
+			$deleteQuery();
+			$table = $db->getJsonArray2Tabel(["divisions" => [
+				"code" => "$.code",
+				"name" => "$.name",
+				"kana" => "$.kana",
+				"location_zip" => "$.location_zip",
+				"location_address1" => "$.location_address1",
+				"location_address2" => "$.location_address2",
+				"location_address3" => "$.location_address3",
+				"phone" => "$.phone",
+				"fax" => "$.fax",
+				"print_flag" => "$.print_flag",
+				"note" => "$.note",
+			]], "t");
+			$insertQuery = $db->insertSelect("divisions", "code, name, kana, location_zip, location_address1, location_address2, location_address3, phone, fax, print_flag, note, created, modified, delete_flag")
+				->addTable($table, $q)
+				->addField("code, name, kana, location_zip, location_address1, location_address2, location_address3, phone, fax, print_flag, note")
+				->addField("now(), now(), 0");
+			$insertQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("インポートに失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("インポートが完了しました。", "INFO", "");
+			@SQLite::cache($db, "divisions");
+			@Logger::record($db, "インポート", ["divisions" => []]);
 		}
 	}
 }

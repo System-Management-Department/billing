@@ -5,20 +5,16 @@
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
-<script type="text/javascript">
-{literal}
+<script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url controller="Default" action="master"}",
-	success: "{url controller="Division" action="index"}",{literal}
+	success: "{url action="index"}",{literal}
 	response: new SQLite(),
 	form: null,
 	detail: null,
 	detailList: null,
 	detailParameter: null,
 	title: "部門登録",
-	modalList1: null,
-	modalList2: null,
 	
 	/**
 	 * 状態を監視
@@ -203,7 +199,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-6">
 							<select name="location_address1" id="prefectures_list-input" class="form-select">{foreach from=["" => "選択"]|prefectures item="text" key="value"}
-								<option value="{$value}">{$text}</option>
+								<option value="{$value}"{if $value eq "東京都"} selected{/if}>{$text}</option>
 							{/foreach}</select>
 							<div class="invalid-feedback"></div>
 						</div>
@@ -282,15 +278,4 @@ Flow.start({{/literal}
 		<button type="submit" class="btn btn-success rounded-pill w-25 d-inline-flex"><div class="flex-grow-1"></div>登録・更新<div class="flex-grow-1"></div></button>
 	</div>
 </fieldset></form>
-{/block}
-
-{block name="scripts" append}
-<script type="text/javascript">
-	function loadFinished(){
-		var select = document.getElementById("prefectures_list-input");
-		select.options[13].selected = true;
-	}
-
-	window.onload = loadFinished;
-</script>
 {/block}

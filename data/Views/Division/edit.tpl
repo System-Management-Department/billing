@@ -5,20 +5,16 @@
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
-<script type="text/javascript">
-{literal}
+<script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url controller="Default" action="master"}",
-	success: "{url controller="Division" action="index"}",{literal}
+	success: "{url action="index"}",{literal}
 	response: new SQLite(),
 	form: null,
 	detail: null,
 	detailList: null,
 	detailParameter: null,
 	title: "部門編集",
-	modalList1: null,
-	modalList2: null,
 	
 	/**
 	 * 状態を監視
