@@ -5,9 +5,7 @@
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
-<script type="text/javascript">
-{literal}
+<script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url controller="Default" action="master"}",
 	success: "{url controller="Client" action="index"}",{literal}
@@ -17,8 +15,6 @@ Flow.start({{/literal}
 	detailList: null,
 	detailParameter: null,
 	title: "得意先クライアント編集",
-	modalList1: null,
-	modalList2: null,
 	
 	/**
 	 * 状態を監視
@@ -461,17 +457,17 @@ Flow.start({{/literal}
 					</th>
 					<td>
 						<div class="col-10">
-						<input type="text" name="location_lat_lng" class="form-control" id="location_lat_lng-input" autocomplete="off" />
+						<input type="text" name="location_lat_lng" class="form-control" id="location_lat_lng-input" autocomplete="off" value="{$data.location_lat_lng|escape:"html"}" />
 						</div>
 					</td>
 				</tr> -->
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="remarks-input">備考</label>
+						<label class="form-label ls-1" for="note-input">備考</label>
 					</th>
 					<td>
 						<div class="col-10">
-							<textarea name="remarks" class="form-control" id="remarks-input" autocomplete="off">{$data.remarks|escape:"html"}</textarea>
+							<textarea name="note" class="form-control" id="note-input" autocomplete="off">{$data.note|escape:"html"}</textarea>
 						</div>
 					</td>
 				</tr>

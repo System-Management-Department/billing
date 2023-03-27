@@ -1,4 +1,4 @@
-{block name="title"}請求先（納品先）編集画面{/block}
+{block name="title"}得意先クライアント編集画面{/block}
 
 {block name="scripts" append}
 <script type="text/javascript">{literal}
@@ -25,7 +25,7 @@ Flow.start({{/literal}
 			if(response.success){
 				// フォーム送信 成功
 				for(let message of response.messages){
-					Flow.DB.insertSet("messages", {title: "請求先削除", message: message[0], type: message[1], name: message[2]}, {}).apply();
+					Flow.DB.insertSet("messages", {title: "得意先削除", message: message[0], type: message[1], name: message[2]}, {}).apply();
 				}
 				Flow.DB.commit().then(res => { location.href = this.success; });
 			}
@@ -48,7 +48,7 @@ Flow.start({{/literal}
 			<table class="col table">
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="code-input">請求先コード</label>
+						<label class="form-label ls-1" for="code-input">得意先コード</label>
 					</th>
 					<td>
 						<div class="col-3">{$data.code|escape:"html"}</div>
@@ -56,15 +56,7 @@ Flow.start({{/literal}
 				</tr>
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="client-input">得意先</label>
-					</th>
-					<td>
-						<div class="col-10">{$data.client|escape:"html"}</div>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="name-input">請求先名</label>
+						<label class="form-label ls-1" for="name-input">得意先名</label>
 					</th>
 					<td>
 						<div class="col-10">{$data.name|escape:"html"}</div>
@@ -72,7 +64,7 @@ Flow.start({{/literal}
 				</tr>
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="kana-input">請求先名カナ</label>
+						<label class="form-label ls-1" for="kana-input">得意先名カナ</label>
 					</th>
 					<td>
 						<div class="col-10">{$data.kana|escape:"html"}</div>
@@ -80,7 +72,7 @@ Flow.start({{/literal}
 				</tr>
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="short_name-input">請求先名称略</label>
+						<label class="form-label ls-1" for="short_name-input">得意先名称略</label>
 					</th>
 					<td>
 						<div class="col-10">{$data.short_name|escape:"html"}</div>
@@ -161,7 +153,7 @@ Flow.start({{/literal}
 			<table class="col table">
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="transactee-input">請求先担当者</label>
+						<label class="form-label ls-1" for="transactee-input">得意先担当者</label>
 					</th>
 					<td>
 						<div class="col-10">{$data.transactee|escape:"html"}</div>
@@ -175,7 +167,7 @@ Flow.start({{/literal}
 						<div class="col-4">{$data.transactee_honorific|escape:"html"}</div>
 					</td>
 				</tr>
-				<!-- <tr>
+				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
 						<label class="form-label ls-1" for="department-input">部署名</label>
 					</th>
@@ -189,14 +181,6 @@ Flow.start({{/literal}
 					</th>
 					<td>
 						<div class="col-10">{$data.managerial_position|escape:"html"}</div>
-					</td>
-				</tr> -->
-				<tr>
-					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="invoice_format-input">請求書パターン</label>
-					</th>
-					<td>
-						<div class="col-6">{$data.invoice_format|invoiceFormat}</div>
 					</td>
 				</tr>
 				<tr>
@@ -229,22 +213,6 @@ Flow.start({{/literal}
 					</th>
 					<td>
 						<div class="col-6">{$data.close_date|closeDate}</div>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="payment_cycle-input">入金サイクル （◯ヶ月後）</label>
-					</th>
-					<td>
-						<div class="col-6">{$data.payment_cycle|monthList}</div>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="payment_date-input">入金予定日（28日以降は末日を選択）</label>
-					</th>
-					<td>
-						<div class="col-6">{$data.payment_date|closeDate}</div>
 					</td>
 				</tr>
 			</table>

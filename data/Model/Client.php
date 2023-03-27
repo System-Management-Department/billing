@@ -51,7 +51,7 @@ class Client{
 		$check["close_processing"]->required("請求方法を選択してください。");
 		$check["close_date"]->required("締日指定を選択してください。");
 		$check["receivables_balance"]->numeric("期首売掛残高は数値で入力してください。");
-		$check["remarks"]->length("備考は-文字以下で入力してください。", null, 255);
+		$check["note"]->length("備考は-文字以下で入力してください。", null, 255);
 	}
 	
 	public static function execInsert($db, $q, $context, $result){
@@ -94,8 +94,8 @@ class Client{
 				"receipt_with_ruled_lines" => $q["receipt_with_ruled_lines"],
 				"invoice_with_ruled_lines" => $q["invoice_with_ruled_lines"],
 				"receivables_balance" => $q["receivables_balance"] == "" ? 0 : $q["receivables_balance"],
-				"location_lat_lng" => $q["location_lat_lng"],
-				"remarks" => $q["remarks"],
+				//"location_lat_lng" => $q["location_lat_lng"],
+				"note" => $q["note"],
 			],[
 				"created" => "now()",
 				"modified" => "now()",
@@ -145,8 +145,8 @@ class Client{
 				"receipt_with_ruled_lines" => $q["receipt_with_ruled_lines"],
 				"invoice_with_ruled_lines" => $q["invoice_with_ruled_lines"],
 				"receivables_balance" => $q["receivables_balance"] == "" ? 0 : $q["receivables_balance"],
-				"location_lat_lng" => $q["location_lat_lng"],
-				"remarks" => $q["remarks"],
+				//"location_lat_lng" => $q["location_lat_lng"],
+				"note" => $q["note"],
 			],[
 				"modified" => "now()",
 			]);
@@ -185,6 +185,58 @@ class Client{
 			$result->addMessage("削除が完了しました。", "INFO", "");
 			@SQLite::cache($db, "clients");
 			@Logger::record($db, "削除", ["clients" => $code]);
+		}
+	}
+	
+	public static function execImport($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$deleteQuery = $db->delete("clients");
+			$deleteQuery();
+			$table = $db->getJsonArray2Tabel(["clients" => [
+				"code" => "$.code",
+				"name" => "$.name",
+				"kana" => "$.kana",
+				"short_name" => "$.short_name",
+				"location_zip" => "$.location_zip",
+				"location_address1" => "$.location_address1",
+				"location_address2" => "$.location_address2",
+				"location_address3" => "$.location_address3",
+				"phone" => "$.phone",
+				"fax" => "$.fax",
+				"email" => "$.email",
+				"homepage" => "$.homepage",
+				"transactee" => "$.transactee",
+				"transactee_honorific" => "$.transactee_honorific",
+				"unit_price_type" => "$.unit_price_type",
+				"tax_round" => "$.tax_round",
+				"tax_processing" => "$.tax_processing",
+				"close_processing" => "$.close_processing",
+				"close_date" => "$.close_date",
+				"salse_with_ruled_lines" => "$.salse_with_ruled_lines",
+				"delivery_with_ruled_lines" => "$.delivery_with_ruled_lines",
+				"receipt_with_ruled_lines" => "$.receipt_with_ruled_lines",
+				"invoice_with_ruled_lines" => "$.invoice_with_ruled_lines",
+				"receivables_balance" => "$.receivables_balance",
+				"note" => "$.note",
+				"department" => "$.department",
+				"managerial_position" => "$.managerial_position",
+			]], "t");
+			$insertQuery = $db->insertSelect("clients", "code, name, kana, short_name, location_zip, location_address1, location_address2, location_address3, phone, fax, email, homepage, transactee, transactee_honorific, unit_price_type, tax_round, tax_processing, close_processing, close_date, salse_with_ruled_lines, delivery_with_ruled_lines, receipt_with_ruled_lines, invoice_with_ruled_lines, receivables_balance, note, department, managerial_position, created, modified, delete_flag")
+				->addTable($table, $q)
+				->addField("code, name, kana, short_name, location_zip, location_address1, location_address2, location_address3, phone, fax, email, homepage, transactee, transactee_honorific, unit_price_type, tax_round, tax_processing, close_processing, close_date, salse_with_ruled_lines, delivery_with_ruled_lines, receipt_with_ruled_lines, invoice_with_ruled_lines, receivables_balance, note, department, managerial_position")
+				->addField("now(), now(), 0");
+			$insertQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("インポートに失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("インポートが完了しました。", "INFO", "");
+			@SQLite::cache($db, "clients");
+			@Logger::record($db, "インポート", ["clients" => []]);
 		}
 	}
 }

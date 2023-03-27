@@ -10,60 +10,13 @@
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript">
-{call name="ListItem"}
-{call name="DeleteModal"}{literal}
-class DeleteListItem{
-	#url;#id;#db;#pObj;#template;
-	constructor(url, id, db, pObj){
-		this.#url = url;
-		this.#id = id;
-		this.#db = db;
-		this.#pObj = pObj;
-		this.#template = new DeleteModal();
-	}
-	*[Symbol.iterator](){
-		let header = this.#db.select("ROW")
-			.addTable("apply_clients")
-			.addField("apply_clients.name")
-			.andWhere("code=?", Number(this.#id))
-			.apply();
-		let detail = this.#db.select("ALL")
-			.addTable("apply_clients")
-			.addField("apply_clients.name")
-			.andWhere("apply_clients.code=?", Number(this.#id))
-			.apply();
-		let modalBody = Object.assign(document.querySelector('#deleteModal .modal-body'), {innerHTML: ""});
-		this.#template.insertBeforeEnd(modalBody, header);
-		
-		let res = yield new Promise((resolve, reject) => { Object.assign(this.#pObj, {resolve: resolve, reject: reject}); });
-		this.#pObj.value = false;
-		if(res){
-			let formData = new FormData();
-			formData.append("id", this.#id);
-			fetch(this.#url, {
-				method: "POST",
-				body: formData
-			})
-			.then(response => response.json())
-			.then(response => {
-				if(response.success){
-					// フォーム送信 成功
-					for(let message of response.messages){
-						Flow.DB.insertSet("messages", {title: "売上削除", message: message[0], type: message[1], name: message[2]}, {}).apply();
-					}
-					Flow.DB.commit().then(res => { location.reload(); });
-				}
-			});
-		}
-	}
-}
+<script type="text/javascript">{literal}
 Flow.start({{/literal}
-	dbDownloadURL: "{url controller="Default" action="master"}",
-	deleteURL: "{url action="delete"}",{literal}
+	dbDownloadURL: "{url controller="Default" action="master"}",{literal}
 	strage: null,
 	response: new SQLite(),
 	y: null,
+	template: new Template(),
 	*[Symbol.iterator](){
 		const form = document.querySelector('form');
 		yield* this.init(form);
@@ -97,16 +50,8 @@ Flow.start({{/literal}
 				time: Date.now(),
 				scroll_y: JSON.stringify(sy)
 			}, {}).apply();
-			this.strage.commit().then(e => {
-				location.href = form.getAttribute("action");
-				location.reload();
-			});
-		});
-		
-		form.addEventListener("reset", e => {
-			document.querySelector('input[name="code"]').value = "";
-			document.querySelector('input[name="name"]').value = "";
-			document.querySelector('input[name="phone"]').value = "";
+			this.strage.commit();
+			this.search(obj.data).next();
 		});
 
 		if(this.y != null){
@@ -120,7 +65,6 @@ Flow.start({{/literal}
 			}
 			this.y = null;
 		}
-		
 	},
 	*init(form){
 		this.strage = yield* Flow.waitDbUnlock();
@@ -129,7 +73,17 @@ Flow.start({{/literal}
 			.andWhere("location=?", form.getAttribute("action"))
 			.setOrderBy("time DESC")
 			.apply();
-		let {data, label} = yield* this.search(history);
+
+		let data, label;
+		if(history != null){
+			let obj = JSON.parse(history.json);
+			data = obj.data;
+			label = obj.label;
+		}
+		const buffer = yield fetch(this.dbDownloadURL).then(response => response.arrayBuffer());
+		this.response.import(buffer, "list");
+		
+		yield* this.search(data);
 		if(history != null){
 			for(let input of form.elements){
 				if(!input.hasAttribute("name")){
@@ -164,58 +118,103 @@ Flow.start({{/literal}
 				this.strage.commit();
 			});
 		}
+		let csvKeys = [
+			"code", "name", "kana", "short_name", "location_zip", "location_address1", "location_address2", "location_address3",
+			"phone", "fax", "email", "homepage", "transactee", "transactee_honorific", "department", "managerial_position", "tax_round", "tax_processing",
+			"close_processing", "close_date", "unit_price_type",
+			"salse_with_ruled_lines", "delivery_with_ruled_lines", "receipt_with_ruled_lines", "invoice_with_ruled_lines",
+			"receivables_balance", "note"
+		];
+		let csvData = masterData = this.response.select("ALL").addTable("clients").apply();
+		csvData.unshift({
+			code: "得意先コード",
+			name: "得意先名",
+			kana: "得意先名カナ",
+			short_name: "得意先名称略",
+			location_zip: "郵便番号",
+			location_address1: "都道府県",
+			location_address2: "市区町村・番地",
+			location_address3: "建物名",
+			phone: "電話番号",
+			fax: "FAX",
+			email: "メールアドレス",
+			homepage: "ホームページ",
+			transactee: "得意先担当者",
+			transactee_honorific: "担当者敬称",
+			department: "部署名",
+			managerial_position: "役職名",
+			tax_round: "税端数処理",
+			tax_processing: "税処理",
+			close_processing: "請求方法",
+			close_date: "締日指定（28日以降は末日を選択）",
+			unit_price_type: "単価種別",
+			salse_with_ruled_lines: "売上伝票種別",
+			delivery_with_ruled_lines: "納品書種別",
+			receipt_with_ruled_lines: "受領書種別",
+			invoice_with_ruled_lines: "請求書種別",
+			receivables_balance: "期首売掛残高",
+			note: "備考"
+		});
+		let blob = new Blob([
+			new Uint8Array([0xef, 0xbb, 0xbf]),
+			csvData.map(row => {
+				let res = [];
+				for(let k of csvKeys){
+					let v = row[k];
+					if(v == null){
+						res.push("");
+					}else if(typeof v === "string" && v.match(/[,"\r\n]/)){
+						res.push(`"${v.split('"').join('""')}"`);
+					}else{
+						res.push(`${v}`);
+					}
+				}
+				return res.join(",");
+			}).join("\r\n")
+		], {type: "text/csv"});
+		document.getElementById("export").setAttribute("href", URL.createObjectURL(blob));
+		
 	},
-	*search(history){
-		let res = {data: null, label: null};
-		let formData = new FormData();
-		if(history != null){
-			let {data, label} = res = JSON.parse(history.json);
-			for(let k in data){
-				for(let v of data[k]){
-					formData.append(k, v);
+	*search(parameter){
+		let query = this.response.select("ALL")
+			.addTable("clients");
+		let searchObj = {
+			code(q, v){
+				if((v != null) && (v != "")){
+					q.andWhere("code like '%' || ? || '%'", v.replace(/(?=[\\\%\_])/g, "\\"));
+				}
+			},
+			name(q, v){
+				if((v != null) && (v != "")){
+					let val = v.replace(/(?=[\\\%\_])/g, "\\");
+					q.andWhere("((unique_name like '%' || ? || '%') OR (name like '%' || ? || '%') OR (kana like '%' || ? || '%') OR (short_name like '%' || ? || '%'))", val, val, val, val);
+				}
+			},
+			phone(q, v){
+				if((v != null) && (v != "")){
+					q.andWhere("phone like '%' || ? || '%'", v.replace(/(?=[\\\%\_])/g, "\\"));
 				}
 			}
-		}
-		const buffer = yield fetch(this.dbDownloadURL, {
-			method: "POST",
-			body: formData
-		}).then(response => response.arrayBuffer());
-		this.response.import(buffer, "list");
-		
-		
-		const template = new ListItem();
-		let table = this.response.select("ALL")
-			.addTable("clients")
-			.addField("clients.code,clients.name,clients.phone,clients.transactee,clients.transactee_honorific")
-			.apply();
-		let tbody = document.getElementById("list");
-		for(let row of table){
-			template.insertBeforeEnd(tbody, row);
-		}
-		
-		let pObj = {value: false};
-		tbody.addEventListener("click", e => {
-			if(e.target.hasAttribute("data-search-delete")){
-				co(new DeleteListItem(this.deleteURL, e.target.getAttribute("data-search-delete"), this.response, pObj));
+		};
+		for(let k in parameter){
+			if(k in searchObj){
+				searchObj[k](query, ...parameter[k]);
 			}
-		}, {useCapture: true});
-		document.getElementById("deleteModal").addEventListener("hidden.bs.modal", e => {
-			pObj.resolve(pObj.value);
-		});
-		document.getElementById("deleteModalYes").addEventListener("click", e => {
-			pObj.value = true;
-		});
-		
-		return res;
+		}
+		let table = query.apply();
+		document.getElementById("list").innerHTML = table.map(row => this.template.listItem(row)).join("");
 	}
 });
 {/literal}</script>
 {/block}
 
+{block name="tools"}
+	<a class="btn btn-success" id="export" download="clients.csv">CSV出力</a>
+	<a href="{url action="upload"}" class="btn btn-success me-5">CSV取込</a>
+	<a href="{url action="create"}" class="btn btn-success">新しい得意先の追加</a>
+{/block}
+
 {block name="body"}
-<div class="container grid-colspan-12 text-end p-0 mb-2">
-	<a href="{url controller="Client" action="create"}" class="btn btn-success">新しい得意先の追加</a>
-</div>
 <form action="{url}" class="container border border-secondary rounded p-4 mb-5 bg-white"><fieldset class="row" disabled>
 	<table class="table w-50">
 		<tbody>
@@ -268,8 +267,7 @@ Flow.start({{/literal}
 				<th></th>
 			</tr>
 		</thead>
-		<tbody id="list">
-			{function name="ListItem"}{template_class name="ListItem" assign="obj" iterators=[]}{strip}
+		<tbody id="list">{predefine name="listItem" assign="obj"}
 			<tr>
 				<td>{$obj.code}</td>
 				<td>{$obj.name}</td>
@@ -277,44 +275,10 @@ Flow.start({{/literal}
 				<td>{$obj.department}</td>
 				<td>{$obj.transactee}</td>
 				<td>
-					<a href="{url action="edit"}/{$obj.code}" class="btn btn-sm bx bxs-edit"></a>
-					<button type="button" class="btn btn-sm bi bi-trash3" data-search-delete="{$obj.code}" data-bs-toggle="modal" data-bs-target="#deleteModal" ></button>
+					<a href="{url action="detail"}/{$obj.code}" class="btn btn-sm btn-info">詳細</a>
 				</td>
 			</tr>
-			{/strip}{/template_class}{/function}
-		</tbody>
+		{/predefine}</tbody>
 	</table>
-</div>
-{/block}
-
-{block name="dialogs" append}
-<div class="modal fade" id="deleteModal" tabindex="-1">
-	<div class="modal-dialog modal-dialog-centered modal-lg">
-		<div class="modal-content">
-			<div class="modal-header flex-row">
-				<div class="text-center text-danger">本当に削除しますか？</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
-			</div>
-			<div class="modal-body">
-				{function name="DeleteModal"}{template_class name="DeleteModal" assign=["header", "detail"] iterators=["i"]}{strip}
-				<table class="table">
-					<tbody>
-						<tr><th scope="row" class="bg-light align-middle ps-4">請求先コード</th><td>{$header.name}</td></tr>
-					</tbody>
-				</table>
-				<table class="table table_sticky_list" style="height: max(10rem, calc(80vh - 25rem));">
-					<thead>
-						<tr>
-							<th>請求先コード</th>
-						</tr>
-					</thead>
-				</table>
-				{/strip}{/template_class}{/function}
-			</div>
-			<div class="modal-footer justify-content-evenly">
-				<button type="button" class="btn btn-success rounded-pill w-25 d-inline-flex" data-bs-dismiss="modal" id="deleteModalYes"><div class="flex-grow-1"></div>はい<div class="flex-grow-1"></div></button>
-				<button type="button" class="btn btn-outline-success rounded-pill w-25 d-inline-flex" data-bs-dismiss="modal"><div class="flex-grow-1"></div>いいえ<div class="flex-grow-1"></div></button>
-			</div>
-		</div>
-	</div>
 </div>
 {/block}

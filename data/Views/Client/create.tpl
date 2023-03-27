@@ -5,7 +5,6 @@
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
 <script type="text/javascript">
 {literal}
 Flow.start({{/literal}
@@ -17,8 +16,6 @@ Flow.start({{/literal}
 	detailList: null,
 	detailParameter: null,
 	title: "得意先クライアント登録",
-	modalList1: null,
-	modalList2: null,
 	
 	/**
 	 * 状態を監視
@@ -214,7 +211,7 @@ Flow.start({{/literal}
 					<td>
 						<div class="col-6">
 							<select name="location_address1" id="prefectures_list-input" class="form-select">{foreach from=["" => "選択"]|prefectures item="text" key="value"}
-								<option value="{$value}">{$text}</option>
+								<option value="{$value}"{if $value eq "東京都"} selected{/if}>{$text}</option>
 							{/foreach}</select>
 							<div class="invalid-feedback"></div>
 						</div>
@@ -469,11 +466,11 @@ Flow.start({{/literal}
 				<input type="hidden" name="location_lat_lng" value="" />
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="remarks-input">備考</label>
+						<label class="form-label ls-1" for="note-input">備考</label>
 					</th>
 					<td>
 						<div class="col-10">
-							<textarea name="remarks" class="form-control" id="remarks-input" autocomplete="off"></textarea>
+							<textarea name="note" class="form-control" id="note-input" autocomplete="off"></textarea>
 						</div>
 					</td>
 				</tr>
@@ -484,15 +481,4 @@ Flow.start({{/literal}
 		<button type="submit" class="btn btn-success rounded-pill w-25 d-inline-flex"><div class="flex-grow-1"></div>登録・更新<div class="flex-grow-1"></div></button>
 	</div>
 </fieldset></form>
-{/block}
-
-{block name="scripts" append}
-<script type="text/javascript">
-	function loadFinished(){
-		var select = document.getElementById("prefectures_list-input");
-		select.options[13].selected = true;
-	}
-
-	window.onload = loadFinished;
-</script>
 {/block}
