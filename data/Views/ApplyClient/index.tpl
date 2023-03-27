@@ -65,7 +65,6 @@ Flow.start({{/literal}
 			}
 			this.y = null;
 		}
-		
 	},
 	*init(form){
 		this.strage = yield* Flow.waitDbUnlock();
@@ -119,6 +118,65 @@ Flow.start({{/literal}
 				this.strage.commit();
 			});
 		}
+		
+		let csvKeys = [
+			"code", "client", "name", "kana", "short_name", "location_zip", "location_address1", "location_address2", "location_address3",
+			"phone", "fax", "email", "homepage", "transactee", "transactee_honorific", "invoice_format", "tax_round", "tax_processing",
+			"close_processing", "close_date", "payment_cycle", "payment_date", "unit_price_type",
+			"salse_with_ruled_lines", "delivery_with_ruled_lines", "receipt_with_ruled_lines", "invoice_with_ruled_lines",
+			"receivables_balance", "note"
+		];
+		let csvData = masterData = this.response.select("ALL").addTable("apply_clients").apply();
+		csvData.unshift({
+			code: "請求先コード",
+			client: "得意先",
+			name: "請求先名",
+			kana: "請求先名カナ",
+			short_name: "請求先名称略",
+			location_zip: "郵便番号",
+			location_address1: "都道府県",
+			location_address2: "市区町村・番地",
+			location_address3: "建物名",
+			phone: "電話番号",
+			fax: "FAX",
+			email: "メールアドレス",
+			homepage: "ホームページ",
+			transactee: "請求先担当者",
+			transactee_honorific: "担当者敬称",
+			invoice_format: "請求書パターン",
+			tax_round: "税端数処理",
+			tax_processing: "税処理",
+			close_processing: "請求方法",
+			close_date: "締日指定（28日以降は末日を選択）",
+			payment_cycle: "入金サイクル （◯ヶ月後）",
+			payment_date: "入金予定日（28日以降は末日を選択）",
+			unit_price_type: "単価種別",
+			salse_with_ruled_lines: "売上伝票種別",
+			delivery_with_ruled_lines: "納品書種別",
+			receipt_with_ruled_lines: "受領書種別",
+			invoice_with_ruled_lines: "請求書種別",
+			receivables_balance: "期首売掛残高",
+			note: "備考"
+		});
+		let blob = new Blob([
+			new Uint8Array([0xef, 0xbb, 0xbf]),
+			csvData.map(row => {
+				let res = [];
+				for(let k of csvKeys){
+					let v = row[k];
+					if(v == null){
+						res.push("");
+					}else if(typeof v === "string" && v.match(/[,"\r\n]/)){
+						res.push(`"${v.split('"').join('""')}"`);
+					}else{
+						res.push(`${v}`);
+					}
+				}
+				return res.join(",");
+			}).join("\r\n")
+		], {type: "text/csv"});
+		document.getElementById("export").setAttribute("href", URL.createObjectURL(blob));
+		
 	},
 	*search(parameter){
 		let query = this.response.select("ALL")
@@ -154,7 +212,7 @@ Flow.start({{/literal}
 {/block}
 
 {block name="tools"}
-	<button type="button" class="btn btn-success">CSV出力</button>
+	<a class="btn btn-success" id="export" download="apply_clients.csv">CSV出力</a>
 	<a href="{url action="upload"}" class="btn btn-success me-5">CSV取込</a>
 	<a href="{url action="create"}" class="btn btn-success">新しい請求先の追加</a>
 {/block}
