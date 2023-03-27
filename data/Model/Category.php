@@ -22,12 +22,26 @@ class Category{
 		登録・更新共通の検証
 	*/
 	public static function validate($check, $masterData, $db){
+		$check["name"]->required("カテゴリー名を入力してください。")
+			->length("カテゴリー名は-文字以下で入力してください。", null, 255);
 	}
 	
 	public static function execInsert($db, $q, $context, $result){
 		$db->beginTransaction();
 		try{
+			$query = $db
+				->select("ROW")
+				->setTable("clients")
+				->addField("(CASE WHEN max(code) is null THEN 1 ELSE max(code) + 1 END) as max_id");
+			if($max_id = $query()){
+			}else{
+				$result->addMessage("編集保存に失敗しました。(max_id)", "ERROR", "");
+				return;
+			}
+
 			$insertQuery = $db->insertSet("categories", [
+				"code" => $max_id["max_id"],
+				"name" => $q["name"],
 			],[
 				"created" => "now()",
 				"modified" => "now()",
@@ -51,6 +65,7 @@ class Category{
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("categories", [
+				"name" => $q["name"],
 			],[
 				"modified" => "now()",
 			]);
@@ -70,6 +85,7 @@ class Category{
 	}
 	
 	public static function execDelete($db, $q, $context, $result){
+		$code = $q["id"];
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("categories", [
@@ -88,6 +104,33 @@ class Category{
 			$result->addMessage("削除が完了しました。", "INFO", "");
 			@SQLite::cache($db, "categories");
 			@Logger::record($db, "削除", ["categories" => $q["code"]]);
+		}
+	}
+	
+	public static function execImport($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$deleteQuery = $db->delete("categories");
+			$deleteQuery();
+			$table = $db->getJsonArray2Tabel(["categories" => [
+				"code" => "$.code",
+				"name" => "$.name",
+			]], "t");
+			$insertQuery = $db->insertSelect("categories", "code, name, created, modified, delete_flag")
+				->addTable($table, $q)
+				->addField("code, name")
+				->addField("now(), now(), 0");
+			$insertQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("インポートに失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("インポートが完了しました。", "INFO", "");
+			@SQLite::cache($db, "categories");
+			@Logger::record($db, "インポート", ["categories" => []]);
 		}
 	}
 }
