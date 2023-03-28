@@ -22,12 +22,28 @@ class Summary{
 		登録・更新共通の検証
 	*/
 	public static function validate($check, $masterData, $db){
+		$check["name"]->required("摘要名を入力してください。")
+			->length("摘要名は-文字以下で入力してください。", null, 255);
+		$check["type"]->required("摘要種別を選択してください。");
 	}
 	
 	public static function execInsert($db, $q, $context, $result){
 		$db->beginTransaction();
 		try{
+			$query = $db
+				->select("ROW")
+				->setTable("summaries")
+				->addField("(CASE WHEN max(code) is null THEN 1 ELSE max(code) + 1 END) as max_id");
+			if($max_id = $query()){
+			}else{
+				$result->addMessage("編集保存に失敗しました。(max_id)", "ERROR", "");
+				return;
+			}
+			
 			$insertQuery = $db->insertSet("summaries", [
+				"code" => $max_id["max_id"],
+				"type" => $q["type"],
+				"name" => $q["name"],
 			],[
 				"created" => "now()",
 				"modified" => "now()",
@@ -51,6 +67,8 @@ class Summary{
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("summaries", [
+				"type" => $q["type"],
+				"name" => $q["name"],
 			],[
 				"modified" => "now()",
 			]);
@@ -70,6 +88,7 @@ class Summary{
 	}
 	
 	public static function execDelete($db, $q, $context, $result){
+		$code = $q["id"];
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("summaries", [
@@ -87,7 +106,7 @@ class Summary{
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
 			@SQLite::cache($db, "summaries");
-			@Logger::record($db, "削除", ["summaries" => $q["code"]]);
+			@Logger::record($db, "削除", ["summaries" => $q["id"]]);
 		}
 	}
 }

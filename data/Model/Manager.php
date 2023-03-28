@@ -22,12 +22,29 @@ class Manager{
 		登録・更新共通の検証
 	*/
 	public static function validate($check, $masterData, $db){
+		$check["name"]->required("担当者名を入力してください。")
+			->length("担当者名は-文字以下で入力してください。", null, 255);
+		$check["kana"]->required("担当者名カナを入力してください。")
+			->length("担当者名カナは-文字以下で入力してください。", null, 255);
 	}
 	
 	public static function execInsert($db, $q, $context, $result){
 		$db->beginTransaction();
 		try{
+			$query = $db
+				->select("ROW")
+				->setTable("managers")
+				->addField("(CASE WHEN max(code) is null THEN 1 ELSE max(code) + 1 END) as max_id");
+			if($max_id = $query()){
+			}else{
+				$result->addMessage("編集保存に失敗しました。(max_id)", "ERROR", "");
+				return;
+			}
+			
 			$insertQuery = $db->insertSet("managers", [
+				"code" => $max_id["max_id"],
+				"name" => $q["name"],
+				"kana" => $q["kana"],
 			],[
 				"created" => "now()",
 				"modified" => "now()",
@@ -51,6 +68,8 @@ class Manager{
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("managers", [
+				"name" => $q["name"],
+				"kana" => $q["kana"],
 			],[
 				"modified" => "now()",
 			]);
@@ -70,6 +89,7 @@ class Manager{
 	}
 	
 	public static function execDelete($db, $q, $context, $result){
+		$code = $q["id"];
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("managers", [
@@ -87,7 +107,7 @@ class Manager{
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
 			@SQLite::cache($db, "managers");
-			@Logger::record($db, "削除", ["managers" => $q["code"]]);
+			@Logger::record($db, "削除", ["managers" => $q["id"]]);
 		}
 	}
 }
