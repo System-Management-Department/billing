@@ -83,7 +83,7 @@ Flow.start({{/literal}
 {block name="tools"}
 	<a class="btn btn-success" id="export" download="teams.csv">CSV出力</a>
 	<a href="{url action="upload"}" class="btn btn-success me-5">CSV取込</a>
-	<a href="{url action="create"}" class="btn btn-success">新しい部門の追加</a>
+	<a href="{url action="create"}" class="btn btn-success">新しいチームの追加</a>
 {/block}
 
 {block name="body"}
