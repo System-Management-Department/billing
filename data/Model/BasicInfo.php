@@ -1,6 +1,7 @@
 <?php
 namespace Model;
 use stdClass;
+use App\Validator;
 
 class BasicInfo{
 	public static function checkUpdate($db, $q, $masterData, $context){
@@ -14,12 +15,22 @@ class BasicInfo{
 		$code = $context->id;
 		$db->beginTransaction();
 		try{
-			$updateQuery = $db->updateSet("", [
-			],[
-				"modified" => "now()",
-			]);
-			$updateQuery->andWhere("code=?", $code);
-			$updateQuery();
+			$data = [];
+			foreach($q as $k => $v){
+				$data[] = ["key" => $k, "value" => $v];
+			}
+			$json = json_encode($data);
+			
+			$deleteQuery = $db->delete("basic_info");
+			$deleteQuery();
+			$table = $db->getJsonArray2Tabel(["basic_info" => [
+				"key" => "$.key",
+				"value" => "$.value",
+			]], "t");
+			$insertQuery = $db->insertSelect("basic_info", "`key`,`value`")
+				->addTable($table, $json)
+				->addField("`key`,`value`");
+			$insertQuery();
 			$db->commit();
 		}catch(Exception $ex){
 			$result->addMessage("編集保存に失敗しました。", "ERROR", "");
