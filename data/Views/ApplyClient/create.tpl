@@ -11,9 +11,6 @@ Flow.start({{/literal}
 	success: "{url controller="ApplyClient" action="index"}",{literal}
 	response: new SQLite(),
 	form: null,
-	detail: null,
-	detailList: null,
-	detailParameter: null,
 	title: "請求先（納品先）登録",
 	template: new Template(),
 	modalList: null,
@@ -37,7 +34,6 @@ Flow.start({{/literal}
 		this.response.import(buffer, "list");
 		let master;
 		this.form = document.querySelector('form');
-		this.detail = this.form.querySelector('[name="detail"]');
 		this.modalList = document.querySelector('#clientModal tbody');
 		master = this.response.select("ALL")
 			.setTable("clients")

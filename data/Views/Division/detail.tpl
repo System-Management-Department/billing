@@ -1,4 +1,4 @@
-{block name="title"}部門編集画面{/block}
+{block name="title"}部門詳細画面{/block}
 
 {block name="scripts" append}
 <script type="text/javascript">{literal}

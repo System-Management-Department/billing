@@ -1,4 +1,4 @@
-{block name="title"}得意先CSV取込{/block}
+{block name="title"}得意先クライアントCSV取込{/block}
 
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/common/CSVTokenizer.js"></script>

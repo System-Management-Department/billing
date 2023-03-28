@@ -12,9 +12,6 @@ Flow.start({{/literal}
 	success: "{url action="index"}",{literal}
 	response: new SQLite(),
 	form: null,
-	detail: null,
-	detailList: null,
-	detailParameter: null,
 	title: "ユーザー登録",
 	
 	/**
@@ -36,7 +33,6 @@ Flow.start({{/literal}
 		this.response.import(buffer, "list");
 		let master;
 		this.form = document.querySelector('form');
-		this.detail = this.form.querySelector('[name="detail"]');
 		
 		return {next: "input", args: []};
 	},

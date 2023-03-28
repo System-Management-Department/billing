@@ -1,4 +1,4 @@
-{block name="title"}チーム編集画面{/block}
+{block name="title"}チーム詳細画面{/block}
 
 {block name="scripts" append}
 <script type="text/javascript">{literal}

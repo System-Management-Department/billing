@@ -1,4 +1,4 @@
-{block name="title"}請求先（納品先）編集画面{/block}
+{block name="title"}請求先（納品先）詳細画面{/block}
 
 {block name="scripts" append}
 <script type="text/javascript">{literal}

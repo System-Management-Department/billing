@@ -1,4 +1,4 @@
-{block name="title"}請求先CSV取込{/block}
+{block name="title"}請求先（納品先）CSV取込{/block}
 
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/common/CSVTokenizer.js"></script>

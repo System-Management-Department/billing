@@ -11,9 +11,6 @@ Flow.start({{/literal}
 	success: "{url controller="ApplyClient" action="index"}",{literal}
 	response: new SQLite(),
 	form: null,
-	detail: null,
-	detailList: null,
-	detailParameter: null,
 	title: "請求先（納品先）編集",
 	template: new Template(),
 	modalList: null,

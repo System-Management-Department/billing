@@ -1,4 +1,4 @@
-{block name="title"}商品カテゴリー編集画面{/block}
+{block name="title"}商品カテゴリー詳細画面{/block}
 
 {block name="scripts" append}
 <script type="text/javascript">{literal}

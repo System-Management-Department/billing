@@ -1,4 +1,4 @@
-{block name="title"}得意先クライアント編集画面{/block}
+{block name="title"}得意先クライアント詳細画面{/block}
 
 {block name="scripts" append}
 <script type="text/javascript">{literal}
