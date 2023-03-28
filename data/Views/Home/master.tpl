@@ -92,6 +92,16 @@
 			</div>
 		</div>
 		
+		<div class="col">
+			<div class="card h-100">
+				<div class="card-body p-3">
+					<h5 class="card-title">ユーザーマスター登録</h5>
+					<p class="card-text">ユーザーを登録します</p>
+					<a href="{url controller="User" action="index"}" class="btn btn-success">実行する</a>
+				</div>
+			</div>
+		</div>
+		
 	</div>
 </div>
 {/block}
