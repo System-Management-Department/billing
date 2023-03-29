@@ -459,7 +459,6 @@ Flow.start({{/literal}
 						</div>
 					</td>
 				</tr> -->
-				<input type="hidden" name="location_lat_lng" value="" />
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
 						<label class="form-label ls-1" for="note-input">備考</label>
