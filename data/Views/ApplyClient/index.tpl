@@ -5,6 +5,7 @@
 {/block}
 
 {block name="scripts" append}
+<script type="text/javascript" src="/assets/encoding.js/encoding.min.js"></script>
 <script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url controller="Default" action="master"}",{literal}
@@ -153,8 +154,7 @@ Flow.start({{/literal}
 			receivables_balance: "期首売掛残高",
 			note: "備考"
 		});
-		let blob = new Blob([
-			new Uint8Array([0xef, 0xbb, 0xbf]),
+		let blob = new Blob(this.blobData(
 			csvData.map(row => {
 				let res = [];
 				for(let k of csvKeys){
@@ -168,8 +168,9 @@ Flow.start({{/literal}
 					}
 				}
 				return res.join(",");
-			}).join("\r\n")
-		], {type: "text/csv"});
+			}).join("\r\n"),
+			"SJIS"
+		), {type: "text/csv"});
 		document.getElementById("export").setAttribute("href", URL.createObjectURL(blob));
 		
 	},
@@ -201,6 +202,13 @@ Flow.start({{/literal}
 		}
 		let table = query.apply();
 		document.getElementById("list").innerHTML = table.map(row => this.template.listItem(row)).join("");
+	},
+	blobData(data, to = null){
+		if(to == null){
+			return [new Uint8Array([0xef, 0xbb, 0xbf]), data];
+		}else{
+			return [new Uint8Array(Encoding.convert(Encoding.stringToCode(data), {to: to, from: "UNICODE"}))];
+		}
 	}
 });
 {/literal}</script>
