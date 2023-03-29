@@ -146,7 +146,7 @@ Flow.start({{/literal}
 			<table class="table w-50">
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="code-input">得意先コード</label>
+						<label class="form-label ls-1" for="code-input">カテゴリーコード</label>
 					</th>
 					<td>
 						<div class="col-3">
@@ -157,7 +157,7 @@ Flow.start({{/literal}
 				</tr>
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="name-input">得意先名　<span class="text-danger fw-light">※</span></label>
+						<label class="form-label ls-1" for="name-input">カテゴリー名　<span class="text-danger fw-light">※</span></label>
 					</th>
 					<td>
 						<div class="col-10">
