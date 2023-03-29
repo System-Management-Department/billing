@@ -145,7 +145,7 @@ Flow.start({{/literal}
 			<table class="table w-50">
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
-						<label class="form-label ls-1" for="code-input">カテゴリーコード</label>
+						<label class="form-label ls-1" for="code-input">摘要コード</label>
 					</th>
 					<td>
 						<div class="col-3">
