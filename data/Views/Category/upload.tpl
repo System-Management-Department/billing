@@ -20,7 +20,7 @@ Flow.start({{/literal}
 		
 		fileElement.addEventListener("change", e => {
 			if(fileElement.files.length > 0){
-				reader.readAsText(fileElement.files[0]);
+				reader.readAsText(fileElement.files[0], "SJIS");
 			}
 		});
 		reader.addEventListener("load", e => {
