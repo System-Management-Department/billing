@@ -59,7 +59,7 @@ Flow.start({{/literal}
 						<label class="form-label ls-1" for="client-input">得意先</label>
 					</th>
 					<td>
-						<div class="col-10">{$data.client|escape:"html"}</div>
+						<div class="col-10">{$data.client_name|escape:"html"}</div>
 					</td>
 				</tr>
 				<tr>
