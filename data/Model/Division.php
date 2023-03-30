@@ -44,17 +44,18 @@ class Division{
 		$db->beginTransaction();
 		try{
 			$query = $db
-				->select("ROW")
+				->select("ONE")
 				->setTable("divisions")
-				->addField("(CASE WHEN max(code) is null THEN 1 ELSE max(code) + 1 END) as max_id");
-			if($max_id = $query()){
-			}else{
-				$result->addMessage("編集保存に失敗しました。(max_id)", "ERROR", "");
-				return;
+				->setField("(code + 1) as max_id")
+				->setOrderBy("LENGTH(code) DESC,code DESC")
+				->andWhere("code REGEXP ?", "^[1-9][0-9]*\$");
+			$max_id = $query();
+			if(empty($max_id)){
+				$max_id = 1;
 			}
 
 			$insertQuery = $db->insertSet("divisions", [
-				"code" => $max_id["max_id"],
+				"code" => $max_id,
 				"name" => $q["name"],
 				"kana" => $q["kana"],
 				"location_zip" => $q["location_zip"],
@@ -80,7 +81,7 @@ class Division{
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
 			@SQLite::cache($db, "divisions");
-			@Logger::record($db, "登録", ["divisions" => $max_id["max_id"]]);
+			@Logger::record($db, "登録", ["divisions" => $max_id]);
 		}
 	}
 	

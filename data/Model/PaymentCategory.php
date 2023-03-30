@@ -31,17 +31,18 @@ class PaymentCategory{
 		$db->beginTransaction();
 		try{
 			$query = $db
-				->select("ROW")
+				->select("ONE")
 				->setTable("payment_categories")
-				->addField("(CASE WHEN max(code) is null THEN 1 ELSE max(code) + 1 END) as max_id");
-			if($max_id = $query()){
-			}else{
-				$result->addMessage("編集保存に失敗しました。(max_id)", "ERROR", "");
-				return;
+				->setField("(code + 1) as max_id")
+				->setOrderBy("LENGTH(code) DESC,code DESC")
+				->andWhere("code REGEXP ?", "^[1-9][0-9]*\$");
+			$max_id = $query();
+			if(empty($max_id)){
+				$max_id = 1;
 			}
 			
 			$insertQuery = $db->insertSet("payment_categories", [
-				"code" => $max_id["max_id"],
+				"code" => $max_id,
 				"type" => $q["type"],
 				"name" => $q["name"],
 			],[
@@ -58,7 +59,7 @@ class PaymentCategory{
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
 			@SQLite::cache($db, "payment_categories");
-			@Logger::record($db, "登録", ["payment_categories" => $q["code"]]);
+			@Logger::record($db, "登録", ["payment_categories" => $max_id]);
 		}
 	}
 	
