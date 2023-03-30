@@ -107,7 +107,7 @@ class PaymentCategory{
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
 			@SQLite::cache($db, "payment_categories");
-			@Logger::record($db, "削除", ["payment_categories" => $q["id"]]);
+			@Logger::record($db, "削除", ["payment_categories" => $code]);
 		}
 	}
 }

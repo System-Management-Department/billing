@@ -104,7 +104,7 @@ class Category{
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
 			@SQLite::cache($db, "categories");
-			@Logger::record($db, "削除", ["categories" => $q["code"]]);
+			@Logger::record($db, "削除", ["categories" => $code]);
 		}
 	}
 	

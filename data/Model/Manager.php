@@ -108,7 +108,7 @@ class Manager{
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
 			@SQLite::cache($db, "managers");
-			@Logger::record($db, "削除", ["managers" => $q["id"]]);
+			@Logger::record($db, "削除", ["managers" => $code]);
 		}
 	}
 }

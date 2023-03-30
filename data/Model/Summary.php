@@ -107,7 +107,7 @@ class Summary{
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
 			@SQLite::cache($db, "summaries");
-			@Logger::record($db, "削除", ["summaries" => $q["id"]]);
+			@Logger::record($db, "削除", ["summaries" => $code]);
 		}
 	}
 }

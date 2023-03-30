@@ -135,7 +135,7 @@ class Team{
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
 			@SQLite::cache($db, "teams");
-			@Logger::record($db, "削除", ["teams" => $q["code"]]);
+			@Logger::record($db, "削除", ["teams" => $code]);
 		}
 	}
 	
