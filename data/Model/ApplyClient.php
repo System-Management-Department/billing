@@ -4,6 +4,8 @@ use App\Validator;
 use App\Smarty\SelectionModifiers;
 
 class ApplyClient{
+	public static $delimiter = "-";
+	
 	public static function checkInsert($db, $q, $masterData){
 		$check = new Validator();
 		self::validate($check, $masterData, $db);
@@ -63,9 +65,9 @@ class ApplyClient{
 			$query = $db
 				->select("ONE")
 				->setTable("apply_clients")
-				->setField("(code + 1) as max_id")
-				->setOrderBy("LENGTH(code) DESC,code DESC")
-				->andWhere("code REGEXP ?", "^[1-9][0-9]*\$");
+				->setField("(SUBSTRING_INDEX(code,?,1) + 1) as max_id", self::$delimiter)
+				->setOrderBy("LENGTH(SUBSTRING_INDEX(code,?,1)) DESC,SUBSTRING_INDEX(code,?,1) DESC", self::$delimiter, self::$delimiter)
+				->andWhere("code REGEXP ?", "^[1-9][0-9]*" . self::$delimiter);
 			$max_id = $query();
 			if(empty($max_id)){
 				$max_id = 1;
@@ -73,7 +75,7 @@ class ApplyClient{
 
 			$insertQuery = $db->insertSet("apply_clients", [
 				"client" => $q["client"],
-				"code" => $max_id,
+				"code" => $max_id . self::$delimiter . $q["client"],
 				"unique_name" => $q["name"],
 				"name" => $q["name"],
 				"kana" => $q["kana"],
@@ -118,7 +120,7 @@ class ApplyClient{
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
 			@SQLite::cache($db, "apply_clients");
-			@Logger::record($db, "登録", ["apply_clients" => $max_id]);
+			@Logger::record($db, "登録", ["apply_clients" => $max_id . self::$delimiter . $q["client"]]);
 		}
 	}
 	
