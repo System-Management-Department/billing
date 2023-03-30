@@ -360,13 +360,13 @@ Flow.start({{/literal}
 				let cols = new Array(37);
 				cols[0] = item.accounting_date.split("-").join("/");
 				cols[1] = item.slip_number;
-				cols[2] = item.billing_destination;
+				cols[2] = (typeof item.billing_destination === 'string') ? item.billing_destination.replace(/-.*$/, "") : item.billing_destination;
 				cols[3] = item.client_name;
 				cols[4] = item.total_amount;
 				cols[5] = item.total_amount_s;
 				cols[6] = item.total_amount + item.total_amount_s;
-				cols[7] = item.payment_date.split("-").join("/");
-				cols[8] = item.accounting_date.split("-").join("/");
+				cols[7] = (typeof item.payment_date === 'string') ? item.payment_date.split("-").join("/") : item.payment_date;
+				cols[8] = (typeof item.accounting_date === 'string') ? item.accounting_date.split("-").join("/") : item.accounting_date;
 				cols[9] = item.item_name;
 				cols[10] = item.quantity;
 				cols[11] = item.unit_price;
