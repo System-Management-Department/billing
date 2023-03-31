@@ -166,6 +166,17 @@ Flow.start({{/literal}
 				if(v != ""){
 					q.andWhere("id IN(SELECT id FROM details WHERE itemName like '%' || ? || '%')", v.replace(/(?=[\\\%\_])/g, "\\"));
 				}
+			},
+			mode(q, v){
+				if(v == "2"){
+					q.andWhere("billing_destination_name IS NOT NULL")
+					.andWhere("billing_destination_name<>''");
+				}
+				if(v == "3"){
+					q.andWhere("billing_destination_name IS NOT NULL")
+					.andWhere("billing_destination_name<>''")
+					.andWhere("EXISTS(SELECT 1 FROM details WHERE details.id=slips.id AND (details.amount > 0 OR details.amount < 0))");
+				}
 			}
 		};
 		let it = parameter.keys();
@@ -193,7 +204,7 @@ Flow.start({{/literal}
 			pObj.resolve(new FormData(form));
 		}, {signal: controller.signal});
 		document.getElementById("checkall").addEventListener("click", e => {
-			let checked = form.querySelectorAll('input:checked:not([disabled])');
+			let checked = form.querySelectorAll('input:checked:not([disabled]):not(#update)');
 			for(let i = checked.length - 1; i >= 0; i--){
 				checked[i].checked = false;
 			}
@@ -237,7 +248,7 @@ Flow.start({{/literal}
 				.addField("managers.code as manager")
 				.leftJoin("apply_clients on slips.billing_destination_name=apply_clients.unique_name")
 				.addField("apply_clients.code as billing_destination")
-				.addField("slips.delivery_destination")
+				.addField("CASE WHEN slips.delivery_destination IS NULL THEN '' ELSE slips.delivery_destination END AS delivery_destination")
 				.addField("slips.subject")
 				.addField("slips.note")
 				.addField("slips.header1")
@@ -262,11 +273,13 @@ Flow.start({{/literal}
 				body: formData
 			}).then(res => res.json());
 			if(response.success){
-				this.gs.update({
-					[GoogleSheets.requestSymbol]: "appendCells",
-					[targetId]: this.isChecked.values.map(r => [r, GoogleSheets.now])
-				});
-				this.response.updateSet("slips", {import: 1}, {}).andWhere("is_checked(id)=1").apply();
+				if(document.getElementById("update").checked){
+					this.gs.update({
+						[GoogleSheets.requestSymbol]: "appendCells",
+						[targetId]: this.isChecked.values.map(r => [r, GoogleSheets.now])
+					});
+					this.response.updateSet("slips", {import: 1}, {}).andWhere("is_checked(id)=1").apply();
+				}
 			}
 			for(let message of response.messages){
 				Flow.DB.insertSet("messages", {title: "売上データ取り込み", message: message[0], type: message[1], name: message[2]}, {}).apply();
@@ -289,8 +302,8 @@ Flow.start({{/literal}
 {/block}
 
 {block name="body"}
-<form class="container border border-secondary rounded p-4 mb-5 bg-white"><fieldset class="row" disabled>
-	<table class="table w-50">
+<form class="container border border-secondary rounded p-4 mb-5 bg-white"><fieldset class="row gap-4 align-items-start" disabled>
+	<table class="col table">
 		<tbody>
 			<tr>
 				<th scope="row" class="bg-light align-middle ps-4">
@@ -372,6 +385,24 @@ Flow.start({{/literal}
 			</tr>
 		</tbody>
 	</table>
+	<table class="col table">
+		<tbody>
+			<tr>
+				<th scope="row" class="bg-light align-middle ps-4">
+					<label class="form-label ls-1" for="mode-input">検索条件</label>
+				</th>
+				<td>
+					<div class="col-10">
+						<select name="mode" class="form-select" id="mode-input">
+							<option value="1" selected>伝票番号が設定されているもの</option>
+							<option value="2">伝票番号・請求先が設定されているもの</option>
+							<option value="3">伝票番号・請求先・金額が設定されているもの</option>
+						</select>
+					</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 	<div class="col-12 text-center">
 		<button type="button" class="btn btn-success" id="search">検　索</button>
 	</div>
@@ -408,6 +439,7 @@ Flow.start({{/literal}
 			<button type="reset" class="btn btn-success">すべてチェック</button>
 			<button type="button" id="checkall" class="btn btn-success">すべてチェックを外す</button>
 			<button type="submit" class="btn btn-success">取　込</button>
+			<label class="ms-5"><input type="checkbox" id="update" checked />スプレッドシートを取込済に更新</label>
 		</div>
 	</div>
 </fieldset></form>
