@@ -204,7 +204,7 @@ Flow.start({{/literal}
 			pObj.resolve(new FormData(form));
 		}, {signal: controller.signal});
 		document.getElementById("checkall").addEventListener("click", e => {
-			let checked = form.querySelectorAll('input:checked:not([disabled]):not(#update)');
+			let checked = form.querySelectorAll('input:checked:not([disabled])');
 			for(let i = checked.length - 1; i >= 0; i--){
 				checked[i].checked = false;
 			}
@@ -407,6 +407,7 @@ Flow.start({{/literal}
 		<button type="button" class="btn btn-success" id="search">検　索</button>
 	</div>
 </fieldset></form>
+<label class="ms-3"><input type="checkbox" id="update" checked />スプレッドシートを取込済に更新</label>
 <form id="import" action="{url action="import"}" method="POST"><fieldset disabled>
 	<div class="container border border-secondary rounded p-4 bg-white table-responsive">
 		<table class="table table_sticky_list" data-scroll-y="list">
@@ -439,7 +440,6 @@ Flow.start({{/literal}
 			<button type="reset" class="btn btn-success">すべてチェック</button>
 			<button type="button" id="checkall" class="btn btn-success">すべてチェックを外す</button>
 			<button type="submit" class="btn btn-success">取　込</button>
-			<label class="ms-5"><input type="checkbox" id="update" checked />スプレッドシートを取込済に更新</label>
 		</div>
 	</div>
 </fieldset></form>
