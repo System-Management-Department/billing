@@ -1,5 +1,17 @@
 {block name="title"}売上データ取り込み画面{/block}
 
+{block name="styles" append}
+<style type="text/css">{literal}
+[data-error~="apply_client"] [data-column="apply_client"],
+[data-error~="manager"] [data-column="manager"],
+[data-error~="division"] [data-column="division"],
+[data-error~="team"] [data-column="team"]{
+	background-color: #f8d7da;
+	color: var(--bs-danger);
+}
+{/literal}</style>
+{/block}
+
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/googleAPI/GoogleSheets.js"></script>
 <script type="text/javascript" src="/assets/googleAPI/GoogleDrive.js"></script>
@@ -10,7 +22,7 @@ Flow.start({{/literal}
 	jwt: "{url controller="JWT" action="spreadsheet"}",{literal}
 	response: new SQLite(),
 	gs: null,
-	template: new Template(),
+	template: null,
 	dataList: null,
 	isChecked: {
 		length: 1,
@@ -112,6 +124,26 @@ Flow.start({{/literal}
 			select.appendChild(option);
 		}
 		
+		let dataValidation = {
+			divisions: this.response.select("COL").setTable("divisions").setField("name").apply(),
+			// teams: this.response.select("COL").setTable("teams").setField("name").apply(),
+			managers: this.response.select("COL").setTable("managers").setField("name").apply(),
+			apply_clients: this.response.select("COL").setTable("apply_clients").setField("unique_name").apply(),
+			apply(row){
+				let res = [];
+				if(!this.divisions.includes(row.division_name)){
+					res.push("division");
+				}
+				if(!this.managers.includes(row.manager_name)){
+					res.push("manager");
+				}
+				if(!this.apply_clients.includes(row.billing_destination_name)){
+					res.push("apply_client");
+				}
+				return res.join(" ");
+			}
+		};
+		this.template = new Template(dataValidation);
 		this.dataList = document.getElementById("list");
 		let parameter = new FormData();
 		do{
@@ -423,15 +455,15 @@ Flow.start({{/literal}
 					<th class="w-20">備考欄</th>
 				</tr>
 			</thead>
-			<tbody id="list">{predefine name="listItem" assign="obj"}
-				<tr>
+			<tbody id="list">{predefine name="listItem" constructor="dataValidation" assign="obj"}
+				<tr data-error="{$dataValidation.apply|predef_invoke:$obj}">
 					<td><input type="checkbox" name="id[]" value="{$obj.id}" checked /></td>
 					<td>{$obj.slip_number}</td>
 					<td>{$obj.accounting_date}</td>
-					<td>{$obj.billing_destination_name}</td>
-					<td>{$obj.manager_name}</td>
-					<td>{$obj.division_name}</td>
-					<td>{$obj.team_name}</td>
+					<td data-column="apply_client">{$obj.billing_destination_name}</td>
+					<td data-column="manager">{$obj.manager_name}</td>
+					<td data-column="division">{$obj.division_name}</td>
+					<td data-column="team">{$obj.team_name}</td>
 					<td>{$obj.note}</td>
 				</tr>
 			{/predefine}</tbody>
