@@ -27,7 +27,7 @@ Flow.start({{/literal}
 	isChecked: {
 		length: 1,
 		apply: function(dummy, args){
-			let id = args[0];
+			let id = `${args[0]}`;
 			return this.values.includes(id) ? 1 : 0;
 		},
 		values: null,
@@ -289,12 +289,12 @@ Flow.start({{/literal}
 				.addField("slips.payment_date")
 				.leftJoin("invoice_formats on slips.invoice_format_name=invoice_formats.name")
 				.addField("invoice_formats.id as invoice_format")
-				.leftJoin("details on slips.id=details.id")
+				.leftJoin("details on slips.slip_number=details.id")
 				.leftJoin("categories on details.categoryName=categories.name")
 				.addField("sales_tax(details.amount) as sales_tax")
 				.addField("json_detail(categories.code, details.itemName, details.unit, details.quantity, details.unitPrice, details.amount, details.data1, details.data2, details.data3, details.circulation) as detail")
-				.andWhere("is_checked(slips.id)=1")
-				.setGroupBy("slips.id")
+				.andWhere("is_checked(slips.slip_number)=1")
+				.setGroupBy("slips.slip_number")
 				.apply();
 			
 			let formData = new FormData();
@@ -310,7 +310,7 @@ Flow.start({{/literal}
 						[GoogleSheets.requestSymbol]: "appendCells",
 						[targetId]: this.isChecked.values.map(r => [r, GoogleSheets.now])
 					});
-					this.response.updateSet("slips", {import: 1}, {}).andWhere("is_checked(id)=1").apply();
+					this.response.updateSet("slips", {import: 1}, {}).andWhere("is_checked(slip_number)=1").apply();
 				}
 			}
 			for(let message of response.messages){
@@ -457,7 +457,7 @@ Flow.start({{/literal}
 			</thead>
 			<tbody id="list">{predefine name="listItem" constructor="dataValidation" assign="obj"}
 				<tr data-error="{$dataValidation.apply|predef_invoke:$obj}">
-					<td><input type="checkbox" name="id[]" value="{$obj.id}" checked /></td>
+					<td><input type="checkbox" name="id[]" value="{$obj.slip_number}" checked /></td>
 					<td>{$obj.slip_number}</td>
 					<td>{$obj.accounting_date}</td>
 					<td data-column="apply_client">{$obj.billing_destination_name}</td>

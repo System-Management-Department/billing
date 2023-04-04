@@ -315,7 +315,7 @@ Flow.start({{/literal}
 				frozenRowCount: 1,
 				rows: [
 					[
-						GoogleSheets.formula`BYROW(B:B,LAMBDA(X,IF(ROW(X)=1,"取込済",COUNTIF('取込済'!A:A,X)>0)))`,
+						GoogleSheets.formula`BYROW(C:C,LAMBDA(X,IF(ROW(X)=1,"取込済",COUNTIF('取込済'!A:A,X)>0)))`,
 						GoogleSheets.formula`BYROW(C:C,LAMBDA(X,IF(ROW(X)=1,"通し番号",TEXT(ROW(X)-1,"00000000"))))`,
 						"伝票番号", "売上日付", "部門", "チーム", "当社担当者", "請求先", "納品先", "件名", "備考", "摘要ヘッダー１", "摘要ヘッダー２", "摘要ヘッダー３", "入金予定日", "請求パターン"
 					]
@@ -406,13 +406,13 @@ Flow.start({{/literal}
 					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 15}
 				],
 				gridData: {
-					columnMetadata: [{hiddenByUser:true},{pixelSize:66},{pixelSize:81},{pixelSize:74},{pixelSize:96},{hiddenByUser:true},{pixelSize:96},{pixelSize:336},{pixelSize:336},{pixelSize:342},{pixelSize:490},{pixelSize:132},{pixelSize:132},{pixelSize:132},{pixelSize:74},{pixelSize:94}]
+					columnMetadata: [{hiddenByUser:true},{hiddenByUser:true},{pixelSize:81},{pixelSize:74},{pixelSize:96},{hiddenByUser:true},{pixelSize:96},{pixelSize:336},{pixelSize:336},{pixelSize:342},{pixelSize:490},{pixelSize:132},{pixelSize:132},{pixelSize:132},{pixelSize:74},{pixelSize:94}]
 				}
 			}),
 			GoogleSheets.createSheetJson({index: 1, title: "売上明細"}, 500, 11, {
 				frozenRowCount: 1,
 				rows: [
-					["通し番号", "カテゴリー", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
+					["伝票番号", "カテゴリー", "商品名", "単位", "数量", "単価", "金額", "摘要１", "摘要２", "摘要３", "発行部数"]
 				],
 				validationRanges: [
 					{
