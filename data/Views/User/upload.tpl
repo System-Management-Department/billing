@@ -1,5 +1,15 @@
 {block name="title"}ユーザーCSV取込{/block}
 
+{block name="styles" append}
+<style type="text/css">{literal}
+[data-error~="id"] [data-column="id"],
+[data-error~="email"] [data-column="email"]{
+	background-color: #f8d7da;
+	color: var(--bs-danger);
+}
+{/literal}</style>
+{/block}
+
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/common/CSVTokenizer.js"></script>
 <script type="text/javascript">{literal}
@@ -33,8 +43,22 @@ Flow.start({{/literal}
 			let table = this.response.select("ALL")
 				.setTable("csv")
 				.apply();
-			tbody.innerHTML = table.map(row => this.template.listItem(row)).join("");
-			submitBtn.disabled = false;
+			let dataValidation = {
+				id: this.response.select("COL").setTable("csv").setField("id").setGroupBy("id").setHaving("count(1)>1").apply(),
+				email: this.response.select("COL").setTable("csv").setField("email").setGroupBy("email").setHaving("count(1)>1").apply(),
+				apply(row){
+					let res = [];
+					if(this.id.includes(row.id)){
+						res.push("id");
+					}
+					if(this.email.includes(row.email)){
+						res.push("email");
+					}
+					return res.join(" ");
+				}
+			};
+			tbody.innerHTML = table.map(row => this.template.listItem(row, dataValidation)).join("");
+			submitBtn.disabled = (tbody.querySelector('tr[data-error]:not([data-error=""])') != null);
 		});
 		form.addEventListener("submit", e => {
 			e.stopPropagation();
@@ -102,11 +126,11 @@ Flow.start({{/literal}
 					<th>部署</th>
 				</tr>
 			</thead>
-			<tbody id="list">{predefine name="listItem" constructor="role" assign="obj"}
-				<tr>
-					<td>{$obj.id}</td>
+			<tbody id="list">{predefine name="listItem" constructor="role" assign=["obj", "dataValidation"]}
+				<tr data-error="{$dataValidation.apply|predef_invoke:$obj}">
+					<td data-column="id">{$obj.id}</td>
 					<td>{$obj.username}</td>
-					<td>{$obj.email}</td>
+					<td data-column="email">{$obj.email}</td>
 					<td>{$obj.password}</td>
 					<td>{$role[$obj.role]}</td>
 					<td>{$obj.department}</td>

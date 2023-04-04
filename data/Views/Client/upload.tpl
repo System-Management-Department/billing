@@ -1,5 +1,15 @@
 {block name="title"}得意先クライアントCSV取込{/block}
 
+{block name="styles" append}
+<style type="text/css">{literal}
+[data-error~="code"] [data-column="code"],
+[data-error~="name"] [data-column="name"]{
+	background-color: #f8d7da;
+	color: var(--bs-danger);
+}
+{/literal}</style>
+{/block}
+
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/common/CSVTokenizer.js"></script>
 <script type="text/javascript">{literal}
@@ -45,8 +55,22 @@ Flow.start({{/literal}
 			let table = this.response.select("ALL")
 				.setTable("csv")
 				.apply();
-			tbody.innerHTML = table.map(row => this.template.listItem(row)).join("");
-			submitBtn.disabled = false;
+			let dataValidation = {
+				code: this.response.select("COL").setTable("csv").setField("code").setGroupBy("code").setHaving("count(1)>1").apply(),
+				name: this.response.select("COL").setTable("csv").setField("name").setGroupBy("name").setHaving("count(1)>1").apply(),
+				apply(row){
+					let res = [];
+					if(this.code.includes(row.code)){
+						res.push("code");
+					}
+					if(this.name.includes(row.name)){
+						res.push("name");
+					}
+					return res.join(" ");
+				}
+			};
+			tbody.innerHTML = table.map(row => this.template.listItem(row, dataValidation)).join("");
+			submitBtn.disabled = (tbody.querySelector('tr[data-error]:not([data-error=""])') != null);
 		});
 		form.addEventListener("submit", e => {
 			e.stopPropagation();
@@ -135,10 +159,10 @@ Flow.start({{/literal}
 					<th>備考</th>
 				</tr>
 			</thead>
-			<tbody id="list">{predefine name="listItem" constructor=["closeProcessing", "prefectures", "invoiceFormat", "taxRound", "taxProcessing", "closeDate", "monthList", "unitPriceType", "existence"] assign="obj"}
-				<tr>
-					<td>{$obj.code}</td>
-					<td>{$obj.name}</td>
+			<tbody id="list">{predefine name="listItem" constructor=["closeProcessing", "prefectures", "invoiceFormat", "taxRound", "taxProcessing", "closeDate", "monthList", "unitPriceType", "existence"] assign=["obj", "dataValidation"]}
+				<tr data-error="{$dataValidation.apply|predef_invoke:$obj}">
+					<td data-column="code">{$obj.code}</td>
+					<td data-column="name">{$obj.name}</td>
 					<td>{$obj.kana}</td>
 					<td>{$obj.short_name}</td>
 					<td>{$obj.location_zip}</td>
