@@ -220,7 +220,7 @@ Flow.start({{/literal}
 			},
 			itemName(q, v){
 				if(v != ""){
-					q.andWhere("id IN(SELECT id FROM details WHERE itemName like '%' || ? || '%')", v.replace(/(?=[\\\%\_])/g, "\\"));
+					q.andWhere("slip_number IN(SELECT id FROM details WHERE itemName like '%' || ? || '%')", v.replace(/(?=[\\\%\_])/g, "\\"));
 				}
 			},
 			mode(q, v){
