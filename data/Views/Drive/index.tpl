@@ -21,8 +21,10 @@ Flow.start({{/literal}
 	id: "{$smarty.get.id}",
 	jwt: "{url controller="JWT" action="spreadsheet"}",{literal}
 	response: new SQLite(),
+	duplication: {},
 	gs: null,
 	template: null,
+	template2: null,
 	dataList: null,
 	isChecked: {
 		length: 1,
@@ -53,6 +55,12 @@ Flow.start({{/literal}
 			"id", "categoryName", "itemName", "unit", "quantity", "unitPrice", "amount", "data1", "data2", "data3", "circulation"
 		], book.sheet("売上明細").range.slice(1));
 		
+		this.response.create_function("equals", {
+			length: 2,
+			apply(dummy, args){
+				return (args[0] == args[1]) ? 1 : 0;
+			},
+		});
 		this.response.create_function("is_checked", this.isChecked);
 		this.response.create_aggregate("sales_tax", {
 			init(){
@@ -143,8 +151,24 @@ Flow.start({{/literal}
 				return res.join(" ");
 			}
 		};
-		this.template = new Template(dataValidation);
+		this.duplication = this.response.select("OBJECT").setTable("slips").setField("slip_number,count(1) as `count`").andWhere("import=0").andWhere("slip_number<>''").setGroupBy("slip_number").setHaving("count(1)>1").apply();
+		this.template = new Template(dataValidation, (a, k) => (k in a) ? 1 : 0);
+		this.template2 = new Template(i => i + 1);
 		this.dataList = document.getElementById("list");
+		this.dataList.addEventListener("click", e => {
+			if((e.target.nodeType == Node.ELEMENT_NODE) && (e.target.hasAttribute("data-info"))){
+				let id = e.target.getAttribute("data-info");
+				let info = this.response.select("ROW")
+					.setTable("slips")
+					.andWhere("equals(id,?)", id)
+					.apply();
+				let details = this.response.select("ALL")
+					.setTable("details")
+					.andWhere("equals(id,?)", info.slip_number)
+					.apply();
+				document.getElementById("listinfo").innerHTML = this.template2.listInfo(info, details);
+			}
+		}, {useCapture: true});
 		let parameter = new FormData();
 		do{
 			yield* this.search(parameter);
@@ -218,7 +242,19 @@ Flow.start({{/literal}
 			}
 		}
 		let table = query.apply();
-		this.dataList.innerHTML = table.map(row => this.template.listItem(row)).join("");
+		let html = "";
+		let added = {};
+		for(let row of table){
+			if(row.slip_number in this.duplication){
+				if(row.slip_number in added){
+					continue;
+				}else{
+					added[row.slip_number] = 1;
+				}
+			}
+			html += this.template.listItem(row, this.duplication);
+		}
+		this.dataList.innerHTML = html;
 	},
 	*input(targetId){
 		let pObj = {};
@@ -453,9 +489,10 @@ Flow.start({{/literal}
 					<th class="w-15">部門</th>
 					<th class="w-10">チーム</th>
 					<th class="w-20">備考欄</th>
+					<th></th>
 				</tr>
 			</thead>
-			<tbody id="list">{predefine name="listItem" constructor="dataValidation" assign="obj"}
+			<tbody id="list">{predefine name="listItem" constructor=["dataValidation","exists"] assign=["obj", "duplication"]}
 				<tr data-error="{$dataValidation.apply|predef_invoke:$obj}">
 					<td><input type="checkbox" name="id[]" value="{$obj.slip_number}" checked /></td>
 					<td>{$obj.slip_number}</td>
@@ -465,6 +502,12 @@ Flow.start({{/literal}
 					<td data-column="division">{$obj.division_name}</td>
 					<td data-column="team">{$obj.team_name}</td>
 					<td>{$obj.note}</td>
+					<td>
+						{predef_repeat loop=$exists|predef_invoke:$duplication:$obj.slip_number}
+						<span class="text-danger">伝票番号の重複が{$duplication[$obj.slip_number].count}行あります。</span>
+						{/predef_repeat}
+						<button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#infoModal" data-info="{$obj.id}">詳細</button>
+					</td>
 				</tr>
 			{/predefine}</tbody>
 		</table>
@@ -475,4 +518,61 @@ Flow.start({{/literal}
 		</div>
 	</div>
 </fieldset></form>
+{/block}
+
+{block name="dialogs"}
+<div class="modal fade" id="infoModal" tabindex="-1">
+	<div class="modal-dialog modal-dialog-centered modal-lg">
+		<div class="modal-content">
+			<div class="modal-header flex-row">売上明細</div>
+			<div class="modal-body" id="listinfo">{predefine name="listInfo" constructor="inc" assign=["header","detail"]}
+				<table class="table">
+					<tbody>
+						<tr>
+							<th scope="row" class="bg-light align-middle ps-4">伝票番号</th>
+							<td>{$header.slip_number}</td>
+						</tr>
+					</tbody>
+				</table>
+				<table class="table table-md table_sticky_list">
+					<thead>
+						<tr>
+							<th>No</th>
+							<th>商品カテゴリー</th>
+							<th>内容（摘要）</th>
+							<th>単位</th>
+							<th>数量</th>
+							<th>単価</th>
+							<th>金額</th>
+							<th>{$header.header1}</th>
+							<th>{$header.header2}</th>
+							<th>{$header.header3}</th>
+							<th>発行部数</th>
+						</tr>
+					</thead>
+					<tbody>
+						{predef_repeat loop=$detail.length index="i"}
+						<tr>
+							<td>{$inc|predef_invoke:$i}</td>
+							<td>{$detail[$i].categoryName}</td>
+							<td>{$detail[$i].itemName}</td>
+							<td>{$detail[$i].unit}</td>
+							<td>{$detail[$i].quantity}</td>
+							<td>{$detail[$i].unitPrice}</td>
+							<td>{$detail[$i].amount}</td>
+							<td>{$detail[$i].data1}</td>
+							<td>{$detail[$i].data2}</td>
+							<td>{$detail[$i].data3}</td>
+							<td>{$detail[$i].circulation}</td>
+						</tr>
+						{/predef_repeat}
+					</tbody>
+				</table>
+			{/predefine}</div>
+			<div class="modal-footer justify-content-evenly">
+				<button type="button" class="btn btn-outline-success rounded-pill w-25 d-inline-flex" data-bs-dismiss="modal"><div class="flex-grow-1"></div>閉じる<div class="flex-grow-1"></div></button>
+			</div>
+		</div>
+	</div>
+</div>
 {/block}
