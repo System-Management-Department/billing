@@ -109,7 +109,7 @@ class User{
 	*/
 	public static function validate($check, $masterData, $db){
 		$check["username"]->required("ユーザ名を入力してください。")
-			->length("ユーザ名は-文字以下で入力してください。", null, 255);
+			->length("ユーザ名は80文字以下で入力してください。", null, 255);
 		$check["email"]->required("メールアドレスを入力してください。")
 			->mail("メールアドレスを正しく入力してください。");
 		$check["password"]->required("パスワードを入力してください。")
@@ -117,7 +117,7 @@ class User{
 			->password("このパスワードは設定できません。");
 		$check["role"]->required("権限を入力してください。")
 			->range("権限を正しく入力してください。", "in", ["admin", "entry"]);
-		$check["department"]->length("部署名は-文字以下で入力してください。", null, 255);
+		$check["department"]->length("部署名は80文字以下で入力してください。", null, 255);
 	}
 	
 	public static function execInsert($db, $q, $context, $result){

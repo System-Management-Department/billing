@@ -23,7 +23,7 @@ class PaymentCategory{
 	*/
 	public static function validate($check, $masterData, $db){
 		$check["name"]->required("入金区分名を入力してください。")
-			->length("入金区分名は-文字以下で入力してください。", null, 255);
+			->length("入金区分名は80文字以下で入力してください。", null, 255);
 		$check["type"]->required("	入金種別を選択してください。");
 	}
 	

@@ -23,9 +23,9 @@ class Manager{
 	*/
 	public static function validate($check, $masterData, $db){
 		$check["name"]->required("担当者名を入力してください。")
-			->length("担当者名は-文字以下で入力してください。", null, 255);
+			->length("担当者名は80文字以下で入力してください。", null, 255);
 		$check["kana"]->required("担当者名カナを入力してください。")
-			->length("担当者名カナは-文字以下で入力してください。", null, 255);
+			->length("担当者名カナは80文字以下で入力してください。", null, 255);
 	}
 	
 	public static function execInsert($db, $q, $context, $result){

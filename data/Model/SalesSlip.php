@@ -52,7 +52,7 @@ class SalesSlip{
 		$check["billing_destination"]->required("請求先を入力してください。")
 			->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
 		$check["delivery_destination"]->required("納品先を入力してください。")
-			->length("納品先は-文字以下で入力してください。", null, 255);
+			->length("納品先は80文字以下で入力してください。", null, 255);
 		//$check["sales_tax_calculation"]->required("税処理を入力してください。")
 		//	->range("税処理を正しく入力してください。", "in", [1, 2, 3, 4, 5, 6]);
 		$check["subject"]->required("件名を入力してください。");

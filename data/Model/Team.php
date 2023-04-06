@@ -23,21 +23,21 @@ class Team{
 	*/
 	public static function validate($check, $masterData, $db){
 		$check["name"]->required("チーム名を入力してください。")
-			->length("チーム名は-文字以下で入力してください。", null, 255);
+			->length("チーム名は80文字以下で入力してください。", null, 255);
 		$check["kana"]->required("チーム名カナを入力してください。")
-			->length("チーム名カナは-文字以下で入力してください。", null, 255);
+			->length("チーム名カナは80文字以下で入力してください。", null, 255);
 		$check["location_zip"]->required("郵便番号を入力してください。")
-			->length("郵便番号はハイフン無しの-文字で入力してください。", null, 7);
+			->length("郵便番号はハイフン無しの7文字で入力してください。", null, 7);
 		$check["location_address1"]->required("都道府県を選択してください。");
 		$check["location_address2"]->required("市区町村・番地を入力してください。")
-			->length("市区町村・番地は-文字以下で入力してください。", null, 255);
-		$check["location_address3"]->length("市区町村・番地は-文字以下で入力してください。", null, 255);
+			->length("市区町村・番地は80文字以下で入力してください。", null, 255);
+		$check["location_address3"]->length("市区町村・番地は80文字以下で入力してください。", null, 255);
 		$check["phone"]->required("電話番号を入力してください。")
 			->tel("電話番号の形式で入力してください。")
-			->length("電話番号は-文字以下で入力してください。", null, 255);
+			->length("電話番号は80文字以下で入力してください。", null, 255);
 		$check["fax"]->tel("FAX番号の形式で入力してください。")
-			->length("FAXは-文字以下で入力してください。", null, 255);
-		$check["remarks"]->length("備考は-文字以下で入力してください。", null, 255);
+			->length("FAXは80文字以下で入力してください。", null, 255);
+		$check["remarks"]->length("備考は80文字以下で入力してください。", null, 255);
 	}
 	
 	public static function execInsert($db, $q, $context, $result){

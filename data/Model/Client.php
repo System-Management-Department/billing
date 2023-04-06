@@ -24,34 +24,34 @@ class Client{
 	*/
 	public static function validate($check, $masterData, $db){
 		$check["name"]->required("得意先名を入力してください。")
-			->length("得意先名は-文字以下で入力してください。", null, 255);
+			->length("得意先名は80文字以下で入力してください。", null, 255);
 		$check["kana"]->required("得意先名カナを入力してください。")
-			->length("得意先名カナは-文字以下で入力してください。", null, 255);
+			->length("得意先名カナは80文字以下で入力してください。", null, 255);
 		$check["short_name"]->required("得意先名称略を入力してください。")
-			->length("得意先名称略は-文字以下で入力してください。", null, 255);
+			->length("得意先名称略は80文字以下で入力してください。", null, 255);
 		$check["location_zip"]->required("郵便番号を入力してください。")
-			->length("郵便番号はハイフン無しの-文字で入力してください。", null, 7);
+			->length("郵便番号はハイフン無しの7文字で入力してください。", null, 7);
 		$check["location_address1"]->required("都道府県を選択してください。");
 		$check["location_address2"]->required("市区町村・番地を入力してください。")
-			->length("市区町村・番地は-文字以下で入力してください。", null, 255);
-		$check["location_address3"]->length("市区町村・番地は-文字以下で入力してください。", null, 255);
+			->length("市区町村・番地は80文字以下で入力してください。", null, 255);
+		$check["location_address3"]->length("市区町村・番地は80文字以下で入力してください。", null, 255);
 		$check["phone"]->tel("電話番号の形式で入力してください。")
-			->length("電話番号は-文字以下で入力してください。", null, 255);
+			->length("電話番号は80文字以下で入力してください。", null, 255);
 		$check["fax"]->tel("FAX番号の形式で入力してください。")
-			->length("FAXは-文字以下で入力してください。", null, 255);
+			->length("FAXは80文字以下で入力してください。", null, 255);
 		$check["email"]->mail("メールアドレスの形式で入力してください。")
-			->length("メールアドレスは-文字以下で入力してください。", null, 255);
-		$check["homepage"]->length("ホームページは-文字以下で入力してください。", null, 255);
-		$check["transactee"]->length("得意先担当者は-文字以下で入力してください。", null, 255);
-		$check["transactee_honorific"]->length("得意先担当者は-文字以下で入力してください。", null, 255);
-		$check["department"]->length("部署名は-文字以下で入力してください。", null, 255);
-		$check["managerial_position"]->length("役職名は-文字以下で入力してください。", null, 255);
+			->length("メールアドレスは80文字以下で入力してください。", null, 255);
+		$check["homepage"]->length("ホームページは80文字以下で入力してください。", null, 255);
+		$check["transactee"]->length("得意先担当者は80文字以下で入力してください。", null, 255);
+		$check["transactee_honorific"]->length("得意先担当者は80文字以下で入力してください。", null, 255);
+		$check["department"]->length("部署名は80文字以下で入力してください。", null, 255);
+		$check["managerial_position"]->length("役職名は80文字以下で入力してください。", null, 255);
 		$check["tax_round"]->required("税端数処理を選択してください。");
 		$check["tax_processing"]->required("税処理を選択してください。");
 		$check["close_processing"]->required("請求方法を選択してください。");
 		$check["close_date"]->required("締日指定を選択してください。");
 		$check["receivables_balance"]->numeric("期首売掛残高は数値で入力してください。");
-		$check["note"]->length("備考は-文字以下で入力してください。", null, 255);
+		$check["note"]->length("備考は80文字以下で入力してください。", null, 255);
 	}
 	
 	public static function execInsert($db, $q, $context, $result){

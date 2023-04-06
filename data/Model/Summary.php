@@ -23,7 +23,7 @@ class Summary{
 	*/
 	public static function validate($check, $masterData, $db){
 		$check["name"]->required("摘要名を入力してください。")
-			->length("摘要名は-文字以下で入力してください。", null, 255);
+			->length("摘要名は80文字以下で入力してください。", null, 255);
 		$check["type"]->required("摘要種別を選択してください。");
 	}
 	

@@ -23,7 +23,7 @@ class Category{
 	*/
 	public static function validate($check, $masterData, $db){
 		$check["name"]->required("カテゴリー名を入力してください。")
-			->length("カテゴリー名は-文字以下で入力してください。", null, 255);
+			->length("カテゴリー名は80文字以下で入力してください。", null, 255);
 	}
 	
 	public static function execInsert($db, $q, $context, $result){
