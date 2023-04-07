@@ -88,6 +88,14 @@ Flow.start({{/literal}
 				</tr>
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
+						<label class="form-label ls-1" for="unique_name-input">請求先名（管理用）</label>
+					</th>
+					<td>
+						<div class="col-10">{$data.unique_name|escape:"html"}</div>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row" class="bg-light align-middle ps-4">
 						<label class="form-label ls-1" for="location_zip-input">郵便番号</label>
 					</th>
 					<td>

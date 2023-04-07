@@ -116,7 +116,7 @@ Flow.start({{/literal}
 		}
 		
 		let csvKeys = [
-			"code", "client", "name", "kana", "short_name", "location_zip", "location_address1", "location_address2", "location_address3",
+			"code", "client", "name", "kana", "short_name", "unique_name", "location_zip", "location_address1", "location_address2", "location_address3",
 			"phone", "fax", "email", "homepage", "transactee", "transactee_honorific", "invoice_format", "tax_round", "tax_processing",
 			"close_processing", "close_date", "payment_cycle", "payment_date", "unit_price_type",
 			"salse_with_ruled_lines", "delivery_with_ruled_lines", "receipt_with_ruled_lines", "invoice_with_ruled_lines",
@@ -129,6 +129,7 @@ Flow.start({{/literal}
 			name: "請求先名",
 			kana: "請求先名カナ",
 			short_name: "請求先名称略",
+			unique_name: "請求先名（管理用）",
 			location_zip: "郵便番号",
 			location_address1: "都道府県",
 			location_address2: "市区町村・番地",

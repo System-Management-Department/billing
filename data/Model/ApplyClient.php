@@ -33,6 +33,8 @@ class ApplyClient{
 			->length("請求先名カナは80文字以下で入力してください。", null, 255);
 		$check["short_name"]->required("請求先名称略を入力してください。")
 			->length("請求先名称略は80文字以下で入力してください。", null, 255);
+		$check["unique_name"]->required("請求先名（管理用）を入力してください。")
+			->length("請求先名（管理用）は80文字以下で入力してください。", null, 255);
 		$check["location_zip"]->required("郵便番号を入力してください。")
 			->length("郵便番号はハイフン無しの7文字で入力してください。", null, 7);
 		$check["location_address1"]->required("都道府県を選択してください。");
@@ -76,7 +78,7 @@ class ApplyClient{
 			$insertQuery = $db->insertSet("apply_clients", [
 				"client" => $q["client"],
 				"code" => $max_id . self::$delimiter . $q["client"],
-				"unique_name" => $q["name"],
+				"unique_name" => $q["unique_name"],
 				"name" => $q["name"],
 				"kana" => $q["kana"],
 				"short_name" => $q["short_name"],
@@ -130,7 +132,7 @@ class ApplyClient{
 		try{
 			$updateQuery = $db->updateSet("apply_clients", [
 				"client" => $q["client"],
-				"unique_name" => $q["name"],
+				"unique_name" => $q["unique_name"],
 				"name" => $q["name"],
 				"kana" => $q["kana"],
 				"short_name" => $q["short_name"],
@@ -208,7 +210,7 @@ class ApplyClient{
 			$table = $db->getJsonArray2Tabel(["apply_clients" => [
 				"code" => "$.code",
 				"client" => "$.client",
-				"unique_name" => "$.name",
+				"unique_name" => "$.unique_name",
 				"name" => "$.name",
 				"kana" => "$.kana",
 				"short_name" => "$.short_name",

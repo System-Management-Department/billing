@@ -236,6 +236,17 @@ Flow.start({{/literal}
 				</tr>
 				<tr>
 					<th scope="row" class="bg-light align-middle ps-4">
+						<label class="form-label ls-1" for="unique_name-input">請求先名（管理用）　<span class="text-danger fw-light">※</span></label>
+					</th>
+					<td>
+						<div class="col-10">
+							<input type="text" name="unique_name" class="form-control" id="unique_name-input" autocomplete="off" />
+							<div class="invalid-feedback"></div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row" class="bg-light align-middle ps-4">
 						<label class="form-label ls-1" for="location_zip-input">郵便番号　<span class="text-danger fw-light">※</span></label>
 					</th>
 					<td>

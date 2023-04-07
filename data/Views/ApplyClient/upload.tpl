@@ -3,7 +3,7 @@
 {block name="styles" append}
 <style type="text/css">{literal}
 [data-error~="code"] [data-column="code"],
-[data-error~="name"] [data-column="name"]{
+[data-error~="unique_name"] [data-column="unique_name"]{
 	background-color: #f8d7da;
 	color: var(--bs-danger);
 }
@@ -48,7 +48,7 @@ Flow.start({{/literal}
 			let data = CSVTokenizer.parse(reader.result.replace(/\r\n?/mg, "\n"));
 			this.response.import(buffer, "list");
 			this.response.createTable("csv", [
-				"code","client","name","kana","short_name","location_zip","location_address1","location_address2","location_address3","phone","fax","email","homepage",
+				"code","client","name","kana","short_name","unique_name","location_zip","location_address1","location_address2","location_address3","phone","fax","email","homepage",
 				"transactee","transactee_honorific","invoice_format","tax_round","tax_processing","close_processing","close_date","payment_cycle","payment_date",
 				"unit_price_type","salse_with_ruled_lines","delivery_with_ruled_lines","receipt_with_ruled_lines","invoice_with_ruled_lines","receivables_balance","note"
 			], data.slice(1));
@@ -60,14 +60,14 @@ Flow.start({{/literal}
 				.apply();
 			let dataValidation = {
 				code: this.response.select("COL").setTable("csv").setField("code").setGroupBy("code").setHaving("count(1)>1").apply(),
-				name: this.response.select("COL").setTable("csv").setField("name").setGroupBy("name").setHaving("count(1)>1").apply(),
+				unique_name: this.response.select("COL").setTable("csv").setField("unique_name").setGroupBy("unique_name").setHaving("count(1)>1").apply(),
 				apply(row){
 					let res = [];
 					if(this.code.includes(row.code)){
 						res.push("code");
 					}
-					if(this.name.includes(row.name)){
-						res.push("name");
+					if(this.unique_name.includes(row.unique_name)){
+						res.push("unique_name");
 					}
 					return res.join(" ");
 				}
@@ -138,6 +138,7 @@ Flow.start({{/literal}
 					<th>請求先名</th>
 					<th>請求先名カナ</th>
 					<th>請求先名称略</th>
+					<th>請求先名（管理用）</th>
 					<th>郵便番号</th>
 					<th>都道府県</th>
 					<th>市区町村・番地</th>
@@ -168,9 +169,10 @@ Flow.start({{/literal}
 				<tr data-error="{$dataValidation.apply|predef_invoke:$obj}">
 					<td data-column="code">{$obj.code}</td>
 					<td>{$obj.client_name}</td>
-					<td data-column="name">{$obj.name}</td>
+					<td>{$obj.name}</td>
 					<td>{$obj.kana}</td>
 					<td>{$obj.short_name}</td>
+					<td data-column="unique_name">{$obj.unique_name}</td>
 					<td>{$obj.location_zip}</td>
 					<td>{$prefectures[$obj.location_address1]}</td>
 					<td>{$obj.location_address2}</td>
