@@ -26,8 +26,11 @@ class ApplyClientController extends ControllerBase{
 		
 		$query = $db->select("ROW")
 			->addTable("apply_clients")
-			->andWhere("delete_flag=0")
-			->andWhere("code=?", $this->requestContext->id);
+			->addField("apply_clients.*")
+			->andWhere("apply_clients.delete_flag=0")
+			->andWhere("apply_clients.code=?", $this->requestContext->id)
+			->leftJoin("clients on apply_clients.client=clients.code")
+			->addField("clients.name as client_name");
 		$data = $query();
 		
 		if(empty($data)){

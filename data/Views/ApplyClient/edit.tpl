@@ -194,7 +194,7 @@ Flow.start({{/literal}
 								<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#clientModal">検 索</button>
 							</div>
 							<div class="input-group" data-form-output="result" data-form-name="client">
-								<div class="form-control" data-form-label="client"></div>
+								<div class="form-control" data-form-label="client">{$data.client_name|escape:"html"}</div>
 								<input type="hidden" name="client" value="{$data.client|escape:"html"}" />
 								<button type="button" class="btn btn-danger" data-form-output-reset="client">取 消</button>
 							</div>
