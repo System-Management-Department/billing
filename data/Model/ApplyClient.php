@@ -18,6 +18,17 @@ class ApplyClient{
 		$check = new Validator();
 		self::validate($check, $masterData, $db);
 		$result = $check($q);
+		if(!$result->hasError()){
+			list($hCode, $lCode) = explode(self::$delimiter, $context->id, 2);
+			if($lCode != $q["client"]){
+				$exists = $db->select("ONE")->setTable("clients")->setField("1")
+					->andWhere("code like concat(?,'%')", $hCode . self::$delimiter)
+					->andWhere("client=?", $q["client"]);
+				if(!empty($exists)){
+					$result->addMessage("既に登録済みの得意先と請求先の組み合わせです。", "ERROR", "client");
+				}
+			}
+		}
 		return $result;
 	}
 	
@@ -130,7 +141,11 @@ class ApplyClient{
 		$code = $context->id;
 		$db->beginTransaction();
 		try{
+			list($hCode, $lCode) = explode(self::$delimiter, $code, 2);
+			$newCode = $hCode . self::$delimiter . $q["client"];
+			
 			$updateQuery = $db->updateSet("apply_clients", [
+				"code" => $newCode,
 				"client" => $q["client"],
 				"unique_name" => $q["unique_name"],
 				"name" => $q["name"],
