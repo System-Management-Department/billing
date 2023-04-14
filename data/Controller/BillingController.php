@@ -16,7 +16,11 @@ use Model\SQLite;
 class BillingController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function index(){
-		return new View();
+		$db = Session::getDB();
+		$v = new View();
+		$query = $db->select("ASSOC")->setTable("basic_info");
+		$v["basicInfo"] = $query();
+		return $v;
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]

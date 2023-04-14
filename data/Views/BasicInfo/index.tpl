@@ -469,6 +469,37 @@ Flow.start({
 			</table>
 		</div>
 	</div>
+	<div class="container border border-secondary rounded p-4 mb-5 bg-white">
+		<div class="row h5">楽楽明細</div>
+		<div class="row gap-4 align-items-start">
+			<table class="col table">
+				<tr>
+					<th scope="row" class="bg-light align-middle ps-4">
+						<label class="form-label ls-1" for="rakurakumeisai_account-input">アカウント</label>
+					</th>
+					<td>
+						<div class="col-10">
+							<input type="text" name="rakurakumeisai_account" class="form-control" id="rakurakumeisai_account-input" autocomplete="off" value="{$data.rakurakumeisai_account|escape:"html"}" />
+							<div class="invalid-feedback"></div>
+						</div>
+					</td>
+				</tr>
+			</table>
+			<table class="col table">
+				<tr>
+					<th scope="row" class="bg-light align-middle ps-4">
+						<label class="form-label ls-1" for="rakurakumeisai_apitoken-input">APIトークン</label>
+					</th>
+					<td>
+						<div class="col-10">
+							<input type="text" name="rakurakumeisai_apitoken" class="form-control" id="rakurakumeisai_apitoken-input" autocomplete="off" value="{$data.rakurakumeisai_apitoken|escape:"html"}" />
+							<div class="invalid-feedback"></div>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
 	<div class="grid-colspan-12 text-center">
 		<input type="hidden" name="gserviceaccount" value="{$data.gserviceaccount|escape:"html"}" />
 		<button type="submit" class="btn btn-success rounded-pill w-25 d-inline-flex"><div class="flex-grow-1"></div>登録・更新<div class="flex-grow-1"></div></button>

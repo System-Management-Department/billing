@@ -8,7 +8,9 @@
 <script type="text/javascript" src="/assets/encoding.js/encoding.min.js"></script>
 <script type="text/javascript">{literal}
 Flow.start({{/literal}
-	dbDownloadURL: "{url action="search"}",{literal}
+	dbDownloadURL: "{url action="search"}",
+	account: "{$basicInfo.rakurakumeisai_account.value}",
+	apitoken: "{$basicInfo.rakurakumeisai_apitoken.value}",{literal}
 	strage: null,
 	response: new SQLite(),
 	y: null,
@@ -290,48 +292,55 @@ Flow.start({{/literal}
 		
 		// 出力
 		if(res instanceof FormData){
+			let reportTypes = this.response.select("COL")
+				.addTable("sales_slips")
+				.setField("distinct invoice_format")
+				.andWhere("is_checked(id)=1")
+				.andWhere("invoice_format is not null")
+				.apply();
 			let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(new Date());
-			let csvData = [new Uint8Array(Encoding.convert(Encoding.stringToCode([
-				"対象日付",
-				"帳票No",
-				"顧客コード",
-				"顧客名",
-				"税抜金額",
-				"消費税",
-				"合計金額",
-				"支払期限",
-				"明細日付",
-				"摘要",
-				"数量",
-				"明細単価",
-				"明細金額",
-				"備考(見出し)",
-				"税抜金額(8%)",
-				"税抜金額(10%)",
-				"消費税(8%)",
-				"消費税(10%)",
-				"税率",
-				"顧客名カナ",
-				"請求日",
-				"請求金額",
-				"件名",
-				"単位",
-				"摘要ヘッダー１",
-				"摘要ヘッダー２",
-				"摘要ヘッダー３",
-				"摘要ヘッダー１値",
-				"摘要ヘッダー２値",
-				"摘要ヘッダー３値",
-				"消費税(明細別合計)",
-				"税込金額(明細合計)",
-				"消費税(明細別)",
-				"税込金額(明細別)",
-				"担当者氏名",
-				"発行部数",
-				"明細単価"
-			].join(",") + "\r\n"), {to: "SJIS", from: "UNICODE"}))];
-			
-			
+			let csvData = {};
+			for(let type of reportTypes){
+				csvData[type] = [[
+					"対象日付",
+					"帳票No",
+					"顧客コード",
+					"顧客名",
+					"税抜金額",
+					"消費税",
+					"合計金額",
+					"支払期限",
+					"明細日付",
+					"摘要",
+					"数量",
+					"明細単価",
+					"明細金額",
+					"備考(見出し)",
+					"税抜金額(8%)",
+					"税抜金額(10%)",
+					"消費税(8%)",
+					"消費税(10%)",
+					"税率",
+					"顧客名カナ",
+					"請求日",
+					"請求金額",
+					"件名",
+					"単位",
+					"摘要ヘッダー１",
+					"摘要ヘッダー２",
+					"摘要ヘッダー３",
+					"摘要ヘッダー１値",
+					"摘要ヘッダー２値",
+					"摘要ヘッダー３値",
+					"消費税(明細別合計)",
+					"税込金額(明細合計)",
+					"消費税(明細別)",
+					"税込金額(明細別)",
+					"担当者氏名",
+					"発行部数",
+					"明細単価"
+				]];
+			}
 			
 			let table = this.response.select("ALL")
 				.addTable("sales_slips")
@@ -355,84 +364,111 @@ Flow.start({{/literal}
 				.andWhere("is_checked(sales_slips.id)=1")
 				.apply();
 			for(let item of table){
+				if(!(item.invoice_format in csvData)){
+					continue;
+				}
 				item.detail = JSON.parse(item.detail);
 				let taxRate = 0.1;
-				let cols = new Array(37);
-				cols[0] = item.accounting_date.split("-").join("/");
-				cols[1] = item.slip_number;
-				cols[2] = (typeof item.billing_destination === 'string') ? item.billing_destination.replace(/-.*$/, "") : item.billing_destination;
-				cols[3] = item.client_name;
-				cols[4] = item.total_amount;
-				cols[5] = item.total_amount_s;
-				cols[6] = item.total_amount + item.total_amount_s;
-				cols[7] = (typeof item.payment_date === 'string') ? item.payment_date.split("-").join("/") : item.payment_date;
-				cols[8] = (typeof item.accounting_date === 'string') ? item.accounting_date.split("-").join("/") : item.accounting_date;
-				cols[9] = item.item_name;
-				cols[10] = item.quantity;
-				cols[11] = item.unit_price;
-				cols[12] = item.amount;
-				cols[13] = item.note;
-				cols[14] = "";
-				cols[15] = "";
-				cols[16] = "";
-				cols[17] = "";
-				cols[18] = "";
-				cols[19] = item.client_kana;
-				cols[20] = today;
-				cols[21] = item.total_amount + item.total_amount_s;
-				cols[22] = item.subject;
-				cols[23] = item.unit;
-				cols[24] = item.header1;
-				cols[25] = item.header2;
-				cols[26] = item.header3;
-				cols[27] = item.data1;
-				cols[28] = item.data2;
-				cols[29] = item.data3;
-				cols[30] = item.total_amount_p;
-				cols[31] = item.total_amount + item.total_amount_p;
-				cols[32] = (typeof item.amount === "number") ? item.amount * taxRate : "";
-				cols[33] = (typeof item.amount === "number") ? (item.amount + item.amount * taxRate) : "";
-				cols[34] = item.manager_name;
-				cols[35] = item.circulation;
-				cols[36] = item.unit_price;
-				
-				csvData.push(new Uint8Array(Encoding.convert(Encoding.stringToCode(cols.map(v => {
-					if(v == null){
-						return "";
-					}else if(typeof v === "string" && v.match(/[,"\r\n]/)){
-						return `"${v.split('"').join('""')}"`;
-					}
-					return `${v}`;
-				}).join(",") + "\r\n"), {to: "SJIS", from: "UNICODE"})));
+				csvData[item.invoice_format].push([
+					item.accounting_date.split("-").join("/"),
+					item.slip_number,
+					(typeof item.billing_destination === 'string') ? item.billing_destination.replace(/-.*$/, "") : item.billing_destination,
+					item.client_name,
+					item.total_amount,
+					item.total_amount_s,
+					item.total_amount + item.total_amount_s,
+					(typeof item.payment_date === 'string') ? item.payment_date.split("-").join("/") : item.payment_date,
+					(typeof item.accounting_date === 'string') ? item.accounting_date.split("-").join("/") : item.accounting_date,
+					item.item_name,
+					item.quantity,
+					item.unit_price,
+					item.amount,
+					item.note,
+					"",
+					"",
+					"",
+					"",
+					"",
+					item.client_kana,
+					today,
+					item.total_amount + item.total_amount_s,
+					item.subject,
+					item.unit,
+					item.header1,
+					item.header2,
+					item.header3,
+					item.data1,
+					item.data2,
+					item.data3,
+					item.total_amount_p,
+					item.total_amount + item.total_amount_p,
+					(typeof item.amount === "number") ? item.amount * taxRate : "",
+					(typeof item.amount === "number") ? (item.amount + item.amount * taxRate) : "",
+					item.manager_name,
+					item.circulation,
+					item.unit_price
+				]);
 			}
 			
-			let response = yield fetch(outputForm.getAttribute("action"), {
-				method: outputForm.getAttribute("method"),
-				body: res
-			}).then(res => res.json());
-			if(response.success){
-				let blob = new Blob(csvData, {type: "text/csv"});
-				let a = document.createElement("a");
-				a.setAttribute("href", URL.createObjectURL(blob));
-				a.setAttribute("download", "output.csv");
-				a.click();
-				for(let message of response.messages){
-					Flow.DB.insertSet("messages", {title: "請求締データ", message: message[0], type: message[1], name: message[2]}, {}).apply();
-				}
-				yield Flow.DB.commit();
-				location.reload();
-			}else{
-				for(let message of response.messages){
-					Flow.DB.insertSet("messages", {title: "請求締データ", message: message[0], type: message[1], name: message[2]}, {}).apply();
-				}
-				let messages = Flow.DB
-					.select("ALL")
-					.addTable("messages")
-					.leftJoin("toast_classes using(type)")
-					.apply();
-				if(messages.length > 0){
-					Toaster.show(messages);
-					Flow.DB.delete("messages").apply();
+			let apiPL = [];
+			let apiHeader = new Headers();
+			apiHeader.set("X-WB-apitoken", this.apitoken);
+			for(let type of reportTypes){
+				let blob = new Blob([new Uint8Array(Encoding.convert(Encoding.stringToCode(
+					csvData[type].map(cols =>
+						cols.map(v => {
+							if(v == null){
+								return "";
+							}else if(typeof v === "string" && v.match(/[,"\r\n]/)){
+								return `"${v.split('"').join('""')}"`;
+							}
+							return `${v}`;
+						}).join(",")
+					).join("\r\n")
+				), {to: "SJIS", from: "UNICODE"}))], {type: "text/csv"});
+				let apiBody = new FormData();
+				apiBody.append("json", JSON.stringify({
+					reportTypeId: type,
+					isNewIssues: 1,
+					importProcessName: `取込`,
+					skipFirst: 1,
+					isImmApproval: 0
+				}));
+				apiBody.append("files[0]", blob, "data.csv");
+				apiPL.push(fetch(`https://${this.account}/api/v1/reports/imports`, {
+					method: "POST",
+					mode: 'cors',
+					headers: apiHeader,
+					body: apiBody
+				}).then(res => {
+					return res.json();
+				}));
+			}
+			let apiRes = yield Promise.all(apiPL);
+			if(apiRes.length > 0 && apiRes[0].code == "200"){
+				let response = yield fetch(outputForm.getAttribute("action"), {
+					method: outputForm.getAttribute("method"),
+					body: res
+				}).then(res => res.json());
+				if(response.success){
+					for(let message of response.messages){
+						Flow.DB.insertSet("messages", {title: "請求締データ", message: message[0], type: message[1], name: message[2]}, {}).apply();
+					}
+					yield Flow.DB.commit();
+					location.reload();
+				}else{
+					for(let message of response.messages){
+						Flow.DB.insertSet("messages", {title: "請求締データ", message: message[0], type: message[1], name: message[2]}, {}).apply();
+					}
+					let messages = Flow.DB
+						.select("ALL")
+						.addTable("messages")
+						.leftJoin("toast_classes using(type)")
+						.apply();
+					if(messages.length > 0){
+						Toaster.show(messages);
+						Flow.DB.delete("messages").apply();
+					}
 				}
 			}
 		}
