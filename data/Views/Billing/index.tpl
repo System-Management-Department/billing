@@ -6,6 +6,7 @@
 
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/encoding.js/encoding.min.js"></script>
+<script type="text/javascript" src="/assets/common/CSVSerializer.js"></script>
 <script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url action="search"}",
@@ -298,48 +299,64 @@ Flow.start({{/literal}
 				.andWhere("is_checked(id)=1")
 				.andWhere("invoice_format is not null")
 				.apply();
+			let vSerializer = new CSVSerializer((val, col) => {
+				if(col == 2){
+					return (typeof val === 'string') ? val.replace(/-.*$/, "") : val;
+				}
+				if(
+					(col == 4) || (col == 5) || (col == 6) ||
+					(col == 12) || (col == 21) || (col == 30) ||
+					(col == 31) || (col == 32) || (col == 33)){
+					return (typeof val === "number") ? Math.floor(val) : "";
+				}
+				if((col == 7) || (col == 8)){
+					return (typeof val === "string") ? val.split("-").join("/") : val;
+				}
+				return val;
+			}).setHeader([
+				"対象日付",
+				"帳票No",
+				"顧客コード",
+				"顧客名",
+				"税抜金額",
+				"消費税",
+				"合計金額",
+				"支払期限",
+				"明細日付",
+				"摘要",
+				"数量",
+				"明細単価",
+				"明細金額",
+				"備考(見出し)",
+				"税抜金額(8%)",
+				"税抜金額(10%)",
+				"消費税(8%)",
+				"消費税(10%)",
+				"税率",
+				"顧客名カナ",
+				"請求日",
+				"請求金額",
+				"件名",
+				"単位",
+				"摘要ヘッダー１",
+				"摘要ヘッダー２",
+				"摘要ヘッダー３",
+				"摘要ヘッダー１値",
+				"摘要ヘッダー２値",
+				"摘要ヘッダー３値",
+				"消費税(明細別合計)",
+				"税込金額(明細合計)",
+				"消費税(明細別)",
+				"税込金額(明細別)",
+				"担当者氏名",
+				"発行部数",
+				"明細単価"
+			]).setFilter(data => data[6] > 0)
+			.setConverter(data => new Blob([new Uint8Array(Encoding.convert(Encoding.stringToCode(data), {to: "SJIS", from: "UNICODE"}))], {type: "text/csv"}));
 			let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(new Date());
 			let csvData = {};
 			for(let type of reportTypes){
-				csvData[type] = [[
-					"対象日付",
-					"帳票No",
-					"顧客コード",
-					"顧客名",
-					"税抜金額",
-					"消費税",
-					"合計金額",
-					"支払期限",
-					"明細日付",
-					"摘要",
-					"数量",
-					"明細単価",
-					"明細金額",
-					"備考(見出し)",
-					"税抜金額(8%)",
-					"税抜金額(10%)",
-					"消費税(8%)",
-					"消費税(10%)",
-					"税率",
-					"顧客名カナ",
-					"請求日",
-					"請求金額",
-					"件名",
-					"単位",
-					"摘要ヘッダー１",
-					"摘要ヘッダー２",
-					"摘要ヘッダー３",
-					"摘要ヘッダー１値",
-					"摘要ヘッダー２値",
-					"摘要ヘッダー３値",
-					"消費税(明細別合計)",
-					"税込金額(明細合計)",
-					"消費税(明細別)",
-					"税込金額(明細別)",
-					"担当者氏名",
-					"発行部数",
-					"明細単価"
-				]];
+				csvData[type] = [];
 			}
 			
 			let table = this.response.select("ALL")
@@ -372,13 +389,13 @@ Flow.start({{/literal}
 				csvData[item.invoice_format].push([
 					item.accounting_date.split("-").join("/"),
 					item.slip_number,
-					(typeof item.billing_destination === 'string') ? item.billing_destination.replace(/-.*$/, "") : item.billing_destination,
+					item.billing_destination,
 					item.client_name,
 					item.total_amount,
 					item.total_amount_s,
 					item.total_amount + item.total_amount_s,
-					(typeof item.payment_date === 'string') ? item.payment_date.split("-").join("/") : item.payment_date,
-					(typeof item.accounting_date === 'string') ? item.accounting_date.split("-").join("/") : item.accounting_date,
+					item.payment_date,
+					item.accounting_date,
 					item.item_name,
 					item.quantity,
 					item.unit_price,
@@ -414,18 +431,7 @@ Flow.start({{/literal}
 			let apiHeader = new Headers();
 			apiHeader.set("X-WB-apitoken", this.apitoken);
 			for(let type of reportTypes){
-				let blob = new Blob([new Uint8Array(Encoding.convert(Encoding.stringToCode(
-					csvData[type].map(cols =>
-						cols.map(v => {
-							if(v == null){
-								return "";
-							}else if(typeof v === "string" && v.match(/[,"\r\n]/)){
-								return `"${v.split('"').join('""')}"`;
-							}
-							return `${v}`;
-						}).join(",")
-					).join("\r\n")
-				), {to: "SJIS", from: "UNICODE"}))], {type: "text/csv"});
+				let blob = vSerializer.serializeToString(csvData[type]);
 				let apiBody = new FormData();
 				apiBody.append("json", JSON.stringify({
 					reportTypeId: type,

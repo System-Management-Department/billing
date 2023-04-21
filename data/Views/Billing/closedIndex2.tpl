@@ -6,6 +6,7 @@
 
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/encoding.js/encoding.min.js"></script>
+<script type="text/javascript" src="/assets/common/CSVSerializer.js"></script>
 <script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url action="search"}",{literal}
@@ -290,8 +291,21 @@ Flow.start({{/literal}
 		
 		// 出力
 		if(res instanceof FormData){
-			let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(new Date());
-			let csvData = [new Uint8Array(Encoding.convert(Encoding.stringToCode([
+			let vSerializer = new CSVSerializer((val, col) => {
+				if(col == 2){
+					return (typeof val === 'string') ? val.replace(/-.*$/, "") : val;
+				}
+				if(
+					(col == 4) || (col == 5) || (col == 6) ||
+					(col == 12) || (col == 21) || (col == 30) ||
+					(col == 31) || (col == 32) || (col == 33)){
+					return (typeof val === "number") ? Math.floor(val) : "";
+				}
+				if((col == 7) || (col == 8)){
+					return (typeof val === "string") ? val.split("-").join("/") : val;
+				}
+				return val;
+			}).setHeader([
 				"対象日付",
 				"帳票No",
 				"顧客コード",
@@ -329,9 +343,10 @@ Flow.start({{/literal}
 				"担当者氏名",
 				"発行部数",
 				"明細単価"
-			].join(",") + "\r\n"), {to: "SJIS", from: "UNICODE"}))];
-			
-			
+			]).setFilter(data => data[6] > 0)
+			.setConverter(data => new Blob([new Uint8Array(Encoding.convert(Encoding.stringToCode(data), {to: "SJIS", from: "UNICODE"}))], {type: "text/csv"}));
+			let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(new Date());
+			let csvData = [];
 			
 			let table = this.response.select("ALL")
 				.addTable("sales_slips")
@@ -357,56 +372,50 @@ Flow.start({{/literal}
 			for(let item of table){
 				item.detail = JSON.parse(item.detail);
 				let taxRate = 0.1;
-				let cols = new Array(37);
-				cols[0] = item.accounting_date.split("-").join("/");
-				cols[1] = item.slip_number;
-				cols[2] = (typeof item.billing_destination === 'string') ? item.billing_destination.replace(/-.*$/, "") : item.billing_destination;
-				cols[3] = item.client_name;
-				cols[4] = item.total_amount;
-				cols[5] = item.total_amount_s;
-				cols[6] = item.total_amount + item.total_amount_s;
-				cols[7] = (typeof item.payment_date === 'string') ? item.payment_date.split("-").join("/") : item.payment_date;
-				cols[8] = (typeof item.accounting_date === 'string') ? item.accounting_date.split("-").join("/") : item.accounting_date;
-				cols[9] = item.item_name;
-				cols[10] = item.quantity;
-				cols[11] = item.unit_price;
-				cols[12] = item.amount;
-				cols[13] = item.note;
-				cols[14] = "";
-				cols[15] = "";
-				cols[16] = "";
-				cols[17] = "";
-				cols[18] = "";
-				cols[19] = item.client_kana;
-				cols[20] = today;
-				cols[21] = item.total_amount + item.total_amount_s;
-				cols[22] = item.subject;
-				cols[23] = item.unit;
-				cols[24] = item.header1;
-				cols[25] = item.header2;
-				cols[26] = item.header3;
-				cols[27] = item.data1;
-				cols[28] = item.data2;
-				cols[29] = item.data3;
-				cols[30] = item.total_amount_p;
-				cols[31] = item.total_amount + item.total_amount_p;
-				cols[32] = (typeof item.amount === "number") ? item.amount * taxRate : "";
-				cols[33] = (typeof item.amount === "number") ? (item.amount + item.amount * taxRate) : "";
-				cols[34] = item.manager_name;
-				cols[35] = item.circulation;
-				cols[36] = item.unit_price;
+				let cols = [
+					item.accounting_date.split("-").join("/"),
+					item.slip_number,
+					item.billing_destination,
+					item.client_name,
+					item.total_amount,
+					item.total_amount_s,
+					item.total_amount + item.total_amount_s,
+					item.payment_date,
+					item.accounting_date,
+					item.item_name,
+					item.quantity,
+					item.unit_price,
+					item.amount,
+					item.note,
+					"",
+					"",
+					"",
+					"",
+					"",
+					item.client_kana,
+					today,
+					item.total_amount + item.total_amount_s,
+					item.subject,
+					item.unit,
+					item.header1,
+					item.header2,
+					item.header3,
+					item.data1,
+					item.data2,
+					item.data3,
+					item.total_amount_p,
+					item.total_amount + item.total_amount_p,
+					(typeof item.amount === "number") ? item.amount * taxRate : "",
+					(typeof item.amount === "number") ? (item.amount + item.amount * taxRate) : "",
+					item.manager_name,
+					item.circulation,
+					item.unit_price
+				];
 				
-				csvData.push(new Uint8Array(Encoding.convert(Encoding.stringToCode(cols.map(v => {
-					if(v == null){
-						return "";
-					}else if(typeof v === "string" && v.match(/[,"\r\n]/)){
-						return `"${v.split('"').join('""')}"`;
-					}
-					return `${v}`;
-				}).join(",") + "\r\n"), {to: "SJIS", from: "UNICODE"})));
+				csvData.push(cols);
 			}
 			
-			let blob = new Blob(csvData, {type: "text/csv"});
+			let blob = vSerializer.serializeToString(csvData);
 			let a = document.createElement("a");
 			a.setAttribute("href", URL.createObjectURL(blob));
 			a.setAttribute("download", "output.csv");
