@@ -312,6 +312,18 @@ Flow.start({{/literal}
 				if((col == 7) || (col == 8)){
 					return (typeof val === "string") ? val.split("-").join("/") : val;
 				}
+				if(col == 37){
+					if(Array.isArray(val)){
+						let date = new Date(val[0]);
+						if(val[1] == 99){
+							date.setMonth(date.getMonth() + 1);
+							date.setDate(-1);
+						}else{
+							date.setDate(val[1]);
+						}
+						return Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(date);
+					}
+				}
 				return val;
 			}).setHeader([
 				"対象日付",
@@ -350,10 +362,12 @@ Flow.start({{/literal}
 				"税込金額(明細別)",
 				"担当者氏名",
 				"発行部数",
-				"明細単価"
+				"明細単価",
+				"売上日"
 			]).setFilter(data => data[6] > 0)
 			.setConverter(data => new Blob([new Uint8Array(Encoding.convert(Encoding.stringToCode(data), {to: "SJIS", from: "UNICODE"}))], {type: "text/csv"}));
-			let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(new Date());
+			let now = new Date();
+			let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(now);
 			let csvData = {};
 			for(let type of reportTypes){
 				csvData[type] = [];
@@ -377,7 +391,7 @@ Flow.start({{/literal}
 				.leftJoin("managers on sales_slips.manager=managers.code")
 				.addField("managers.name as manager_name")
 				.leftJoin("apply_clients on sales_slips.billing_destination=apply_clients.code")
-				.addField("apply_clients.name as client_name,apply_clients.kana as client_kana")
+				.addField("apply_clients.name as client_name,apply_clients.kana as client_kana,apply_clients.close_date as client_close")
 				.andWhere("is_checked(sales_slips.id)=1")
 				.apply();
 			for(let item of table){
@@ -423,7 +437,8 @@ Flow.start({{/literal}
 					(typeof item.amount === "number") ? (item.amount + item.amount * taxRate) : "",
 					item.manager_name,
 					item.circulation,
-					item.unit_price
+					item.unit_price,
+					(item.client_close == null) ? today : [now, item.client_close]
 				]);
 			}
 			
