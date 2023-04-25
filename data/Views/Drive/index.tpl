@@ -13,8 +13,10 @@
 {/block}
 
 {block name="scripts" append}
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 <script type="text/javascript" src="/assets/googleAPI/GoogleSheets.js"></script>
 <script type="text/javascript" src="/assets/googleAPI/GoogleDrive.js"></script>
+<script type="text/javascript" src="/assets/common/SJISEncoder.js"></script>
 <script type="text/javascript">{literal}
 Flow.start({{/literal}
 	dbDownloadURL: "{url action="master"}",
@@ -46,14 +48,17 @@ Flow.start({{/literal}
 		const book = yield this.gs.getAll();
 		const buffer = yield fetch(this.dbDownloadURL).then(response => response.arrayBuffer());
 		const targetId = book.sheet("取込済").sheetId;
+		
+		let createTables = [book.sheet("売上").range.slice(1), book.sheet("売上明細").range.slice(1)];
+		yield* this.ocrProc(createTables);
 		this.response.import(buffer, "list");
 		this.response.createTable("slips", [
 			"import", "id", "slip_number", "accounting_date", "division_name", "team_name", "manager_name", "billing_destination_name",
 			"delivery_destination", "subject", "note", "header1", "header2", "header3", "payment_date", "invoice_format_name"
-		], book.sheet("売上").range.slice(1));
+		], createTables[0]);
 		this.response.createTable("details", [
 			"id", "categoryName", "itemName", "unit", "quantity", "unitPrice", "amount", "data1", "data2", "data3", "circulation"
-		], book.sheet("売上明細").range.slice(1));
+		], createTables[1]);
 		
 		this.response.create_function("equals", {
 			length: 2,
@@ -166,7 +171,8 @@ Flow.start({{/literal}
 					.setTable("details")
 					.andWhere("equals(id,?)", info.slip_number)
 					.apply();
-				document.getElementById("listinfo").innerHTML = this.template2.listInfo(info, details);
+				let listinfo = document.getElementById("listinfo");
+				listinfo.innerHTML = this.template2.listInfo(info, details);
 			}
 		}, {useCapture: true});
 		let parameter = new FormData();
@@ -174,6 +180,48 @@ Flow.start({{/literal}
 			yield* this.search(parameter);
 			parameter = yield* this.input(targetId);
 		}while(true);
+	},
+	*ocrProc(createTables){
+		let worker = yield Tesseract.createWorker({});
+		yield worker.loadLanguage('jpn');
+		yield worker.initialize('jpn');
+		let chary = "";
+		for(let cd in SJISEncoder.table){
+			if(cd > 0xff){
+				chary += String.fromCharCode(cd);
+			}
+		}
+		worker.setParameters({
+			tessedit_char_whitelist: chary
+		});
+		let tch = {};
+		for(let table of createTables){
+			for(let row of table){
+				for(let i = row.length - 1; i >= 0; i--){
+					let val = row[i];
+					if(typeof val !== "string"){
+						continue;
+					}
+					let nval = "";
+					for(let ch of val){
+						if(ch.codePointAt(0) in SJISEncoder.table){
+							nval += ch;
+							continue;
+						}
+						if(ch in tch){
+							nval += tch[ch];
+							continue;
+						}
+						const canvas = Object.assign(document.createElement("canvas"), {width: 100, height: 100});
+						Object.assign(canvas.getContext("2d"), {font: "50px serif"}).fillText(ch, 0, 50);
+						const res = yield worker.recognize(canvas);
+						tch[ch] = res.data.text.replace(/\s/g, "");
+						nval += tch[ch];
+					}
+					row[i] = nval;
+				}
+			}
+		}
 	},
 	*search(parameter){
 		let query = this.response.select("ALL")

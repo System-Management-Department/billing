@@ -34,4 +34,41 @@ class SJISEncoder{
 		}
 		return error;
 	}
+	static simulateHTML(node, prefix){
+		if(node.nodeType == Node.ELEMENT_NODE){
+			let sub = node.childNodes;
+			let n = sub.length;
+			for(let i = 0; i < n; i++){
+				SJISEncoder.simulateHTML(sub[i], prefix);
+			}
+		}else if(node.nodeType == Node.TEXT_NODE){
+			let content = document.createElement("span");
+			let text = node.textContent;
+			let subStr = "";
+			for(let ch of text){
+				if(ch.codePointAt(0) in SJISEncoder.table){
+					subStr += ch;
+					continue;
+				}else if(subStr != ""){
+					content.appendChild(document.createTextNode(subStr));
+					subStr = "";
+				}
+				let unknown = Object.assign(document.createElement("span"), {textContent: String.fromCharCode(65533)});
+				unknown.setAttribute("title", ch);
+				if(prefix != null){
+					unknown.setAttribute(`data-${prefix}-unknown`, "unknown");
+				}
+				content.appendChild(unknown);
+			}
+			if(content.firstElementChild != null){
+				if(subStr != ""){
+					content.appendChild(document.createTextNode(subStr));
+				}
+				if(prefix != null){
+					content.setAttribute(`data-${prefix}-container`, "container");
+				}
+				node.parentNode.replaceChild(content, node);
+			}
+		}
+	}
 }
