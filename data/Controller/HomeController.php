@@ -2,12 +2,14 @@
 namespace Controller;
 use App\View;
 use App\JsonView;
+use App\RedirectResponse;
 use App\ControllerBase;
 use App\MySQL;
 
 class HomeController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function index(){
+		return new RedirectResponse("*", "sales");
 		return new View();
 	}
 	
