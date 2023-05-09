@@ -243,7 +243,8 @@ class SalesSlip{
 		try{
 			$updateQuery = $db->updateSet("sales_slips", [],[
 				"close_processed" => 1,
-				"closing_date" => "CURRENT_DATE()"
+				"closing_date" => "CURRENT_DATE()",
+				"closed_count" => "closed_count+1",
 			]);
 			$updateQuery->andWhere("id IN (SELECT id FROM JSON_TABLE(?, '$[*]' COLUMNS(id INT PATH '$.id')) AS t)", json_encode($t))
 				->andWhere("output_processed=1");

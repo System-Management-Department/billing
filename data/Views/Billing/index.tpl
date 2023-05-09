@@ -370,7 +370,7 @@ Flow.start({{/literal}
 			let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(now);
 			let csvData = {};
 			for(let type of reportTypes){
-				csvData[type] = [];
+				csvData[type] = [[], []];
 			}
 			
 			let table = this.response.select("ALL")
@@ -400,7 +400,7 @@ Flow.start({{/literal}
 				}
 				item.detail = JSON.parse(item.detail);
 				let taxRate = 0.1;
-				csvData[item.invoice_format].push([
+				csvData[item.invoice_format][item.closed_count == 0 ? 1 : 0].push([
 					item.accounting_date.split("-").join("/"),
 					item.slip_number,
 					item.billing_destination,
@@ -446,24 +446,29 @@ Flow.start({{/literal}
 			let apiHeader = new Headers();
 			apiHeader.set("X-WB-apitoken", this.apitoken);
 			for(let type of reportTypes){
-				let blob = vSerializer.serializeToString(csvData[type]);
-				let apiBody = new FormData();
-				apiBody.append("json", JSON.stringify({
-					reportTypeId: type,
-					isNewIssues: 1,
-					importProcessName: `取込`,
-					skipFirst: 1,
-					isImmApproval: 0
-				}));
-				apiBody.append("files[0]", blob, "data.csv");
-				apiPL.push(fetch(`https://${this.account}/api/v1/reports/imports`, {
-					method: "POST",
-					mode: 'cors',
-					headers: apiHeader,
-					body: apiBody
-				}).then(res => {
-					return res.json();
-				}));
+				for(let isNewIssues = 0; isNewIssues <= 1; isNewIssues++){
+					if(csvData[type][isNewIssues].length < 1){
+						continue;
+					}
+					let blob = vSerializer.serializeToString(csvData[type][isNewIssues]);
+					let apiBody = new FormData();
+					apiBody.append("json", JSON.stringify({
+						reportTypeId: type,
+						isNewIssues: isNewIssues,
+						importProcessName: `取込`,
+						skipFirst: 1,
+						isImmApproval: 0
+					}));
+					apiBody.append("files[0]", blob, "data.csv");
+					apiPL.push(fetch(`https://${this.account}/api/v1/reports/imports`, {
+						method: "POST",
+						mode: 'cors',
+						headers: apiHeader,
+						body: apiBody
+					}).then(res => {
+						return res.json();
+					}));
+				}
 			}
 			let apiRes = yield Promise.all(apiPL);
 			if(apiRes.length > 0 && apiRes[0].code == "200"){
