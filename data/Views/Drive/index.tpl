@@ -235,9 +235,13 @@ Flow.start({{/literal}
 					q.andWhere("slip_number like '%' || ? || '%'", v.replace(/(?=[\\\%\_])/g, "\\"));
 				}
 			},
-			accounting_date(q, v){
-				if(v != ""){
-					q.andWhere("accounting_date=?", v);
+			["accounting_date[]"](q, v1, v2, v3){
+				if(v1 != ""){
+					if(v2 == ""){
+						q.andWhere("strftime('%Y-%m', accounting_date)=?", v1);
+					}else{
+						q.andWhere("strftime('%s',accounting_date)-strftime('%s',?) BETWEEN 0 AND ?", `${v1}-${v2}`, Number(v3) * 86400 + 86399);
+					}
 				}
 			},
 			division(q, v){
@@ -444,8 +448,26 @@ Flow.start({{/literal}
 					<label class="form-label ls-1" for="salesdate-input">売上日付</label>
 				</th>
 				<td>
-					<div class="col-5">
-						<input type="date" name="accounting_date" class="form-control" id="salesdate-input" />
+					<div class="row gx-0">
+						<div class="col-5">
+							<input type="month" name="accounting_date[]" class="form-control" id="salesdate-input" />
+						</div>
+						<div class="col-3">
+							<select name="accounting_date[]" class="form-select">
+								<option value="">--</ooption>
+								{section name="date" start=1 loop=32}
+								<option value="{$smarty.section.date.index}">{$smarty.section.date.index}日</ooption>
+								{/section}
+							</select>
+						</div>
+						<div class="col-3">
+							<select name="accounting_date[]" class="form-select">
+								<option value="0" selected></ooption>
+								{section name="date" start=1 loop=30}
+								<option value="{$smarty.section.date.index}">～{$smarty.section.date.index + 1}日間</ooption>
+								{/section}
+							</select>
+						</div>
 					</div>
 				</td>
 			</tr>
