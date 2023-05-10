@@ -31,6 +31,14 @@ class SalesOutputController extends ControllerBase{
 				$parameter = true;
 				$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
 			}
+			if(!empty($_POST["accounting_month"])){
+				$parameter = true;
+				if(empty($_POST["accounting_month_date"])){
+					$query->andWhere("DATE_FORMAT(accounting_date, '%Y-%m')=?", $_POST["accounting_month"]);
+				}else{
+					$query->andWhere("DATEDIFF(accounting_date,?) BETWEEN 0 AND ?", $_POST["accounting_month"] . "-" . $_POST["accounting_month_date"], $_POST["accounting_month_number"]);
+				}
+			}
 			if(!empty($_POST["accounting_date"])){
 				$parameter = true;
 				$query->andWhere("accounting_date=?", $_POST["accounting_date"]);

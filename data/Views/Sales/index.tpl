@@ -330,8 +330,26 @@ Flow.start({{/literal}
 					<label class="form-label ls-1" for="salesdate-input">売上日付</label>
 				</th>
 				<td>
-					<div class="col-5">
-						<input type="date" name="accounting_date" class="form-control" id="salesdate-input" />
+					<div class="row gx-0">
+						<div class="col-5">
+							<input type="month" name="accounting_month" class="form-control" id="salesdate-input" />
+						</div>
+						<div class="col-3">
+							<select name="accounting_month_date" class="form-select">
+								<option value="">--</ooption>
+								{section name="date" start=1 loop=32}
+								<option value="{$smarty.section.date.index}">{$smarty.section.date.index}日</ooption>
+								{/section}
+							</select>
+						</div>
+						<div class="col-3">
+							<select name="accounting_month_number" class="form-select">
+								<option value="0" selected></ooption>
+								{section name="date" start=1 loop=30}
+								<option value="{$smarty.section.date.index}">～{$smarty.section.date.index + 1}日間</ooption>
+								{/section}
+							</select>
+						</div>
 					</div>
 				</td>
 			</tr>
