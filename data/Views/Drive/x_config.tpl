@@ -402,6 +402,62 @@ Flow.start({{/literal}
 						}
 					}
 				],
+				conditionalFormatRanges:[
+					{
+						range: {
+							startRowIndex:1,
+							endRowIndex: 100,
+							startColumnIndex:0,
+							endColumnIndex: 16
+						},
+						booleanRule: {
+							format: {
+								backgroundColor: {red: 0.8,green: 0.8,blue: 0.8},
+								backgroundColorStyle: {rgbColor: {red: 0.8,green: 0.8,blue: 0.8}}
+							},
+							condition: {
+								type: "CUSTOM_FORMULA",
+								values: [{userEnteredValue: "=INDIRECT(\"RC1\", FALSE)"}]
+							}
+						}
+					},
+					{
+						range: {
+							startRowIndex:1,
+							endRowIndex: 100,
+							startColumnIndex:11,
+							endColumnIndex: 14
+						},
+						booleanRule: {
+							format: {
+								backgroundColor: {},
+								backgroundColorStyle: {rgbColor: {}}
+							},
+							condition: {
+								type: "CUSTOM_FORMULA",
+								values: [{userEnteredValue: "=OR(INDIRECT(\"RC16\", FALSE)=\"通常請求書\",INDIRECT(\"RC16\", FALSE)=\"ダイドー用請求書\")"}]
+							}
+						}
+					},
+					{
+						range: {
+							startRowIndex:1,
+							endRowIndex: 100,
+							startColumnIndex:12,
+							endColumnIndex: 14
+						},
+						booleanRule: {
+							format: {
+								backgroundColor: {},
+								backgroundColorStyle: {rgbColor: {}}
+							},
+							condition: {
+								type: "CUSTOM_FORMULA",
+								values: [{userEnteredValue: "=INDIRECT(\"RC16\", FALSE)=\"ニッピ用請求書\""}]
+							}
+						}
+					}
+				],
 				protectedRanges: [
 					{startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 15}
 				],

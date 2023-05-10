@@ -160,6 +160,19 @@ class GoogleSheets{
 							});
 						}
 					}
+					if("conditionalFormatRanges" in sheetData[sheet.name]){
+						for(let range of sheetData[sheet.name].conditionalFormatRanges){
+							requests.push({
+								addConditionalFormatRule: {
+									rule: {
+										ranges: [Object.assign({sheetId:sheet.sheetId}, range.range)],
+										booleanRule: range.booleanRule
+									},
+									index: 0
+								}
+							});
+						}
+					}
 					if("validationRanges" in sheetData[sheet.name]){
 						for(let range of sheetData[sheet.name].validationRanges){
 							range.range.sheetId = sheet.sheetId;
@@ -319,6 +332,9 @@ class GoogleSheets{
 			}
 			if("validationRanges" in options){
 				json[GoogleSheets.updateSymbol].validationRanges = options.validationRanges;
+			}
+			if("conditionalFormatRanges" in options){
+				json[GoogleSheets.updateSymbol].conditionalFormatRanges = options.conditionalFormatRanges;
 			}
 			if("frozenRowCount" in options){
 				json.properties.gridProperties.frozenRowCount = options.frozenRowCount;
