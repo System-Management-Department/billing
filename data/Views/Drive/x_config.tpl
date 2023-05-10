@@ -16,6 +16,7 @@ Flow.start({{/literal}
 	jwtSpreadsheet: "{url controller="JWT" action="spreadsheet"}",{literal}
 	db: new SQLite(),
 	newFilename: "無題のスプレッドシート",
+	tempDelete: null,
 	*[Symbol.iterator](){
 		const buffer = yield fetch(this.dbDownloadURL).then(response => response.arrayBuffer());
 		this.db.import(buffer, "list");
@@ -38,7 +39,12 @@ Flow.start({{/literal}
 		let tbody = document.getElementById("list");
 		tbody.addEventListener("click", e => {
 			if(e.target.hasAttribute("data-search-delete")){
-				gd.delete(e.target.getAttribute("data-search-delete")).then(e => { location.reload(); });
+				let tr = e.target.closest("tr");
+				let modalObj = {
+					name: tr.querySelector('[data-column="name"]').textContent
+				};
+				this.tempDelete = e.target.getAttribute("data-search-delete");
+				document.querySelector("#deleteModal .modal-body").innerHTML = template.deleteModalBody(modalObj);
 			}else if(e.target.hasAttribute("data-search-update")){
 				const id = e.target.getAttribute("data-search-update");
 				const sheets = new GoogleSheets(this.jwtSpreadsheet, id);
@@ -75,6 +81,12 @@ Flow.start({{/literal}
 				.then(e => { location.reload(); });
 			}
 		}, {useCapture: true});
+		document.querySelector('#deleteModal [data-modal-delete]').addEventListener("click", e => {
+			if(this.tempDelete != null){
+				gd.delete(this.tempDelete).then(e => { location.reload(); });
+				this.tempDelete = null;
+			}
+		});
 		const dateFormatter = new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium", timeStyle: "medium", timeZone: "Asia/Tokyo"});
 		for(let item of obj.files){
 			if("masterUpdate" in item.properties){
@@ -561,7 +573,7 @@ Flow.start({{/literal}
 		</thead>
 		<tbody id="list">{predefine name="listItem" assign="obj"}
 			<tr>
-				<td>{$obj.name}</td>
+				<td data-column="name">{$obj.name}</td>
 				<td>{$obj.modifiedTime}</td>
 				<td>{$obj.lastModifyingUser.displayName}</td>
 				<td>{$obj.properties.masterUpdate}</td>
@@ -569,7 +581,7 @@ Flow.start({{/literal}
 					<div class="d-flex gap-2">
 						<a target="_blank" href="https://docs.google.com/spreadsheets/d/{$obj.id}/edit" class="btn btn-success btn-sm">編集</a>
 						<button type="button" class="btn btn-info btn-sm" data-search-update="{$obj.id}"{predef_repeat loop=$obj.properties.masterUpdateDisabled} disabled{/predef_repeat}>マスタ更新</button>
-						<button type="button" class="btn btn-danger btn-sm" data-search-delete="{$obj.id}">削除</button>
+						<button type="button" class="btn btn-danger btn-sm" data-search-delete="{$obj.id}" data-bs-toggle="modal" data-bs-target="#deleteModal">削除</button>
 					</div>
 				</td>
 			</tr>
@@ -580,4 +592,23 @@ Flow.start({{/literal}
 	</div>
 </div>
 {/if}
+{/block}
+
+{block name="dialogs"}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+	<div class="modal-dialog modal-dialog-centered modal-lg">
+		<div class="modal-content">
+			<div class="modal-header flex-row">
+				<div class="text-center text-danger">本当に削除しますか？</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
+			</div>
+			<div class="modal-body">{predefine name="deleteModalBody" assign="obj"}
+				ファイル名：{$obj.name}
+			{/predefine}</div>
+			<div class="modal-footer justify-content-evenly">
+				<button type="button" class="btn btn-success rounded-pill w-25 d-inline-flex" data-bs-dismiss="modal" data-modal-delete="1"><div class="flex-grow-1"></div>はい<div class="flex-grow-1"></div></button>
+				<button type="button" class="btn btn-outline-success rounded-pill w-25 d-inline-flex" data-bs-dismiss="modal"><div class="flex-grow-1"></div>いいえ<div class="flex-grow-1"></div></button>
+			</div>
+		</div>
+	</div>
+</div>
 {/block}
