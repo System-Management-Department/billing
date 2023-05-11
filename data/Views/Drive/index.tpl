@@ -51,13 +51,16 @@ Flow.start({{/literal}
 		
 		let createTables = [book.sheet("売上").range.slice(1), book.sheet("売上明細").range.slice(1)];
 		yield* this.ocrProc(createTables);
+		for(let i = createTables[1].length - 1; i >= 0; i--){
+			createTables[1][i].push(i);
+		}
 		this.response.import(buffer, "list");
 		this.response.createTable("slips", [
 			"import", "id", "slip_number", "accounting_date", "division_name", "team_name", "manager_name", "billing_destination_name",
 			"delivery_destination", "subject", "note", "header1", "header2", "header3", "payment_date", "invoice_format_name"
 		], createTables[0]);
 		this.response.createTable("details", [
-			"id", "categoryName", "itemName", "unit", "quantity", "unitPrice", "amount", "data1", "data2", "data3", "circulation"
+			"id", "categoryName", "itemName", "unit", "quantity", "unitPrice", "amount", "data1", "data2", "data3", "circulation", "sort"
 		], createTables[1]);
 		
 		this.response.create_function("equals", {
@@ -94,10 +97,11 @@ Flow.start({{/literal}
 					data1: [],
 					data2: [],
 					data3: [],
-					circulation: []
+					circulation: [],
+					sort: []
 				};
 			},
-			step(state, categoryCode, itemName, unit, quantity, unitPrice, amount, data1, data2, data3, circulation){
+			step(state, categoryCode, itemName, unit, quantity, unitPrice, amount, data1, data2, data3, circulation, sort){
 				state.length++;
 				state.categoryCode.push(categoryCode);
 				state.itemName.push(itemName);
@@ -109,10 +113,29 @@ Flow.start({{/literal}
 				state.data2.push(data2);
 				state.data3.push(data3);
 				state.circulation.push(circulation);
+				state.sort.push(sort);
 				return state;
 			},
 			finalize(state){
-				return JSON.stringify(state);
+				let newState = {length: state.length};
+				let sortObj = [];
+				for(let i = 0; i < state.length; i++){
+					sortObj.push({order: state.sort[i], idx: i});
+				}
+				sortObj.sort((a, b) => a.order - b.order);
+				for(let key in state){
+					if(key == "sort"){
+						continue;
+					}else if(Array.isArray(state[key])){
+						newState[key] = [];
+					}else{
+						continue;
+					}
+					for(let sortItem of sortObj){
+						newState[key].push(state[key][sortItem.idx]);
+					}
+				}
+				return JSON.stringify(newState);
 			}
 		});
 		
@@ -380,7 +403,7 @@ Flow.start({{/literal}
 				.leftJoin("details on slips.slip_number=details.id")
 				.leftJoin("categories on details.categoryName=categories.name")
 				.addField("sales_tax(details.amount) as sales_tax")
-				.addField("json_detail(categories.code, details.itemName, details.unit, details.quantity, details.unitPrice, details.amount, details.data1, details.data2, details.data3, details.circulation) as detail")
+				.addField("json_detail(categories.code, details.itemName, details.unit, details.quantity, details.unitPrice, details.amount, details.data1, details.data2, details.data3, details.circulation, details.sort) as detail")
 				.andWhere("is_checked(slips.slip_number)=1")
 				.setGroupBy("slips.slip_number")
 				.apply();
