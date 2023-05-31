@@ -32,11 +32,11 @@ class DeleteListItem{{/literal}
 			.addField("projects.header3")
 			.addField("projects.note")
 			.addField("projects.ingest")
-			.leftJoin("managers on projects.manager=managers.code")
+			.leftJoin("master.managers as managers on projects.manager=managers.code")
 			.addField("managers.name as manager_name,managers.kana as manager_kana")
-			.leftJoin("clients on projects.client=clients.code")
+			.leftJoin("master.clients as clients on projects.client=clients.code")
 			.addField("clients.name as client_name")
-			.leftJoin("apply_clients on projects.apply_client=apply_clients.code")
+			.leftJoin("master.apply_clients as apply_clients on projects.apply_client=apply_clients.code")
 			.addField("apply_clients.name as apply_client_name")
 			.apply();
 		document.querySelector('#deleteModal .modal-body').innerHTML = this.#template.deleteModal(table);
@@ -119,7 +119,7 @@ Flow.start({{/literal}
 		
 		const changeEvent1 = e => {
 			let table = this.response.select("ALL")
-				.setTable("managers")
+				.setTable("master.managers")
 				.orWhere("name like ('%' || ? || '%')", e.currentTarget.value)
 				.orWhere("code like ('%' || ? || '%')", e.currentTarget.value)
 				.apply();
@@ -127,9 +127,9 @@ Flow.start({{/literal}
 		};
 		const changeEvent2 = e => {
 			let table = this.response.select("ALL")
-				.setTable("apply_clients")
+				.setTable("master.apply_clients as apply_clients")
 				.addField("apply_clients.*")
-				.leftJoin("clients on apply_clients.client=clients.code")
+				.leftJoin("master.clients as clients on apply_clients.client=clients.code")
 				.addField("clients.name as client_name")
 				.orWhere("apply_clients.name like ('%' || ? || '%')", e.currentTarget.value)
 				.orWhere("apply_clients.unique_name like ('%' || ? || '%')", e.currentTarget.value)
@@ -140,7 +140,7 @@ Flow.start({{/literal}
 		};
 		const changeEvent3 = e => {
 			let table = this.response.select("ALL")
-				.setTable("clients")
+				.setTable("master.clients as clients")
 				.addField("clients.*")
 				.orWhere("clients.name like ('%' || ? || '%')", e.currentTarget.value)
 				.orWhere("clients.short_name like ('%' || ? || '%')", e.currentTarget.value)
@@ -257,6 +257,7 @@ Flow.start({{/literal}
 			body: formData
 		}).then(response => response.arrayBuffer());
 		this.response.import(buffer, "list");
+		this.response.attach(Flow.Master, "master");
 		
 		let table = this.response.select("ALL")
 			.addTable("projects")
@@ -273,11 +274,11 @@ Flow.start({{/literal}
 			.addField("projects.header3")
 			.addField("projects.note")
 			.addField("projects.ingest")
-			.leftJoin("managers on projects.manager=managers.code")
+			.leftJoin("master.managers as managers on projects.manager=managers.code")
 			.addField("managers.name as manager_name,managers.kana as manager_kana")
-			.leftJoin("clients on projects.client=clients.code")
+			.leftJoin("master.clients as clients on projects.client=clients.code")
 			.addField("clients.name as client_name")
-			.leftJoin("apply_clients on projects.apply_client=apply_clients.code")
+			.leftJoin("master.apply_clients as apply_clients on projects.apply_client=apply_clients.code")
 			.addField("apply_clients.name as apply_client_name")
 			.apply();
 		let tbody = document.getElementById("list");

@@ -45,7 +45,6 @@ class ProjectController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function search(){
 		$db = Session::getDB();
-		$sdb = SQLite::cachedData();
 		$query = $db->select("ALL")
 			->setTable("projects");
 		$parameter = false;
@@ -109,8 +108,10 @@ class ProjectController extends ControllerBase{
 		}
 		
 		list($columns, $data) = $db->exportTable("projects", [], "1=0 limit 0");
-		$sdb->createTable("projects", $columns, $parameter ? $query() : []);
-		return new FileView($sdb->getFileName(), "application/vnd.sqlite3");
+		return new FileView(SQLite::memoryData(["projects" => [
+			"columns" => $columns,
+			"data" => $parameter ? $query() : []
+		]])->getFileName(), "application/vnd.sqlite3");
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
