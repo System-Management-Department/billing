@@ -129,9 +129,11 @@ Flow.start({{/literal}
 	db: Flow.DB,
 	dbName: "{$smarty.session["User.role"]}",
 	dbDownloadURL: "{url controller="Storage" action="sqlite"}",
+	masterDownloadURL: "{url controller="Default" action="master"}",
 	location: "{url}",{literal}
 	*[Symbol.iterator](){
-		{/literal}{db_download test="Object.keys(this.db.tables).length < 1"}yield* this.dbUpdate();{/db_download}{literal}
+		{/literal}{db_download test="Object.keys(this.db.tables).length < 1"}yield* this.dbUpdate();{/db_download}
+		{master_download test="Object.keys(Flow.Master.tables).length < 1"}yield* this.masterUpdate();{/master_download}{literal}
 		Flow.DbLocked = false;
 		yield* this.breadcrumbs();
 		yield* this.toast();
@@ -161,6 +163,14 @@ Flow.start({{/literal}
 			fetch(this.dbDownloadURL).then(response => response.arrayBuffer()).then(buffer => {
 				this.db.import(buffer, this.dbName);
 				this.db.commit().then(res => {resolve(res);});
+			});
+		});
+	},
+	*masterUpdate(){
+		yield new Promise((resolve, reject) => {
+			fetch(this.masterDownloadURL).then(response => response.arrayBuffer()).then(buffer => {
+				Flow.Master.import(buffer, "master");
+				Flow.Master.commit().then(res => {resolve(res);});
 			});
 		});
 	},

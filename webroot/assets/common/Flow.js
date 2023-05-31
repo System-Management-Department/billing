@@ -1,5 +1,6 @@
 class Flow{
 	static DB = new SQLite();
+	static Master = new SQLite();
 	static DbName = "";
 	static DbLocked = false;
 	static #p = null;
@@ -12,6 +13,7 @@ class Flow{
 		}else if(Flow.#p == null){
 			Flow.#p = Promise.all([
 				Flow.DB.use(Flow.DbName),
+				Flow.Master.use("master"),
 				new Promise((resolve, reject) => { document.addEventListener("DOMContentLoaded", e => { resolve(e) }) })
 			]);
 			Flow.#i = Flow.#i.concat(p);
