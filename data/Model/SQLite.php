@@ -44,7 +44,8 @@ class SQLite{
 	}
 	
 	public static function memoryData($data){
-		return new SQLiteMemoryData($data);
+		$db = new SQLiteMemoryData($data);
+		return $db->getFileName();
 	}
 }
 class SQLiteTableBuilder{

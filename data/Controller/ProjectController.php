@@ -108,10 +108,12 @@ class ProjectController extends ControllerBase{
 		}
 		
 		list($columns, $data) = $db->exportTable("projects", [], "1=0 limit 0");
-		return new FileView(SQLite::memoryData(["projects" => [
-			"columns" => $columns,
-			"data" => $parameter ? $query() : []
-		]])->getFileName(), "application/vnd.sqlite3");
+		return new FileView(SQLite::memoryData([
+			"projects" => [
+				"columns" => $columns,
+				"data" => $parameter ? $query() : []
+			]
+		]), "application/vnd.sqlite3");
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
