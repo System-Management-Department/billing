@@ -45,6 +45,12 @@ class SQLite{
 		this.#dbName = name;
 		this.#using = new SQLite.SQL.Database(new Uint8Array(buffer));
 	}
+	attach(sqlite, alias){
+		this.#using.exec(`ATTACH DATABASE '${sqlite.#using.filename}' AS \`${alias}\``);
+	}
+	detach(alias){
+		this.#using.exec(`detach \`${alias}\``);
+	}
 	select(fetchMode = "ALL"){
 		return new SQLiteSelectQuery(this.#using, fetchMode);
 	}
