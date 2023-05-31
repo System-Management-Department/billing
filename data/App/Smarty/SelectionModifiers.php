@@ -148,6 +148,14 @@ class SelectionModifiers{
 		"11" => "11",
 		"12" => "12",
 	];
+	private static $confidence = [
+		"1" => "確定",
+		"2" => "Aヨミ",
+		"3" => "Bヨミ",
+		"4" => "Cヨミ",
+		"5" => "ネタ",
+		"99" => "その他",
+	];
 	public static function __callStatic($target, $args){
 		$assoc = self::$$target;
 		$code = $args[0];
