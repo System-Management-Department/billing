@@ -45,7 +45,7 @@ class ProjectController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function search(){
 		$db = Session::getDB();
-		$query = $db->select("ALL")
+		$query = $db->select("EXPORT")
 			->setTable("projects");
 		$parameter = false;
 		if(!empty($_POST)){
@@ -107,12 +107,11 @@ class ProjectController extends ControllerBase{
 			}
 		}
 		
-		list($columns, $data) = $db->exportTable("projects", [], "1=0 limit 0");
+		if(!$parameter){
+			$query->setLimit(0);
+		}
 		return new FileView(SQLite::memoryData([
-			"projects" => [
-				"columns" => $columns,
-				"data" => $parameter ? $query() : []
-			]
+			"projects" => $query()
 		]), "application/vnd.sqlite3");
 	}
 	
