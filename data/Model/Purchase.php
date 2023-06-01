@@ -3,15 +3,15 @@ namespace Model;
 use App\Validator;
 use App\Smarty\SelectionModifiers;
 
-class Project{
+class Purchase{
 	public static function getJsonQuery($db){
-		list($jsonField, $keys) = $db->getTable2JsonField(["projects", null], null, [
+		list($jsonField, $keys) = $db->getTable2JsonField(["purchases", null], null, [
 			"id" => null,
 			"created" => null,
 			"modified" => null
 		]);
 		$query = $db->select("ONE")
-			->addTable("projects")
+			->addTable("purchases")
 			->addField("JSON_OBJECTAGG(id,{$jsonField})", ...$keys);
 		return $query;
 	}
@@ -41,7 +41,7 @@ class Project{
 	public static function execInsert($db, $q, $context, $result){
 		$db->beginTransaction();
 		try{
-			$insertQuery = $db->insertSet("projects", [
+			$insertQuery = $db->insertSet("purchases", [
 			],[
 				"created" => "now()",
 				"modified" => "now()",
@@ -55,7 +55,7 @@ class Project{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
-			@Logger::record($db, "登録", ["projects" => $id]);
+			@Logger::record($db, "登録", ["purchases" => $id]);
 		}
 	}
 	
@@ -63,7 +63,7 @@ class Project{
 		$id = $context->id;
 		$db->beginTransaction();
 		try{
-			$updateQuery = $db->updateSet("projects", [
+			$updateQuery = $db->updateSet("purchases", [
 			],[
 				"modified" => "now()",
 			]);
@@ -77,19 +77,19 @@ class Project{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
-			@Logger::record($db, "編集", ["projects" => intval($id)]);
+			@Logger::record($db, "編集", ["purchases" => intval($id)]);
 		}
 	}
 	
 	public static function execDelete($db, $q, $context, $result){
 		$query = $db->select("ROW")
-			->addTable("projects")
+			->addTable("purchases")
 			->andWhere("id=?", $q["id"]);
 		
 		$data = $query();
 		$db->beginTransaction();
 		try{
-			$deleteQuery = $db->delete("projects");
+			$deleteQuery = $db->delete("purchases");
 			$deleteQuery->andWhere("id=?", $q["id"]);
 			$deleteQuery();
 			$db->commit();
@@ -100,7 +100,7 @@ class Project{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("削除が完了しました。", "INFO", "");
-			@Logger::record($db, "削除", ["projects" => $data["id"]]);
+			@Logger::record($db, "削除", ["purchases" => $data["id"]]);
 		}
 	}
 }

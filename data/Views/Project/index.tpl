@@ -115,6 +115,8 @@ Flow.start({{/literal}
 			document.querySelector('[data-search-label="manager"]').textContent = "";
 			document.querySelector('input[name="apply_client"]').value = "";
 			document.querySelector('[data-search-label="apply_client"]').textContent = "";
+			document.querySelector('input[name="client"]').value = "";
+			document.querySelector('[data-search-label="client"]').textContent = "";
 		});
 		
 		const changeEvent1 = e => {

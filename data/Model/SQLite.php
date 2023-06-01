@@ -15,6 +15,7 @@ class SQLite{
 			"clients"            => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
 			"apply_clients"      => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
 			"categories"         => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
+			"suppliers"          => ["alias" => ["created" => null, "modified" => null, "delete_flag" => null], "where" => "delete_flag=0"],
 		];
 		$sqlite = new \SQLite3(dirname(DATA_DIR) . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "sqlite" . DIRECTORY_SEPARATOR . "master.sqlite3");
 		$builder = new SQLiteTableBuilder($sqlite);

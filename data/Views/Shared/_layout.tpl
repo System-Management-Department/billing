@@ -37,6 +37,12 @@
 							</a>
 						</li>
 						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="{url controller="Purchase" action="index"}">
+								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">仕入れ検索</span>
+							</a>
+						</li>
+						<li class="nav-link d-flex align-items-center">
 							<a class="d-contents" href="{url controller="Home" action="sales"}">
 								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
 								<span class="text nav-text d-flex flex-column">売上処理</span>
