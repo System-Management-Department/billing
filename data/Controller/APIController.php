@@ -1,13 +1,15 @@
 <?php
 namespace Controller;
 use App\ControllerBase;
-use App\JsonView;
+use App\View;
 use App\MySQL as Database;
 
 class APIController extends ControllerBase{
 	public function projects(){
 		header('Access-Control-Allow-Origin: *');
-		$result = json_decode([]);
+		
+		$v = new View();
+		$v->setLayout(null)->setAction("_result");
 		$db = $this->auth();
 		if($db != null){
 			$jsonTable = $db->getJsonArray2Tabel([
@@ -38,27 +40,32 @@ class APIController extends ControllerBase{
 				->addField("JSON_OBJECT('manager',json_table.manager_name,'confidence',json_table.confidence_name,'billing_month',json_table.billing_month_name,'client',json_table.client_name,'apply_client',json_table.apply_client_name,'payment_date',json_table.payment_date_name)")
 				->addField("now(),now()");
 			$query();
+			$v["message"] = "<h2>登録が完了しました。</h2>";
+		}else{
+			$v["message"] = "<h2>認証に失敗しました。</h2>設定から正しいメールアドレスとパスワードの入力してください。";
 		}
 		
-		return new JsonView($result);
+		return $v;
 	}
 	public function orders(){
 		header('Access-Control-Allow-Origin: *');
-		$result = json_decode([]);
+		$v = new View();
+		$v->setLayout(null)->setAction("_result");
 		$db = $this->auth();
 		if($db != null){
 		}
 		
-		return new JsonView($result);
+		return $v;
 	}
 	public function purchases(){
 		header('Access-Control-Allow-Origin: *');
-		$result = json_decode([]);
+		$v = new View();
+		$v->setLayout(null)->setAction("_result");
 		$db = $this->auth();
 		if($db != null){
 		}
 		
-		return new JsonView($result);
+		return $v;
 	}
 	private function auth(){
 		$db = new Database();
