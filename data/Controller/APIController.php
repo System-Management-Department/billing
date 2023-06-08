@@ -1,7 +1,9 @@
 <?php
 namespace Controller;
+use SimpleXMLElement;
 use App\ControllerBase;
 use App\View;
+use App\StreamView;
 use App\MySQL as Database;
 
 class APIController extends ControllerBase{
@@ -65,6 +67,40 @@ class APIController extends ControllerBase{
 		if($db != null){
 		}
 		
+		return $v;
+	}
+	public function exist(){
+		header('Access-Control-Allow-Origin: *');
+		
+		$documentElement = new SimpleXMLElement("<root />");
+		$db = $this->auth();
+		if($db != null){
+			$jsonTable = $db->getJsonArray2Tabel([
+				"projects" => [
+					"code" => '$.code',
+				]
+			], "json_table");
+			
+			$query = $db->select("ASSOC")
+				->addTable($jsonTable, $_POST["json"])
+				->addField("json_table.code,EXISTS(SELECT 1 FROM projects WHERE code=json_table.code) AS exist");
+			$res = $query();
+			foreach($res as $code => $row){
+				if($row["exist"] == 1){
+					$rowElement = $documentElement->addChild("exist");
+					$rowElement->addAttribute("code", $code);
+				}
+			}
+		}else{
+			$documentElement->addAttribute("result", "認証に失敗しました。");
+		}
+		
+		$fp = fopen("php://temp", "r+");
+		fwrite($fp, $documentElement->asXML());
+		fflush($fp);
+		fseek($fp, 0, SEEK_SET);
+		$v = new StreamView($fp, "application/xml");
+		fclose($fp);
 		return $v;
 	}
 	private function auth(){
