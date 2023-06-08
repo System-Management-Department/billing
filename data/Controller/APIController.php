@@ -65,7 +65,33 @@ class APIController extends ControllerBase{
 		$v->setLayout(null)->setAction("_result");
 		$db = $this->auth();
 		if($db != null){
+			$jsonTable = $db->getJsonArray2Tabel([
+				"dual" => [
+					"supplier_name text " => '$.supplier',
+					"status_name text " => '$.status',
+				],
+				"purchases" => [
+					"project" => '$.project',
+					"subject" => '$.subject',
+					"amount" => '$.amount',
+					"note" => '$.note',
+					"payment_date" => '$.payment_date',
+				]
+			], "json_table");
+			$query = $db->insertSelect("purchases", "project,payment_date,amount,subject,note,supplier,status,ingest,created,modified")
+				->addTable($jsonTable, $_POST["json"])
+				->addField("json_table.project,json_table.payment_date,json_table.amount,json_table.subject,json_table.note")
+				->leftJoin("suppliers on json_table.supplier_name=suppliers.name")
+				->addField("suppliers.code")
+				->addField("0")
+				->addField("JSON_OBJECT('supplier',json_table.supplier_name,'status',json_table.status_name)")
+				->addField("now(),now()");
+			$query();
+			$v["message"] = "<h2>登録が完了しました。</h2>";
+		}else{
+			$v["message"] = "<h2>認証に失敗しました。</h2>設定から正しいメールアドレスとパスワードの入力してください。";
 		}
+		
 		
 		return $v;
 	}
