@@ -34,6 +34,7 @@ class ProjectController extends ControllerBase{
 			->addTable("projects")
 			->andWhere("id=?", $this->requestContext->id);
 		$v["data"] = $query();
+		$v["ingest"] = json_decode($v["data"]["ingest"], true);
 		return $v;
 	}
 	
