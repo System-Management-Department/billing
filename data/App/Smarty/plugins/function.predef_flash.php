@@ -20,7 +20,7 @@ class Template{
 			}else if((typeof substitution === "object") && (Template.#expression in substitution)){
 				substitutions2.push(substitution[Template.#expression]);
 			}else{
-				substitutions2.push(Object.assign(Template.#a, {textContent: substitution}).innerHTML);
+				substitutions2.push(Object.assign(Template.#a, {textContent: substitution}).innerHTML.replace(/"/g, "&quot;"));
 			}
 		}
 		return String.raw(callSite, ...substitutions2);

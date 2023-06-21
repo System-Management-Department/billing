@@ -286,4 +286,138 @@ class SalesSlip{
 			@Logger::record($db, "請求締解除", ["sales_slips" => $id]);
 		}
 	}
+	
+	public static function checkInsert2($db, $q, $masterData, $context){
+		$check = new Validator();
+		//$check["slip_number"]->required("伝票番号を入力してください。");
+		self::validate2($check, $masterData, $db);
+		$result = $check($q);
+		return $result;
+	}
+	
+	public static function checkUpdate2($db, $q, $masterData, $context){
+		$id = $context->id;
+		$check = new Validator();
+		self::validate2($check, $masterData, $db);
+		$result = $check($q);
+		return $result;
+	}
+	
+	/**
+		登録・更新共通の検証
+	*/
+	public static function validate2($check, $masterData, $db){
+		$check["accounting_date"]->required("売上日付を入力してください。")
+			->date("売上日付を正しく入力してください。");
+		$check["delivery_destination"]->required("納品先を入力してください。")
+			->length("納品先は80文字以下で入力してください。", null, 255);
+		$check["subject"]->required("件名を入力してください。");
+		$check["payment_date"]->required("入金予定日を入力してください。")
+			->date("入金予定日を正しく入力してください。");
+		$check["invoice_format"]->required("請求書パターンを入力してください。")
+			->range("請求書パターンを正しく入力してください。", "in", array_keys(SelectionModifiers::invoiceFormat([])));
+	}
+	
+	public static function execInsert2($db, $q, $context, $result){
+		$id = $context->id;
+		$month = date("ym"); 
+		$db->beginTransaction();
+		try{
+			$query = $db->select("ONE")
+				->setTable("basic_info")
+				->setField("`value`")
+				->andWhere("`key`=?", "slip_number_seq")
+				->andWhere("`value` like ?", "{$month}%");
+			$seq = $query();
+			$deleteQuery = $db->delete("basic_info")
+				->andWhere("`key`=?", "slip_number_seq");
+			$deleteQuery();
+			if($seq == null){
+				$number = sprintf("%04d%05d", $month, 1);
+			}else{
+				$str = substr($seq, 4);
+				$number = sprintf("%04d%05d", $month, intval($str) + 1);
+			}
+			$insertQuery = $db->insertSet("basic_info", [
+				"key"   => "slip_number_seq",
+				"value" => $number,
+			], []);
+			$insertQuery();
+			
+			$extendFields = ["manager"];
+			$overrideFields = [
+				"accounting_date", "delivery_destination", "subject",
+				"note", "header1", "header2", "header3",
+				"payment_date", "detail", "invoice_format",
+			];
+			$nowFields = ["created", "modified"];
+			$insertFields = array_merge([
+				"slip_number", "project", "billing_destination"
+				//"division", "team",
+			], $overrideFields, $extendFields, $nowFields);
+			$insertQuery = $db->insertSelect("sales_slips", implode(",", $insertFields))
+				->addTable("projects")
+				->andWhere("projects.code=?", $id);
+			foreach($insertFields as $field){
+				match(true){
+					($field == "slip_number") =>
+						$insertQuery->addField("?", $number),
+					($field == "project") =>
+						$insertQuery->addField("?", $id),
+					($field == "billing_destination") =>
+						$insertQuery->addField("projects.apply_client"),
+					in_array($field, $overrideFields) =>
+						$insertQuery->addField("?", $q[$field]),
+					in_array($field, $extendFields) =>
+						$insertQuery->addField("projects.{$field}"),
+					in_array($field, $nowFields) =>
+						$insertQuery->addField("now()"),
+				};
+			}
+			$insertQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("編集保存に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@Logger::record($db, "登録", ["projects" => $id]);
+		}
+	}
+	
+	public static function execUpdate2($db, $q, $context, $result){
+		$id = $context->id;
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("sales_slips", [
+				"accounting_date" => $q["accounting_date"],
+				"delivery_destination" => $q["delivery_destination"],
+				"subject" => $q["subject"],
+				"note" => $q["note"],
+				"header1" => $q["header1"],
+				"header2" => $q["header2"],
+				"header3" => $q["header3"],
+				"payment_date" => $q["payment_date"],
+				"detail" => $q["detail"],
+				"invoice_format" => $q["invoice_format"],
+			],[
+				"output_processed" => 0,
+				"modified" => "now()",
+			]);
+			$updateQuery->andWhere("id=?", $id)
+				->andWhere("close_processed=0");
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("編集保存に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@Logger::record($db, "編集", ["sales_slips" => intval($id)]);
+		}
+	}
 }

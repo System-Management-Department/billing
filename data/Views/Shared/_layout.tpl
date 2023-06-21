@@ -22,6 +22,15 @@
 			<nav class="px-3 overflow-hidden">
 				<div class="menu-bar">
 					<ul class="menu-links px-0 py-3">
+						{if ($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "manager") or ($smarty.session["User.role"] eq "leader")}
+						<li class="nav-link d-flex align-items-center">
+							<a class="d-contents" href="{url controller="SalesDetail" action="index"}">
+								<i class="bx bx-message-alt icon d-flex align-items-center justify-content-center"></i>
+								<span class="text nav-text d-flex flex-column">案件一覧</span>
+							</a>
+						</li>
+						{/if}
+						{if ($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "entry")}
 						<!--
 						<li class="nav-link d-flex align-items-center">
 							<a class="d-contents" href="{url controller="Dashboard" action="index"}">
@@ -54,6 +63,7 @@
 								<span class="text nav-text d-flex flex-column">請求処理</span>
 							</a>
 						</li>
+						{/if}
 						{if $smarty.session["User.role"] eq "admin"}
 						<li class="nav-link d-flex align-items-center">
 							<a class="d-contents" href="{url controller="Home" action="master"}">
@@ -61,12 +71,12 @@
 								<span class="text nav-text d-flex flex-column">マスタ設定</span>
 							</a>
 						</li>
-						<li class="nav-link d-flex align-items-center">
+						{*<li class="nav-link d-flex align-items-center">
 							<a class="d-contents" href="{url controller="Drive" action="x_config"}">
 								<i class="bx bxl-google-cloud icon d-flex align-items-center justify-content-center"></i>
 								<span class="text nav-text d-flex flex-column">サービスアカウント</span>
 							</a>
-						</li>
+						</li>*}
 						<li class="nav-link d-flex align-items-center">
 							<a class="d-contents" href="{url controller="Log" action="index"}">
 								<i class="bx bx-history icon d-flex align-items-center justify-content-center"></i>

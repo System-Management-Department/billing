@@ -1,6 +1,6 @@
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/googleAPI/GoogleDrive.js"></script>
-<script type="text/javascript">{literal}
+{*<script type="text/javascript">{literal}
 Flow.start({{/literal}
 	jwt: "{url controller="JWT" action="drive"}",{literal}
 	*[Symbol.iterator](){
@@ -14,7 +14,7 @@ Flow.start({{/literal}
 		}
 	}
 });
-{/literal}</script>
+{/literal}</script>*}
 {/block}
 
 
@@ -22,7 +22,7 @@ Flow.start({{/literal}
 <div class="container">
 	<div class="row row-cols-3 g-4">
 	
-		<form action="{url controller="Drive" action="index"}" method="GET" class="col">
+		{*<form action="{url controller="Drive" action="index"}" method="GET" class="col">
 			<div class="card h-100">
 				<div class="card-body p-4">
 					<h5 class="card-title">売上データ取り込み</h5>
@@ -33,7 +33,7 @@ Flow.start({{/literal}
 					</div>
 				</div>
 			</div>
-		</form>
+		</form>*}
 
 		<div class="col">
 			<div class="card h-100">

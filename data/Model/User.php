@@ -85,7 +85,8 @@ class User{
 		$query = $db
 			->select("ROW")
 			->addField("@user:=?", $assoc["id"] ?? 0)
-			->addField("@username:=?", $assoc["username"] ?? "");
+			->addField("@username:=?", $assoc["username"] ?? "")
+			->addField("@manager:=?", $assoc["manager"] ?? "");
 		$query();
 	}
 	
