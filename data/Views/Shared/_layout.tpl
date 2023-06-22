@@ -130,6 +130,7 @@
 <link rel="stylesheet" type="text/css" href="/assets/bootstrap/font/bootstrap-icons.css" />
 <link rel="stylesheet" type="text/css" href="/assets/boxicons/css/boxicons.min.css" />
 <link rel="stylesheet" type="text/css" href="/assets/common/layout.css" />
+<link rel="stylesheet" type="text/css" href="/assets/common/customElements.css" />
 {/block}
 {block name="scripts"}
 <script type="text/javascript" src="/assets/bootstrap/js/bootstrap.min.js"></script>
@@ -137,6 +138,7 @@
 <script type="text/javascript" src="/assets/common/SQLite.js"></script>
 <script type="text/javascript" src="/assets/common/Flow.js"></script>
 <script type="text/javascript" src="/assets/common/Toaster.js"></script>
+<script type="text/javascript" src="/assets/common/customElements.js"></script>
 <script type="text/javascript">
 {predef_flash}
 Flow.DbName = "{$smarty.session["User.role"]}";{literal}

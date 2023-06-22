@@ -214,12 +214,18 @@ Flow.start({{/literal}
 					for(let input of inputs){
 						let name = input.hasAttribute("name") ? input.getAttribute("name") : input.getAttribute("data-form-name");
 						if(name in messages){
+							if(input.tagName == "ROW-FORM"){
+								input.setAttribute("invalid", messages[name]);
+							}
 							input.classList.add("is-invalid");
 							let feedback = input.parentNode.querySelector('.invalid-feedback');
 							if(feedback != null){
 								feedback.textContent = messages[name];
 							}
 						}else{
+							if(input.tagName == "ROW-FORM"){
+								input.removeAttribute("invalid");
+							}
 							input.classList.remove("is-invalid");
 						}
 					}
@@ -259,6 +265,9 @@ Flow.start({{/literal}
 			</tr>
 		{/predefine}</tbody>
 	</table>
+	<datalist id="invoice_format">{foreach from=[]|invoiceFormat item="text" key="value"}
+		<option value="{$value}">{$text}</option>
+	{/foreach}</datalist>
 </div>
 {/block}
 
@@ -273,104 +282,19 @@ Flow.start({{/literal}
 			<form action="{url action="regist"}/{$obj.code}" method="POST" class="modal-body">
 				<div class="container border border-secondary rounded p-4 mb-5 bg-white">
 					<div class="row gap-4 align-items-start">
-						<table class="col table">
-							<tr>
-								<th scope="row" class="bg-light  align-middle ps-4">
-									<label class="form-label ls-1">案件番号</label>
-								</th>
-								<td>
-									<div class="col-5">{$obj.code}</div>
-								</td>
-							</tr>
-							
-							<tr>
-								<th scope="row" class="bg-light  align-middle ps-4">
-									<label class="form-label ls-1" for="salesdate-input">売上日付</label>
-								</th>
-								<td>
-									<div class="col-5">
-										<input type="date" name="accounting_date" class="form-control" id="salesdate-input" autocomplete="off" value="{$sales.date|predef_invoke:$obj.created}" />
-										<div class="invalid-feedback"></div>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1">当社担当者</label>
-								</th>
-								<td>
-									<div class="col-md-10">{$obj.manager_name}</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1" for="subject-input">請求書件名</label>
-								</th>
-								<td>
-									<div class="col-10">
-										<input type="text" name="subject" class="form-control" id="subject-input" autocomplete="off" value="{$obj.subject}" />
-										<div class="invalid-feedback"></div>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light  align-middle ps-4">
-									<label class="form-label ls-1" for="payment_date-input">入金予定日</label>
-								</th>
-								<td>
-									<div class="col-5">
-										<input type="date" name="payment_date" class="form-control" id="payment_date-input" autocomplete="off" value="{$obj.payment_date}" />
-										<div class="invalid-feedback"></div>
-									</div>
-								</td>
-							</tr>
-						</table>
-						<table class="col table">
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1" for="slip_number-input">請求書パターン</label>
-								</th>
-								<td>
-									<div class="col-6">
-										<select name="invoice_format" id="invoice_format-input" class="form-select">{foreach from=[]|invoiceFormat item="text" key="value"}
-											<option value="{$value}">{$text}</option>
-										{/foreach}</select>
-										<div class="invalid-feedback"></div>
-										<span class="no-edit clearfix ms-2">請求書見本はこちら</span>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1">請求先</label>
-								</th>
-								<td>
-									<div class="col-10">{$obj.apply_client_name}</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1" for="slip_number-input">納品先</label>
-								</th>
-								<td>
-									<div class="col-10">
-										<input type="text" name="delivery_destination" class="form-control" id="slip_number-input" autocomplete="off" value="{$obj.delivery_destination}" />
-										<div class="invalid-feedback"></div>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1" for="note-input">備考</label>
-								</th>
-								<td>
-									<div class="col-10">
-										<textarea name="note" class="form-control" id="note-input" autocomplete="off">{$obj.note}</textarea>
-										<div class="invalid-feedback"></div>
-									</div>
-								</td>
-							</tr>
-						</table>
+						<div class="d-table col table">
+							<row-form label="案件番号" col="5">{$obj.code}</row-form>
+							<row-form label="売上日付" col="5" type="date" name="accounting_date">{$sales.date|predef_invoke:$obj.created}</row-form>
+							<row-form label="当社担当者" col="10">{$obj.manager_name}</row-form>
+							<row-form label="請求書件名" col="10" type="text" name="subject" require>{$obj.subject}</row-form>
+							<row-form label="入金予定日" col="5" type="date" name="payment_date" require>{$obj.payment_date}</row-form>
+						</div>
+						<div class="d-table col table">
+							<row-form label="請求書パターン" col="6" type="select" name="invoice_format" list="invoice_format" default="1">1<span slot="content" class="no-edit clearfix ms-2">請求書見本はこちら</span></row-form>
+							<row-form label="請求先" col="10">{$obj.apply_client_name}</row-form>
+							<row-form label="納品先" col="10" type="text" name="delivery_destination" require>{$obj.delivery_destination}</row-form>
+							<row-form label="備考" col="10" type="textarea" name="note">{$obj.note}</row-form>
+						</div>
 					</div>
 				</div>
 				<div class="container border border-secondary rounded p-4 mb-5 bg-white table-responsive">
@@ -433,112 +357,20 @@ Flow.start({{/literal}
 			<form action="{url action="update"}/{$obj.id}" method="POST" class="modal-body">
 				<div class="container border border-secondary rounded p-4 mb-5 bg-white">
 					<div class="row gap-4 align-items-start">
-						<table class="col table">
-							<tr>
-								<th scope="row" class="bg-light  align-middle ps-4">
-									<label class="form-label ls-1">案件番号</label>
-								</th>
-								<td>
-									<div class="col-5">{$obj.project}</div>
-								</td>
-							</tr>
-							
-							<tr>
-								<th scope="row" class="bg-light  align-middle ps-4">
-									<label class="form-label ls-1">伝票番号</label>
-								</th>
-								<td>
-									<div class="col-5">{$obj.slip_number}</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light  align-middle ps-4">
-									<label class="form-label ls-1" for="salesdate-input">売上日付</label>
-								</th>
-								<td>
-									<div class="col-5">
-										<input type="date" name="accounting_date" class="form-control" id="salesdate-input" autocomplete="off" value="{$obj.accounting_date}" />
-										<div class="invalid-feedback"></div>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1">当社担当者</label>
-								</th>
-								<td>
-									<div class="col-md-10">{$obj.manager_name}</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1" for="subject-input">請求書件名</label>
-								</th>
-								<td>
-									<div class="col-10">
-										<input type="text" name="subject" class="form-control" id="subject-input" autocomplete="off" value="{$obj.subject}" />
-										<div class="invalid-feedback"></div>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light  align-middle ps-4">
-									<label class="form-label ls-1" for="payment_date-input">入金予定日</label>
-								</th>
-								<td>
-									<div class="col-5">
-										<input type="date" name="payment_date" class="form-control" id="payment_date-input" autocomplete="off" value="{$obj.payment_date}" />
-										<div class="invalid-feedback"></div>
-									</div>
-								</td>
-							</tr>
-						</table>
-						<table class="col table">
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1" for="slip_number-input">請求書パターン</label>
-								</th>
-								<td>
-									<div class="col-6">
-										<select name="invoice_format" id="invoice_format-input" class="form-select">{foreach from=[]|invoiceFormat item="text" key="value"}
-											<option value="{$value}"{predef_repeat loop=$sales.equals|predef_invoke:$value:$obj.invoice_format} selected{/predef_repeat}>{$text}</option>
-										{/foreach}</select>
-										<div class="invalid-feedback"></div>
-										<span class="no-edit clearfix ms-2">請求書見本はこちら</span>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1">請求先</label>
-								</th>
-								<td>
-									<div class="col-10">{$obj.apply_client_name}</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1" for="slip_number-input">納品先</label>
-								</th>
-								<td>
-									<div class="col-10">
-										<input type="text" name="delivery_destination" class="form-control" id="slip_number-input" autocomplete="off" value="{$obj.delivery_destination}" />
-										<div class="invalid-feedback"></div>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row" class="bg-light align-middle ps-4">
-									<label class="form-label ls-1" for="note-input">備考</label>
-								</th>
-								<td>
-									<div class="col-10">
-										<textarea name="note" class="form-control" id="note-input" autocomplete="off">{$obj.note}</textarea>
-										<div class="invalid-feedback"></div>
-									</div>
-								</td>
-							</tr>
-						</table>
+						<div class="d-table col table">
+							<row-form label="案件番号" col="5">{$obj.project}</row-form>
+							<row-form label="伝票番号" col="5">{$obj.slip_number}</row-form>
+							<row-form label="売上日付" col="5" type="date" name="accounting_date">{$obj.accounting_date}</row-form>
+							<row-form label="当社担当者" col="10">{$obj.manager_name}</row-form>
+							<row-form label="請求書件名" col="10" type="text" name="subject" require>{$obj.subject}</row-form>
+							<row-form label="入金予定日" col="5" type="date" name="payment_date" require>{$obj.payment_date}</row-form>
+						</div>
+						<div class="d-table col table">
+							<row-form label="請求書パターン" col="6" type="select" name="invoice_format" list="invoice_format" default="1">{$obj.invoice_format}<span slot="content" class="no-edit clearfix ms-2">請求書見本はこちら</span></row-form>
+							<row-form label="請求先" col="10">{$obj.apply_client_name}</row-form>
+							<row-form label="納品先" col="10" type="text" name="delivery_destination" require>{$obj.delivery_destination}</row-form>
+							<row-form label="備考" col="10" type="textarea" name="note">{$obj.note}</row-form>
+						</div>
 					</div>
 				</div>
 				<div class="container border border-secondary rounded p-4 mb-5 bg-white table-responsive">
