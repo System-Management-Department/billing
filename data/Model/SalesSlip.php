@@ -420,4 +420,25 @@ class SalesSlip{
 			@Logger::record($db, "編集", ["sales_slips" => intval($id)]);
 		}
 	}
+	
+	public static function approval($db, $q, $context, $result){
+		$id = $context->id;
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("sales_slips", [],[
+				"approval" => 1,
+			]);
+			$updateQuery->andWhere("id=?", $id);
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("承認に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("承認が完了しました。", "INFO", "");
+			@Logger::record($db, "承認", ["sales_slips" => intval($id)]);
+		}
+	}
 }

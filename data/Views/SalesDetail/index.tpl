@@ -10,8 +10,8 @@
 body [data-visible]{
 	display: none;
 }
-body:has(#invoice_format-input [value="2"]:checked) [data-visible="v2"],
-body:has(#invoice_format-input [value="3"]:checked) [data-visible="v3"]{
+body:has(input[name="invoice_format"][value="2"]) [data-visible="v2"],
+body:has(input[name="invoice_format"][value="3"]) [data-visible="v3"]{
 	display: table-cell;
 }
 </style>
@@ -54,7 +54,13 @@ Flow.start({{/literal}
 		}, categories);
 		let table = this.listItemQuery("ALL").apply();
 		document.getElementById("list").innerHTML = table.map(row => this.template.listItem(row)).join("");
-		let buttons = document.querySelectorAll('[data-create],[data-edit]');
+		let approvalRows = document.querySelectorAll('[data-approval="1"]:has([data-edit])');
+		for(let i = approvalRows.length - 1; i >= 0; i--){
+			const span = Object.assign(document.createElement("span"), {textContent: "承認済"});
+			const button = approvalRows[i].querySelector('[data-edit]');
+			button.parentNode.replaceChild(span, button);
+		}
+		let buttons = document.querySelectorAll('[data-create],[data-edit],[data-detail]');
 		for(let i = buttons.length - 1; i >= 0; i--){
 			buttons[i].addEventListener("click", this);
 		}
@@ -68,7 +74,9 @@ Flow.start({{/literal}
 			.leftJoin("master.clients AS clients ON projects.client=clients.code")
 			.addField("clients.name AS client_name")
 			.leftJoin("master.apply_clients AS apply_clients ON projects.apply_client=apply_clients.code")
-			.addField("apply_clients.name AS apply_client_name");
+			.addField("apply_clients.name AS apply_client_name")
+			.leftJoin("sales_slips on projects.code=sales_slips.project")
+			.addField("sales_slips.approval");
 	},
 	handleEvent(e){
 		const content = document.querySelector('#formModal .modal-content');
@@ -105,7 +113,7 @@ Flow.start({{/literal}
 			}
 			data.detail = JSON.stringify(values);
 			content.innerHTML = this.template.createForm(data, detail);
-		}else{
+		}else if(e.currentTarget.hasAttribute("data-edit")){
 			let data = this.response.select("ROW")
 				.addTable("sales_slips")
 				.addField("sales_slips.*")
@@ -128,7 +136,32 @@ Flow.start({{/literal}
 				}
 				detail.push(obj);
 			}
+			console.log(detail);
 			content.innerHTML = this.template.editForm(data, detail);
+		}else{
+			let data = this.response.select("ROW")
+				.addTable("sales_slips")
+				.addField("sales_slips.*")
+				.andWhere("sales_slips.id=?", Number(e.currentTarget.getAttribute("data-detail")))
+				.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
+				.addField("managers.name AS manager_name")
+				.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
+				.addField("apply_clients.name AS apply_client_name")
+				.apply();
+			let values = JSON.parse(data.detail);
+			let keys = Object.keys(values).filter(k => Array.isArray(values[k]));
+			let detail = [];
+			for(let i = 0; i < values.length; i++){
+				let obj = {};
+				for(let k of keys){
+					let key = k.replace(/[A-Z]/g, function(ch){
+						return `_${ch.toLowerCase()}`;
+					});
+					obj[key] = values[k][i];
+				}
+				detail.push(obj);
+			}
+			content.innerHTML = this.template.detailView(data, detail);
 		}
 		const detailList = document.getElementById("detail_list");
 		document.getElementById("add_detail_row").addEventListener("click", e => {
@@ -192,7 +225,13 @@ Flow.start({{/literal}
 						let row = this.listItemQuery("ROW").andWhere("projects.id=?", id).apply();
 						range.insertAdjacentHTML("afterend", this.template.listItem(row));
 						range.parentNode.removeChild(range);
-						let buttons = document.querySelectorAll(`[data-range="${id}"] [data-create],[data-range="${id}"] [data-edit]`);
+						let approvalRows = document.querySelectorAll('[data-approval="1"]:has([data-edit])');
+						for(let i = approvalRows.length - 1; i >= 0; i--){
+							const span = Object.assign(document.createElement("span"), {textContent: "承認済"});
+							const button = approvalRows[i].querySelector('[data-edit]');
+							button.parentNode.replaceChild(span, button);
+						}
+						let buttons = document.querySelectorAll(`[data-range="${id}"] [data-create],[data-range="${id}"] [data-edit],[data-range="${id}"] [data-detail]`);
 						for(let i = buttons.length - 1; i >= 0; i--){
 							buttons[i].addEventListener("click", this);
 						}
@@ -249,10 +288,11 @@ Flow.start({{/literal}
 				{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
 				<th class="w-20">備考</th>
 				<th>登録</th>
+				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">承認</th>{/if}
 			</tr>
 		</thead>
 		<tbody id="list">{predefine name="listItem" constructor="sales" assign="obj"}
-			<tr data-range="{$obj.id}">
+			<tr data-range="{$obj.id}" data-approval="{$obj.approval}">
 				<td>{$obj.code}</td>
 				<td>{$obj.subject}</td>
 				<td>{$obj.client_name}</td>
@@ -262,6 +302,9 @@ Flow.start({{/literal}
 				<td>
 					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
 				</td>
+				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<td>{predef_repeat loop=$sales.equals|predef_invoke:($sales.formType|predef_invoke:$obj):"edit"}
+					<button type="button" data-detail="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">明細</button>
+				{/predef_repeat}</td>{/if}
 			</tr>
 		{/predefine}</tbody>
 	</table>
@@ -310,9 +353,9 @@ Flow.start({{/literal}
 								<th>数量</th>
 								<th>単価</th>
 								<th>金額</th>
-								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header1" class="form-control form-control-sm" placeholder="摘要ヘッダー１" autocomplete="off" /></th>
-								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header2" class="form-control form-control-sm" placeholder="摘要ヘッダー２" autocomplete="off" /></th>
-								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header3" class="form-control form-control-sm" placeholder="摘要ヘッダー３" autocomplete="off" /></th>
+								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header1" class="form-control form-control-sm" placeholder="摘要ヘッダー１" autocomplete="off" value="{$obj.header1}" /></th>
+								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header2" class="form-control form-control-sm" placeholder="摘要ヘッダー２" autocomplete="off" value="{$obj.header2}" /></th>
+								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header3" class="form-control form-control-sm" placeholder="摘要ヘッダー３" autocomplete="off" value="{$obj.header3}" /></th>
 								<th data-visible="v2">発行部数</th>
 								<th></th>
 							</tr>
@@ -328,13 +371,13 @@ Flow.start({{/literal}
 								<td><select name="_detail[categoryCode][]" class="form-select">
 									<option value="">選択</option>
 									{predef_repeat loop=$categories.length index="i"}
-									<option value="{$categories[$i].code}"{predef_repeat loop=$sales.equals|predef_invoke:$categories[$i].code:$obj.category} selected{/predef_repeat}>{$categories[$i].name}</option>
+									<option value="{$categories[$i].code}"{predef_repeat loop=$sales.equals|predef_invoke:$categories[$i].code:$obj.category_code} selected{/predef_repeat}>{$categories[$i].name}</option>
 									{/predef_repeat}
 								</select></td>
-								<td><input type="text" name="_detail[itemName][]" class="form-control" value="{$obj.itemName}{$obj.item_name}" /></td>
+								<td><input type="text" name="_detail[itemName][]" class="form-control" value="{$obj.item_name}" /></td>
 								<td><input type="text" name="_detail[unit][]" class="form-control" value="{$obj.unit}" /></td>
 								<td><input type="text" name="_detail[quantity][]" class="form-control" value="{$obj.quantity}" /></td>
-								<td><input type="text" name="_detail[unitPrice][]" class="form-control"  value="{$obj.unitPrice}{$obj.unit_price}" /></td>
+								<td><input type="text" name="_detail[unitPrice][]" class="form-control"  value="{$obj.unit_price}" /></td>
 								<td><input type="text" name="_detail[amount][]" class="form-control" value="{$obj.amount}" /></td>
 								<td data-visible="v3"><input type="text" name="_detail[data1][]" class="form-control" value="{$obj.data1}" /></td>
 								<td data-visible="v3"><input type="text" name="_detail[data2][]" class="form-control" value="{$obj.data2}" /></td>
@@ -386,9 +429,9 @@ Flow.start({{/literal}
 								<th>数量</th>
 								<th>単価</th>
 								<th>金額</th>
-								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header1" class="form-control form-control-sm" placeholder="摘要ヘッダー１" autocomplete="off" /></th>
-								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header2" class="form-control form-control-sm" placeholder="摘要ヘッダー２" autocomplete="off" /></th>
-								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header3" class="form-control form-control-sm" placeholder="摘要ヘッダー３" autocomplete="off" /></th>
+								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header1" class="form-control form-control-sm" placeholder="摘要ヘッダー１" autocomplete="off" value="{$obj.header1}" /></th>
+								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header2" class="form-control form-control-sm" placeholder="摘要ヘッダー２" autocomplete="off" value="{$obj.header2}" /></th>
+								<th class="py-0 align-middle" data-visible="v3"><input type="text" name="header3" class="form-control form-control-sm" placeholder="摘要ヘッダー３" autocomplete="off" value="{$obj.header3}" /></th>
 								<th data-visible="v2">発行部数</th>
 								<th></th>
 							</tr>
@@ -404,6 +447,74 @@ Flow.start({{/literal}
 			</form>
 			<div class="modal-footer flex-row">
 				<button type="button" class="btn btn-success" data-bs-dismiss="modal">登録</button>
+			</div>
+			{/predefine}{predefine name="detailView" constructor="sales" assign="obj"}
+			<div class="modal-header flex-row">
+				<div class="text-center">売上明細</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
+			</div>
+			<form action="{url action="approval"}/{$obj.id}" method="POST" class="modal-body">
+				<div class="container border border-secondary rounded p-4 mb-5 bg-white">
+					<div class="row gap-4 align-items-start">
+						<div class="d-table col table">
+							<row-form label="案件番号" col="5">{$obj.project}</row-form>
+							<row-form label="伝票番号" col="5">{$obj.slip_number}</row-form>
+							<row-form label="売上日付" col="5">{$obj.accounting_date}</row-form>
+							<row-form label="当社担当者" col="10">{$obj.manager_name}</row-form>
+							<row-form label="請求書件名" col="10">{$obj.subject}</row-form>
+							<row-form label="入金予定日" col="5"{$obj.payment_date}</row-form>
+						</div>
+						<div class="d-table col table">
+							<row-form label="請求書パターン" type="hidden" col="6">{$obj.invoice_format}<div slot="content">{foreach from=[]|invoiceFormat item="text" key="value"}{predef_repeat loop=$sales.equals|predef_invoke:$value:$obj.invoice_format}{$text}{/predef_repeat}{/foreach}</div></row-form>
+							<row-form label="請求先" col="10">{$obj.apply_client_name}</row-form>
+							<row-form label="納品先" col="10">{$obj.delivery_destination}</row-form>
+							<row-form label="備考" col="10">{$obj.note}</row-form>
+						</div>
+					</div>
+				</div>
+				<div class="container border border-secondary rounded p-4 mb-5 bg-white table-responsive">
+					<input type="hidden" name="detail" value="{$obj.detail}" />
+					<input type="hidden" name="sales_tax" value="0" />
+					<table class="table table-md table_sticky">
+						<thead>
+							<tr>
+								<th>No</th>
+								<th>商品カテゴリー</th>
+								<th>内容（摘要）</th>
+								<th>単位</th>
+								<th>数量</th>
+								<th>単価</th>
+								<th>金額</th>
+								<th class="py-0 align-middle" data-visible="v3">{$obj.header1}</th>
+								<th class="py-0 align-middle" data-visible="v3">{$obj.header2}</th>
+								<th class="py-0 align-middle" data-visible="v3">{$obj.header3}</th>
+								<th data-visible="v2">発行部数</th>
+							</tr>
+						</thead>
+						<tfoot hidden>
+							<tr><th colspan="12"><button type="button" class="btn btn-primary bx bxs-message-add" id="add_detail_row">明細行を追加</button></th></tr>
+						</tfoot>
+						<tbody id="detail_list">
+							{predef_repeat loop=$detail.length index="i"}
+								<td class="table-group-row-no align-middle"></td>
+								<td>{predef_repeat loop=$categories.length index="j"}
+									{predef_repeat loop=$sales.equals|predef_invoke:$categories[$j].code:$detail[$i].category_code}{$categories[$j].name}{/predef_repeat}
+								{/predef_repeat}</td>
+								<td>{$detail[$i].itemName}{$detail[$i].item_name}</td>
+								<td>{$detail[$i].unit}</td>
+								<td>{$detail[$i].quantity}</td>
+								<td>{$detail[$i].unitPrice}{$detail[$i].unit_price}</td>
+								<td>{$detail[$i].amount}</td>
+								<td data-visible="v3">{$detail[$i].data1}</td>
+								<td data-visible="v3">{$detail[$i].data2}</td>
+								<td data-visible="v3">{$detail[$i].data3}</td>
+								<td data-visible="v2">{$detail[$i].circulation}</td>
+							{/predef_repeat}
+						</tbody>
+					</table>
+				</div>
+			</form>
+			<div class="modal-footer flex-row">
+				<button type="button" class="btn btn-success" data-bs-dismiss="modal">承認</button>
 			</div>
 			{/predefine}
 		</div>

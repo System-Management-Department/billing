@@ -109,4 +109,14 @@ class SalesDetailController extends ControllerBase{
 		
 		return new JsonView($result);
 	}
+	
+	#[\Attribute\AcceptRole("admin", "leader")]
+	public function approval(){
+		$db = Session::getDB();
+		
+		$result = new Result();
+		SalesSlip::approval($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
 }

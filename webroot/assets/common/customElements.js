@@ -242,7 +242,7 @@ class RowFormElement extends HTMLElement{
 			font-weight: bold;
 		}
 		.require#h::after{
-			content: "※";
+			content: "\\0203b";
 			margin-left: 1em;
 			color: rgb(220,53,69);
 		}
