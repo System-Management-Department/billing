@@ -495,6 +495,7 @@ Flow.start({{/literal}
 						</tfoot>
 						<tbody id="detail_list">
 							{predef_repeat loop=$detail.length index="i"}
+							<tr>
 								<td class="table-group-row-no align-middle"></td>
 								<td>{predef_repeat loop=$categories.length index="j"}
 									{predef_repeat loop=$sales.equals|predef_invoke:$categories[$j].code:$detail[$i].category_code}{$categories[$j].name}{/predef_repeat}
@@ -508,6 +509,7 @@ Flow.start({{/literal}
 								<td data-visible="v3">{$detail[$i].data2}</td>
 								<td data-visible="v3">{$detail[$i].data3}</td>
 								<td data-visible="v2">{$detail[$i].circulation}</td>
+							</tr>
 							{/predef_repeat}
 						</tbody>
 					</table>

@@ -270,6 +270,7 @@ class SalesSlip{
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("sales_slips", [],[
+				"approval" => 0,
 				"close_processed" => 0,
 				"closing_date" => "NULL"
 			]);
@@ -289,7 +290,6 @@ class SalesSlip{
 	
 	public static function checkInsert2($db, $q, $masterData, $context){
 		$check = new Validator();
-		//$check["slip_number"]->required("伝票番号を入力してください。");
 		self::validate2($check, $masterData, $db);
 		$result = $check($q);
 		return $result;

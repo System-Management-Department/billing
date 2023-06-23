@@ -458,6 +458,9 @@ class ModalSelectElement extends HTMLElement{
 	}
 	set searchKeyword(func){
 		this.#callback.searchKeyword = func;
+		if(func != null){
+			func(this.#elements.i.value);
+		}
 	}
 	set resetValue(func){
 		this.#callback.resetValue = func;
@@ -484,6 +487,7 @@ class ModalSelectElement extends HTMLElement{
 		#i, #d{
 			display: block;
 			flex-grow: 1;
+			min-width: 0;
 			padding: 0.375rem 0.75rem;
 			font-size: 1rem;
 			font-weight: 400;
@@ -520,6 +524,7 @@ class ModalSelectElement extends HTMLElement{
 		}
 		#s,#r{
 			display: block;
+			flex-shrink: 0;
 			padding: 0.375rem 0.75rem;
 			font-size: 1rem;
 			font-weight: 400;
