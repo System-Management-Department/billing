@@ -282,6 +282,7 @@ Flow.start({{/literal}
 		<thead>
 			<tr>
 				<th class="w-10">案件番号</th>
+				<th class="w-10">取込日時</th>
 				<th class="w-10">件名</th>
 				<th class="w-10">クライアント名</th>
 				<th class="w-20">請求先名</th>
@@ -294,6 +295,7 @@ Flow.start({{/literal}
 		<tbody id="list">{predefine name="listItem" constructor="sales" assign="obj"}
 			<tr data-range="{$obj.id}" data-approval="{$obj.approval}">
 				<td>{$obj.code}</td>
+				<td>{$obj.created}</td>
 				<td>{$obj.subject}</td>
 				<td>{$obj.client_name}</td>
 				<td>{$obj.apply_client_name}</td>
