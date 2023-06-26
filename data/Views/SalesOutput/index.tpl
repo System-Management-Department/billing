@@ -486,7 +486,7 @@ Flow.start({{/literal}
 		<div class="col-12 text-center">
 			<button type="reset" class="btn btn-outline-success">すべてチェック</button>
 			<button type="button" id="checkall" class="btn btn-outline-success">すべてチェックを外す</button>
-			<button type="submit" class="btn btn-success">出　力</button>
+			<button type="submit" class="btn btn-success">売上伝票出力</button>
 		</div>
 	</div>
 </fieldset></form>

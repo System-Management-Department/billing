@@ -271,6 +271,7 @@ class SalesSlip{
 		try{
 			$updateQuery = $db->updateSet("sales_slips", [],[
 				"approval" => 0,
+				"output_processed" => 0,
 				"close_processed" => 0,
 				"closing_date" => "NULL"
 			]);

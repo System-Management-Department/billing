@@ -651,8 +651,9 @@ Flow.start({{/literal}
 		<div class="col-12 text-center">
 			<button type="reset" class="btn btn-outline-success">すべてチェック</button>
 			<button type="button" id="checkall" class="btn btn-outline-success">すべてチェックを外す</button>
-			<button type="submit" class="btn btn-success">出　力</button>
+			<button type="submit" class="btn btn-success">請求締</button>
 		</div>
+		<div>※楽楽明細に請求データを生成するためには拡張機能「CORS Unblock」を有効にする必要があります。</div>
 	</div>
 </fieldset></form>
 {/block}

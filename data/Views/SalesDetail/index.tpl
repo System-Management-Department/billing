@@ -4,6 +4,13 @@
 <link rel="stylesheet" type="text/css" href="/assets/common/form.css" />
 <link rel="stylesheet" type="text/css" href="/assets/common/list.css" />
 <style type="text/css">
+.table_sticky_list{
+	display: block;
+	overflow-y: scroll;
+	height: calc(100vh/2);
+	border: 1px solid #dedede;
+	border-collapse: collapse;
+}
 .modal-form{
 	--bs-modal-width: calc(100% - var(--bs-modal-margin) * 2);
 }
@@ -52,8 +59,12 @@ Flow.start({{/literal}
 				return datetime.split(" ")[0];
 			}
 		}, categories);
-		let table = this.listItemQuery("ALL").apply();
-		document.getElementById("list").innerHTML = table.map(row => this.template.listItem(row)).join("");
+		let table = this.listItemQuery("ALL").andWhere("sales_slips.id IS NULL").apply();
+		document.getElementById("list1").innerHTML = table.map(row => this.template.listItem1(row)).join("");
+		table = this.listItemQuery("ALL").andWhere("sales_slips.approval=0").apply();
+		document.getElementById("list2").innerHTML = table.map(row => this.template.listItem2(row)).join("");
+		table = this.listItemQuery("ALL").andWhere("sales_slips.approval=1").apply();
+		document.getElementById("list3").innerHTML = table.map(row => this.template.listItem3(row)).join("");
 		let approvalRows = document.querySelectorAll('[data-approval="1"]:has([data-edit])');
 		for(let i = approvalRows.length - 1; i >= 0; i--){
 			const span = Object.assign(document.createElement("span"), {textContent: "承認済"});
@@ -223,7 +234,11 @@ Flow.start({{/literal}
 						this.response.attach(Flow.Master, "master");
 						const id = Number(range.getAttribute("data-range"));
 						let row = this.listItemQuery("ROW").andWhere("projects.id=?", id).apply();
-						range.insertAdjacentHTML("afterend", this.template.listItem(row));
+						if(row.approval == 0){
+							document.getElementById("list2").insertAdjacentHTML("afterend", this.template.listItem2(row));
+						}else if(row.approval == 1){
+							document.getElementById("list3").insertAdjacentHTML("afterend", this.template.listItem3(row));
+						}
 						range.parentNode.removeChild(range);
 						let approvalRows = document.querySelectorAll('[data-approval="1"]:has([data-edit])');
 						for(let i = approvalRows.length - 1; i >= 0; i--){
@@ -277,7 +292,42 @@ Flow.start({{/literal}
 {/block}
 
 {block name="body"}
-<div class="container border border-secondary rounded p-4 bg-white table-responsive">
+<div class="container border border-secondary rounded p-4 bg-white table-responsive mb-4">
+	<p>売上案件</p>
+	<table class="table table_sticky_list" data-scroll-y="list">
+		<thead>
+			<tr>
+				<th class="w-10">案件番号</th>
+				<th class="w-10">取込日時</th>
+				<th class="w-10">件名</th>
+				<th class="w-10">クライアント名</th>
+				<th class="w-20">請求先名</th>
+				{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
+				<th class="w-20">備考</th>
+				<th>登録</th>
+			</tr>
+		</thead>
+		<tbody id="list1">{predefine name="listItem1" constructor="sales" assign="obj"}
+			<tr data-range="{$obj.id}" data-approval="{$obj.approval}">
+				<td>{$obj.code}</td>
+				<td>{$obj.created}</td>
+				<td>{$obj.subject}</td>
+				<td>{$obj.client_name}</td>
+				<td>{$obj.apply_client_name}</td>
+				{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
+				<td>{$obj.note}</td>
+				<td>
+					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
+				</td>
+			</tr>
+		{/predefine}</tbody>
+	</table>
+	<datalist id="invoice_format">{foreach from=[]|invoiceFormat item="text" key="value"}
+		<option value="{$value}">{$text}</option>
+	{/foreach}</datalist>
+</div>
+<div class="container border border-secondary rounded p-4 bg-white table-responsive mb-4">
+	<p>売上登録済み案件</p>
 	<table class="table table_sticky_list" data-scroll-y="list">
 		<thead>
 			<tr>
@@ -292,7 +342,7 @@ Flow.start({{/literal}
 				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">承認</th>{/if}
 			</tr>
 		</thead>
-		<tbody id="list">{predefine name="listItem" constructor="sales" assign="obj"}
+		<tbody id="list2">{predefine name="listItem2" constructor="sales" assign="obj"}
 			<tr data-range="{$obj.id}" data-approval="{$obj.approval}">
 				<td>{$obj.code}</td>
 				<td>{$obj.created}</td>
@@ -310,9 +360,41 @@ Flow.start({{/literal}
 			</tr>
 		{/predefine}</tbody>
 	</table>
-	<datalist id="invoice_format">{foreach from=[]|invoiceFormat item="text" key="value"}
-		<option value="{$value}">{$text}</option>
-	{/foreach}</datalist>
+</div>
+<div class="container border border-secondary rounded p-4 bg-white table-responsive">
+	<p>売上承認済み案件</p>
+	<table class="table table_sticky_list" data-scroll-y="list">
+		<thead>
+			<tr>
+				<th class="w-10">案件番号</th>
+				<th class="w-10">取込日時</th>
+				<th class="w-10">件名</th>
+				<th class="w-10">クライアント名</th>
+				<th class="w-20">請求先名</th>
+				{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
+				<th class="w-20">備考</th>
+				<th>登録</th>
+				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">承認</th>{/if}
+			</tr>
+		</thead>
+		<tbody id="list3">{predefine name="listItem3" constructor="sales" assign="obj"}
+			<tr data-range="{$obj.id}" data-approval="{$obj.approval}">
+				<td>{$obj.code}</td>
+				<td>{$obj.created}</td>
+				<td>{$obj.subject}</td>
+				<td>{$obj.client_name}</td>
+				<td>{$obj.apply_client_name}</td>
+				{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
+				<td>{$obj.note}</td>
+				<td>
+					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
+				</td>
+				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<td>{predef_repeat loop=$sales.equals|predef_invoke:($sales.formType|predef_invoke:$obj):"edit"}
+					<button type="button" data-detail="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">明細</button>
+				{/predef_repeat}</td>{/if}
+			</tr>
+		{/predefine}</tbody>
+	</table>
 </div>
 {/block}
 
@@ -463,7 +545,7 @@ Flow.start({{/literal}
 							<row-form label="売上日付" col="5">{$obj.accounting_date}</row-form>
 							<row-form label="当社担当者" col="10">{$obj.manager_name}</row-form>
 							<row-form label="請求書件名" col="10">{$obj.subject}</row-form>
-							<row-form label="入金予定日" col="5"{$obj.payment_date}</row-form>
+							<row-form label="入金予定日" col="5">{$obj.payment_date}</row-form>
 						</div>
 						<div class="d-table col table">
 							<row-form label="請求書パターン" type="hidden" col="6">{$obj.invoice_format}<div slot="content">{foreach from=[]|invoiceFormat item="text" key="value"}{predef_repeat loop=$sales.equals|predef_invoke:$value:$obj.invoice_format}{$text}{/predef_repeat}{/foreach}</div></row-form>
@@ -476,7 +558,7 @@ Flow.start({{/literal}
 				<div class="container border border-secondary rounded p-4 mb-5 bg-white table-responsive">
 					<input type="hidden" name="detail" value="{$obj.detail}" />
 					<input type="hidden" name="sales_tax" value="0" />
-					<table class="table table-md table_sticky">
+					<table class="table table-md table_sticky_list">
 						<thead>
 							<tr>
 								<th>No</th>
