@@ -26,9 +26,7 @@ class BillingController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function search(){
 		$db = Session::getDB();
-		$sdb = SQLite::cachedData();
-		list($columns, $data) = $db->exportTable("sales_slips", [], "0=1 LIMIT 0");
-		$query = $db->select("ALL")->setTable("sales_slips");
+		$query = $db->select("EXPORT")->setTable("sales_slips");
 		if(isset($_POST["close_processed"])){
 			$query->andWhere("close_processed=?", $_POST["close_processed"]);
 		}
@@ -41,17 +39,15 @@ class BillingController extends ControllerBase{
 			$parameter = true;
 			$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
 		}
-		if(!empty($_POST["accounting_month"])){
-			$parameter = true;
-			if(empty($_POST["accounting_month_date"])){
-				$query->andWhere("DATE_FORMAT(accounting_date, '%Y-%m')=?", $_POST["accounting_month"]);
-			}else{
-				$query->andWhere("DATEDIFF(accounting_date,?) BETWEEN 0 AND ?", $_POST["accounting_month"] . "-" . $_POST["accounting_month_date"], $_POST["accounting_month_number"]);
-			}
-		}
 		if(!empty($_POST["accounting_date"])){
-			$parameter = true;
-			$query->andWhere("accounting_date=?", $_POST["accounting_date"]);
+			if(!empty($_POST["accounting_date"]["from"])){
+				$parameter = true;
+				$query->andWhere("DATEDIFF(accounting_date,?) BETWEEN 0 AND 365", $_POST["accounting_date"]["from"]);
+			}
+			if(!empty($_POST["accounting_date"]["to"])){
+				$parameter = true;
+				$query->andWhere("DATEDIFF(accounting_date,?) BETWEEN -365 AND 0", $_POST["accounting_date"]["to"]);
+			}
 		}
 		if(!empty($_POST["division"])){
 			$parameter = true;
@@ -75,8 +71,13 @@ class BillingController extends ControllerBase{
 				->setField("DISTINCT sales_slips.*")
 				->andWhere("item_name like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["itemName"]));
 		}
-		$sdb->createTable("sales_slips", $columns, $parameter ? $query() : []);
-		return new FileView($sdb->getFileName(), "application/vnd.sqlite3");
+		
+		if(!$parameter){
+			$query->setLimit(0);
+		}
+		return new FileView(SQLite::memoryData([
+			"sales_slips" => $query()
+		]), "application/vnd.sqlite3");
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]
