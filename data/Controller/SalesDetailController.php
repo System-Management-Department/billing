@@ -64,6 +64,11 @@ class SalesDetailController extends ControllerBase{
 		$query3 = $db->select("EXPORT")
 			->setTable("sales_slips")
 			->andWhere("sales_slips.close_processed=0");
+		$query4 = $db->select("EXPORT")
+			->setTable("purchases")
+			->addField("purchases.*")
+			->leftJoin("sales_slips on purchases.project=sales_slips.project")
+			->andWhere("(sales_slips.close_processed=0 OR sales_slips.close_processed IS NULL)");
 		if($_SESSION["User.role"] == "admin"){
 		}else if($_SESSION["User.role"] == "leader"){
 			$division = $db->select("ONE")
@@ -78,7 +83,8 @@ class SalesDetailController extends ControllerBase{
 		return new FileView(SQLite::memoryData([
 			"projects" => $query1(),
 			"orders"   => $query2(),
-			"sales_slips" => $query3()
+			"sales_slips" => $query3(),
+			"purchases" => $query4()
 		]), "application/vnd.sqlite3");
 	}
 	

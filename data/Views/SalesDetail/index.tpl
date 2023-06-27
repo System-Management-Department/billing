@@ -71,7 +71,7 @@ Flow.start({{/literal}
 			const button = approvalRows[i].querySelector('[data-edit]');
 			button.parentNode.replaceChild(span, button);
 		}
-		let buttons = document.querySelectorAll('[data-create],[data-edit],[data-detail],[data-detail2]');
+		let buttons = document.querySelectorAll('[data-create],[data-edit],[data-detail],[data-detail2],[data-purchase]');
 		for(let i = buttons.length - 1; i >= 0; i--){
 			buttons[i].addEventListener("click", this);
 		}
@@ -90,13 +90,11 @@ Flow.start({{/literal}
 			.addField("sales_slips.approval");
 	},
 	handleEvent(e){
-		const content = document.querySelector('#formModal .modal-content');
-		const range = e.currentTarget.closest('[data-range]');
-		if(e.currentTarget.hasAttribute("data-create")){
+		if(e.currentTarget.hasAttribute("data-purchase")){
 			let data = this.response.select("ROW")
 				.addTable("projects")
 				.addField("projects.*")
-				.andWhere("id=?", Number(e.currentTarget.getAttribute("data-create")))
+				.andWhere("projects.code=?", e.currentTarget.getAttribute("data-purchase"))
 				.leftJoin("master.managers AS managers ON projects.manager=managers.code")
 				.addField("managers.name AS manager_name")
 				.leftJoin("master.apply_clients AS apply_clients ON projects.apply_client=apply_clients.code")
@@ -106,210 +104,243 @@ Flow.start({{/literal}
 				.apply();
 			let detail = this.response.select("ALL")
 				.addTable("projects")
-				.andWhere("projects.id=?", Number(e.currentTarget.getAttribute("data-create")))
-				.leftJoin("orders ON projects.code=orders.project")
-				.addField("orders.*")
+				.andWhere("projects.code=?", e.currentTarget.getAttribute("data-purchase"))
+				.leftJoin("purchases ON projects.code=purchases.project")
+				.addField("purchases.*")
 				.apply();
-			let values = {length: detail.length};
-			for(let row of detail){
-				for(let k in row){
-					let key = k.replace(/_[a-z]/g, function(ch){
-						return ch.toUpperCase().substring(1);
-					});
-					if(!(key in values)){
-						values[key] = [];
-					}
-					values[key].push(row[k]);
-				}
-			}
-			data.detail = JSON.stringify(values);
-			content.innerHTML = this.template.createForm(data, detail);
-		}else if(e.currentTarget.hasAttribute("data-edit")){
-			let data = this.response.select("ROW")
-				.addTable("sales_slips")
-				.addField("sales_slips.*")
-				.andWhere("sales_slips.id=?", Number(e.currentTarget.getAttribute("data-edit")))
-				.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
-				.addField("managers.name AS manager_name")
-				.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
-				.addField("apply_clients.name AS apply_client_name")
-				.apply();
-			let values = JSON.parse(data.detail);
-			let keys = Object.keys(values).filter(k => Array.isArray(values[k]));
-			let detail = [];
-			for(let i = 0; i < values.length; i++){
-				let obj = {};
-				for(let k of keys){
-					let key = k.replace(/[A-Z]/g, function(ch){
-						return `_${ch.toLowerCase()}`;
-					});
-					obj[key] = values[k][i];
-				}
-				detail.push(obj);
-			}
-			console.log(detail);
-			content.innerHTML = this.template.editForm(data, detail);
-		}else if(e.currentTarget.hasAttribute("data-detail")){
-			let data = this.response.select("ROW")
-				.addTable("sales_slips")
-				.addField("sales_slips.*")
-				.andWhere("sales_slips.id=?", Number(e.currentTarget.getAttribute("data-detail")))
-				.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
-				.addField("managers.name AS manager_name")
-				.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
-				.addField("apply_clients.name AS apply_client_name")
-				.apply();
-			let values = JSON.parse(data.detail);
-			let keys = Object.keys(values).filter(k => Array.isArray(values[k]));
-			let detail = [];
-			for(let i = 0; i < values.length; i++){
-				let obj = {};
-				for(let k of keys){
-					let key = k.replace(/[A-Z]/g, function(ch){
-						return `_${ch.toLowerCase()}`;
-					});
-					obj[key] = values[k][i];
-				}
-				detail.push(obj);
-			}
-			content.innerHTML = this.template.detailView(data, detail);
-		}else{
-			let data = this.response.select("ROW")
-				.addTable("sales_slips")
-				.addField("sales_slips.*")
-				.andWhere("sales_slips.id=?", Number(e.currentTarget.getAttribute("data-detail2")))
-				.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
-				.addField("managers.name AS manager_name")
-				.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
-				.addField("apply_clients.name AS apply_client_name")
-				.apply();
-			let values = JSON.parse(data.detail);
-			let keys = Object.keys(values).filter(k => Array.isArray(values[k]));
-			let detail = [];
-			for(let i = 0; i < values.length; i++){
-				let obj = {};
-				for(let k of keys){
-					let key = k.replace(/[A-Z]/g, function(ch){
-						return `_${ch.toLowerCase()}`;
-					});
-					obj[key] = values[k][i];
-				}
-				detail.push(obj);
-			}
-			content.innerHTML = this.template.detailView2(data, detail);
-		}
-		const detailList = document.getElementById("detail_list");
-		document.getElementById("add_detail_row").addEventListener("click", e => {
-			detailList.insertAdjacentHTML("beforeend", this.template.detailForm({}));
-		});
-		detailList.addEventListener("change", e => {
-			let checked = detailList.querySelectorAll('tr:has([data-form-remove]:checked)');
-			for(let i = checked.length - 1; i >= 0; i--){
-				detailList.removeChild(checked[i]);
-			}
-			let tr = detailList.querySelectorAll('tr');
-			let data = {
-				length: tr.length
-			};
-			let total = 0;
-			for(let i = 0; i < data.length; i++){
-				let input = tr[i].querySelectorAll('[name]');
-				for(let j = input.length - 1; j >= 0; j--){
-					let name = input[j].getAttribute("name").replace(/^_detail\[|\]\[\]$/g, "");
-					if(!(name in data)){
-						data[name] = new Array(data.length);
-					}
-					if(input[j].value == ""){
-						data[name][i] = null;
-					}else if(isNaN(input[j].value)){
-						data[name][i] = input[j].value;
-					}else{
-						data[name][i] = Number(input[j].value);
-					}
-				}
-				if(("amount" in data) && (typeof data.amount[i] === 'number')){
-					total += data.amount[i];
-				}
-			}
-			content.querySelector('input[name="detail"]').value = JSON.stringify(data);
-			content.querySelector('input[name="sales_tax"]').value = total * 0.1;
+			document.getElementById("purchase_list").innerHTML = this.template.purchaseView(data, detail);
+			console.log({data, detail});
 			
-		}, {useCapture: true/*, signal: controller.signal*/});
-		content.querySelector('.btn[data-bs-dismiss="modal"]').addEventListener("click", e => {
-			const form = content.querySelector('form');
-			let formData = new FormData(form);
-			fetch(form.getAttribute("action"), {
-				method: form.getAttribute("method"),
-				body: formData
-			}).then(res => res.json()).then(response => {
-				if(response.success){
-					// フォーム送信 成功
-					for(let message of response.messages){
-						Flow.DB.insertSet("messages", {title: "売上登録", message: message[0], type: message[1], name: message[2]}, {}).apply();
-					}
-					let messages = Flow.DB.select("ALL")
-						.addTable("messages")
-						.leftJoin("toast_classes using(type)")
-						.apply();
-					Toaster.show(messages);
-					Flow.DB.delete("messages").apply();
-					fetch(this.dbDownloadURL).then(response => response.arrayBuffer()).then(buffer => {
-						this.response.import(buffer, "list");
-						this.response.attach(Flow.Master, "master");
-						const id = Number(range.getAttribute("data-range"));
-						let row = this.listItemQuery("ROW").andWhere("projects.id=?", id).apply();
-						if(row.approval == 0){
-							document.getElementById("list2").insertAdjacentHTML("afterend", this.template.listItem2(row));
-						}else if(row.approval == 1){
-							document.getElementById("list3").insertAdjacentHTML("afterend", this.template.listItem3(row));
+		}else{
+			const content = document.querySelector('#formModal .modal-content');
+			const range = e.currentTarget.closest('[data-range]');
+			if(e.currentTarget.hasAttribute("data-create")){
+				let data = this.response.select("ROW")
+					.addTable("projects")
+					.addField("projects.*")
+					.andWhere("id=?", Number(e.currentTarget.getAttribute("data-create")))
+					.leftJoin("master.managers AS managers ON projects.manager=managers.code")
+					.addField("managers.name AS manager_name")
+					.leftJoin("master.apply_clients AS apply_clients ON projects.apply_client=apply_clients.code")
+					.addField("apply_clients.name AS apply_client_name")
+					.leftJoin("master.clients AS clients ON projects.client=clients.code")
+					.addField("clients.name AS delivery_destination")
+					.apply();
+				let detail = this.response.select("ALL")
+					.addTable("projects")
+					.andWhere("projects.id=?", Number(e.currentTarget.getAttribute("data-create")))
+					.leftJoin("orders ON projects.code=orders.project")
+					.addField("orders.*")
+					.apply();
+				let values = {length: detail.length};
+				for(let row of detail){
+					for(let k in row){
+						let key = k.replace(/_[a-z]/g, function(ch){
+							return ch.toUpperCase().substring(1);
+						});
+						if(!(key in values)){
+							values[key] = [];
 						}
-						range.parentNode.removeChild(range);
-						let approvalRows = document.querySelectorAll('[data-approval="1"]:has([data-edit])');
-						for(let i = approvalRows.length - 1; i >= 0; i--){
-							const span = Object.assign(document.createElement("span"), {textContent: "承認済"});
-							const button = approvalRows[i].querySelector('[data-edit]');
-							button.parentNode.replaceChild(span, button);
-						}
-						let buttons = document.querySelectorAll(`[data-range="${id}"] [data-create],[data-range="${id}"] [data-edit],[data-range="${id}"] [data-detail],[data-range="${id}"] [data-detail2]`);
-						for(let i = buttons.length - 1; i >= 0; i--){
-							buttons[i].addEventListener("click", this);
-						}
-					});
-				}else{
-					// フォーム送信 失敗
-					new bootstrap.Modal(document.getElementById("formModal")).show();
-					
-					// エラーメッセージをオブジェクトへ変更
-					let messages = response.messages.reduce((a, message) => {
-						if(message[1] == 2){
-							a[message[2]] = message[0];
-						}
-						return a;
-					}, {});
-					
-					// エラーメッセージの表示切替
-					let inputs = form.querySelectorAll('[name],[data-form-name]');
-					for(let input of inputs){
-						let name = input.hasAttribute("name") ? input.getAttribute("name") : input.getAttribute("data-form-name");
-						if(name in messages){
-							if(input.tagName == "ROW-FORM"){
-								input.setAttribute("invalid", messages[name]);
-							}
-							input.classList.add("is-invalid");
-							let feedback = input.parentNode.querySelector('.invalid-feedback');
-							if(feedback != null){
-								feedback.textContent = messages[name];
-							}
-						}else{
-							if(input.tagName == "ROW-FORM"){
-								input.removeAttribute("invalid");
-							}
-							input.classList.remove("is-invalid");
-						}
+						values[key].push(row[k]);
 					}
 				}
+				data.detail = JSON.stringify(values);
+				content.innerHTML = this.template.createForm(data, detail);
+			}else if(e.currentTarget.hasAttribute("data-edit")){
+				let data = this.response.select("ROW")
+					.addTable("sales_slips")
+					.addField("sales_slips.*")
+					.andWhere("sales_slips.id=?", Number(e.currentTarget.getAttribute("data-edit")))
+					.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
+					.addField("managers.name AS manager_name")
+					.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
+					.addField("apply_clients.name AS apply_client_name")
+					.apply();
+				let values = JSON.parse(data.detail);
+				let keys = Object.keys(values).filter(k => Array.isArray(values[k]));
+				let detail = [];
+				for(let i = 0; i < values.length; i++){
+					let obj = {};
+					for(let k of keys){
+						let key = k.replace(/[A-Z]/g, function(ch){
+							return `_${ch.toLowerCase()}`;
+						});
+						obj[key] = values[k][i];
+					}
+					detail.push(obj);
+				}
+				console.log(detail);
+				content.innerHTML = this.template.editForm(data, detail);
+			}else if(e.currentTarget.hasAttribute("data-detail")){
+				let data = this.response.select("ROW")
+					.addTable("sales_slips")
+					.addField("sales_slips.*")
+					.andWhere("sales_slips.id=?", Number(e.currentTarget.getAttribute("data-detail")))
+					.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
+					.addField("managers.name AS manager_name")
+					.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
+					.addField("apply_clients.name AS apply_client_name")
+					.apply();
+				let values = JSON.parse(data.detail);
+				let keys = Object.keys(values).filter(k => Array.isArray(values[k]));
+				let detail = [];
+				let detail2 = this.response.select("ALL")
+					.addTable("purchases")
+					.andWhere("project=?", data.project)
+					.apply();
+				for(let i = 0; i < values.length; i++){
+					let obj = {};
+					for(let k of keys){
+						let key = k.replace(/[A-Z]/g, function(ch){
+							return `_${ch.toLowerCase()}`;
+						});
+						obj[key] = values[k][i];
+					}
+					detail.push(obj);
+				}
+				content.innerHTML = this.template.detailView(data, detail, detail2);
+			}else{
+				let data = this.response.select("ROW")
+					.addTable("sales_slips")
+					.addField("sales_slips.*")
+					.andWhere("sales_slips.id=?", Number(e.currentTarget.getAttribute("data-detail2")))
+					.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
+					.addField("managers.name AS manager_name")
+					.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
+					.addField("apply_clients.name AS apply_client_name")
+					.apply();
+				let values = JSON.parse(data.detail);
+				let keys = Object.keys(values).filter(k => Array.isArray(values[k]));
+				let detail = [];
+				let detail2 = this.response.select("ALL")
+					.addTable("purchases")
+					.andWhere("project=?", data.project)
+					.apply();
+				for(let i = 0; i < values.length; i++){
+					let obj = {};
+					for(let k of keys){
+						let key = k.replace(/[A-Z]/g, function(ch){
+							return `_${ch.toLowerCase()}`;
+						});
+						obj[key] = values[k][i];
+					}
+					detail.push(obj);
+				}
+				content.innerHTML = this.template.detailView2(data, detail, detail2);
+			}
+			const detailList = document.getElementById("detail_list");
+			document.getElementById("add_detail_row").addEventListener("click", e => {
+				detailList.insertAdjacentHTML("beforeend", this.template.detailForm({}));
 			});
-		});
+			detailList.addEventListener("change", e => {
+				let checked = detailList.querySelectorAll('tr:has([data-form-remove]:checked)');
+				for(let i = checked.length - 1; i >= 0; i--){
+					detailList.removeChild(checked[i]);
+				}
+				let tr = detailList.querySelectorAll('tr');
+				let data = {
+					length: tr.length
+				};
+				let total = 0;
+				for(let i = 0; i < data.length; i++){
+					let input = tr[i].querySelectorAll('[name]');
+					for(let j = input.length - 1; j >= 0; j--){
+						let name = input[j].getAttribute("name").replace(/^_detail\[|\]\[\]$/g, "");
+						if(!(name in data)){
+							data[name] = new Array(data.length);
+						}
+						if(input[j].value == ""){
+							data[name][i] = null;
+						}else if(isNaN(input[j].value)){
+							data[name][i] = input[j].value;
+						}else{
+							data[name][i] = Number(input[j].value);
+						}
+					}
+					if(("amount" in data) && (typeof data.amount[i] === 'number')){
+						total += data.amount[i];
+					}
+				}
+				content.querySelector('input[name="detail"]').value = JSON.stringify(data);
+				content.querySelector('input[name="sales_tax"]').value = total * 0.1;
+				
+			}, {useCapture: true/*, signal: controller.signal*/});
+			content.querySelector('.btn[data-bs-dismiss="modal"]').addEventListener("click", e => {
+				const form = content.querySelector('form');
+				let formData = new FormData(form);
+				fetch(form.getAttribute("action"), {
+					method: form.getAttribute("method"),
+					body: formData
+				}).then(res => res.json()).then(response => {
+					if(response.success){
+						// フォーム送信 成功
+						for(let message of response.messages){
+							Flow.DB.insertSet("messages", {title: "売上登録", message: message[0], type: message[1], name: message[2]}, {}).apply();
+						}
+						let messages = Flow.DB.select("ALL")
+							.addTable("messages")
+							.leftJoin("toast_classes using(type)")
+							.apply();
+						Toaster.show(messages);
+						Flow.DB.delete("messages").apply();
+						fetch(this.dbDownloadURL).then(response => response.arrayBuffer()).then(buffer => {
+							this.response.import(buffer, "list");
+							this.response.attach(Flow.Master, "master");
+							const id = Number(range.getAttribute("data-range"));
+							let row = this.listItemQuery("ROW").andWhere("projects.id=?", id).apply();
+							if(row.approval == 0){
+								document.getElementById("list2").insertAdjacentHTML("afterend", this.template.listItem2(row));
+							}else if(row.approval == 1){
+								document.getElementById("list3").insertAdjacentHTML("afterend", this.template.listItem3(row));
+							}
+							range.parentNode.removeChild(range);
+							let approvalRows = document.querySelectorAll('[data-approval="1"]:has([data-edit])');
+							for(let i = approvalRows.length - 1; i >= 0; i--){
+								const span = Object.assign(document.createElement("span"), {textContent: "承認済"});
+								const button = approvalRows[i].querySelector('[data-edit]');
+								button.parentNode.replaceChild(span, button);
+							}
+							let buttons = document.querySelectorAll(`[data-range="${id}"] [data-create],[data-range="${id}"] [data-edit],[data-range="${id}"] [data-detail],[data-range="${id}"] [data-detail2],[data-range="${id}"] [data-purchase]`);
+							for(let i = buttons.length - 1; i >= 0; i--){
+								buttons[i].addEventListener("click", this);
+							}
+						});
+					}else{
+						// フォーム送信 失敗
+						new bootstrap.Modal(document.getElementById("formModal")).show();
+						
+						// エラーメッセージをオブジェクトへ変更
+						let messages = response.messages.reduce((a, message) => {
+							if(message[1] == 2){
+								a[message[2]] = message[0];
+							}
+							return a;
+						}, {});
+						
+						// エラーメッセージの表示切替
+						let inputs = form.querySelectorAll('[name],[data-form-name]');
+						for(let input of inputs){
+							let name = input.hasAttribute("name") ? input.getAttribute("name") : input.getAttribute("data-form-name");
+							if(name in messages){
+								if(input.tagName == "ROW-FORM"){
+									input.setAttribute("invalid", messages[name]);
+								}
+								input.classList.add("is-invalid");
+								let feedback = input.parentNode.querySelector('.invalid-feedback');
+								if(feedback != null){
+									feedback.textContent = messages[name];
+								}
+							}else{
+								if(input.tagName == "ROW-FORM"){
+									input.removeAttribute("invalid");
+								}
+								input.classList.remove("is-invalid");
+							}
+						}
+					}
+				});
+			});
+		}
 	}
 });
 {/literal}</script>
@@ -317,7 +348,7 @@ Flow.start({{/literal}
 
 {block name="body"}
 <div class="container border border-secondary rounded p-4 bg-white table-responsive mb-4">
-	<p>売上案件</p>
+	<p>案件一覧</p>
 	<table class="table table_sticky_list" data-scroll-y="list">
 		<thead>
 			<tr>
@@ -328,6 +359,7 @@ Flow.start({{/literal}
 				<th class="w-20">請求先名</th>
 				{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
 				<th class="w-20">備考</th>
+				<th class="w-10">仕入明細</th>
 				<th>登録</th>
 			</tr>
 		</thead>
@@ -340,6 +372,7 @@ Flow.start({{/literal}
 				<td>{$obj.apply_client_name}</td>
 				{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 				<td>{$obj.note}</td>
+				<td><button type="button" data-purchase="{$obj.code}" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#purchaseModal">仕入明細</button></td>
 				<td>
 					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm btn-info bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
 				</td>
@@ -351,7 +384,7 @@ Flow.start({{/literal}
 	{/foreach}</datalist>
 </div>
 <div class="container border border-secondary rounded p-4 bg-white table-responsive mb-4">
-	<p>売上登録済み案件</p>
+	<p>売上一覧</p>
 	<table class="table table_sticky_list" data-scroll-y="list">
 		<thead>
 			<tr>
@@ -362,6 +395,7 @@ Flow.start({{/literal}
 				<th class="w-20">請求先名</th>
 				{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
 				<th class="w-20">備考</th>
+				<th class="w-10">仕入明細</th>
 				<th>売上追加修正</th>
 				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">確認承認</th>{/if}
 			</tr>
@@ -375,6 +409,7 @@ Flow.start({{/literal}
 				<td>{$obj.apply_client_name}</td>
 				{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 				<td>{$obj.note}</td>
+				<td><button type="button" data-purchase="{$obj.code}" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#purchaseModal">仕入明細</button></td>
 				<td>
 					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm btn-info bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
 				</td>
@@ -397,6 +432,7 @@ Flow.start({{/literal}
 				<th class="w-20">請求先名</th>
 				{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
 				<th class="w-20">備考</th>
+				<th class="w-10">仕入明細</th>
 				<th>登録</th>
 				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">確認承認解除</th>{/if}
 			</tr>
@@ -410,6 +446,7 @@ Flow.start({{/literal}
 				<td>{$obj.apply_client_name}</td>
 				{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 				<td>{$obj.note}</td>
+				<td><button type="button" data-purchase="{$obj.code}" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#purchaseModal">仕入明細</button></td>
 				<td>
 					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
 				</td>
@@ -501,7 +538,7 @@ Flow.start({{/literal}
 			<div class="modal-footer flex-row">
 				<button type="button" class="btn btn-success" data-bs-dismiss="modal">登録</button>
 			</div>
-			{/predefine}{predefine name="editForm" constructor="sales" assign="obj"}
+			{/predefine}{predefine name="editForm" constructor="sales" assign=["obj", "detail"]}
 			<div class="modal-header flex-row">
 				<div class="text-center">売上登録</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
 			</div>
@@ -556,7 +593,7 @@ Flow.start({{/literal}
 			<div class="modal-footer flex-row">
 				<button type="button" class="btn btn-success" data-bs-dismiss="modal">登録</button>
 			</div>
-			{/predefine}{predefine name="detailView" constructor="sales" assign="obj"}
+			{/predefine}{predefine name="detailView" constructor="sales" assign=["obj", "detail", "detail2"]}
 			<div class="modal-header flex-row">
 				<div class="text-center">売上明細</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
 			</div>
@@ -622,11 +659,33 @@ Flow.start({{/literal}
 						</tbody>
 					</table>
 				</div>
+				<div class="container border border-secondary rounded p-4 mb-5 bg-white table-responsive">
+					<table class="table table-md table_sticky_list">
+						<thead>
+							<tr>
+								<th>No</th>
+								<th>内容</th>
+								<th>金額</th>
+								<th>支払日</th>
+							</tr>
+						</thead>
+						<tbody>
+							{predef_repeat loop=$detail2.length index="i"}
+							<tr>
+								<td class="table-group-row-no align-middle"></td>
+								<td>{$detail2[$i].subject}</td>
+								<td>{$detail2[$i].amount}</td>
+								<td>{$detail2[$i].payment_date}</td>
+							</tr>
+							{/predef_repeat}
+						</tbody>
+					</table>
+				</div>
 			</form>
 			<div class="modal-footer flex-row">
 				<button type="button" class="btn btn-success" data-bs-dismiss="modal">承認</button>
 			</div>
-			{/predefine}{predefine name="detailView2" constructor="sales" assign="obj"}
+			{/predefine}{predefine name="detailView2" constructor="sales" assign=["obj", "detail", "detail2"]}
 			<div class="modal-header flex-row">
 				<div class="text-center">売上明細</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
 			</div>
@@ -692,6 +751,28 @@ Flow.start({{/literal}
 						</tbody>
 					</table>
 				</div>
+				<div class="container border border-secondary rounded p-4 mb-5 bg-white table-responsive">
+					<table class="table table-md table_sticky_list">
+						<thead>
+							<tr>
+								<th>No</th>
+								<th>内容</th>
+								<th>金額</th>
+								<th>支払日</th>
+							</tr>
+						</thead>
+						<tbody>
+							{predef_repeat loop=$detail2.length index="i"}
+							<tr>
+								<td class="table-group-row-no align-middle"></td>
+								<td>{$detail2[$i].subject}</td>
+								<td>{$detail2[$i].amount}</td>
+								<td>{$detail2[$i].payment_date}</td>
+							</tr>
+							{/predef_repeat}
+						</tbody>
+					</table>
+				</div>
 			</form>
 			<div class="modal-footer flex-row">
 				<button type="button" class="btn btn-success" data-bs-dismiss="modal">承認解除</button>
@@ -701,4 +782,54 @@ Flow.start({{/literal}
 	</div>
 </div>
 
+<div class="modal fade" id="purchaseModal" tabindex="-1">
+	<div class="modal-dialog modal-dialog-centered modal-form">
+		<div class="modal-content">
+			<div class="modal-header flex-row">
+				<div class="text-center">仕入明細</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
+			</div>
+			<div class="modal-body" id="purchase_list">{predefine name="purchaseView" constructor="sales" assign=["obj", "detail"]}
+				<div class="container border border-secondary rounded p-4 mb-5 bg-white">
+					<div class="row gap-4 align-items-start">
+						<div class="d-table col table">
+							<row-form label="案件番号" col="5">{$obj.code}</row-form>
+							<row-form label="当社担当者" col="10">{$obj.manager_name}</row-form>
+							<row-form label="件名" col="10">{$obj.subject}</row-form>
+						</div>
+						<div class="d-table col table">
+							<row-form label="得意先" col="10">{$obj.delivery_destination}</row-form>
+							<row-form label="請求先" col="10">{$obj.apply_client_name}</row-form>
+							<row-form label="備考" col="10">{$obj.note}</row-form>
+						</div>
+					</div>
+				</div>
+				<div class="container border border-secondary rounded p-4 mb-5 bg-white table-responsive">
+					<table class="table table-md table_sticky_list">
+						<thead>
+							<tr>
+								<th>No</th>
+								<th>内容</th>
+								<th>金額</th>
+								<th>支払日</th>
+							</tr>
+						</thead>
+						<tbody>
+							{predef_repeat loop=$detail.length index="i"}
+							<tr>
+								<td class="table-group-row-no align-middle"></td>
+								<td>{$detail[$i].subject}</td>
+								<td>{$detail[$i].amount}</td>
+								<td>{$detail[$i].payment_date}</td>
+							</tr>
+							{/predef_repeat}
+						</tbody>
+					</table>
+				</div>
+			{/predefine}</div>
+			<div class="modal-footer flex-row">
+				<button type="button" class="btn btn-success" data-bs-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+	</div>
+</div>
 {/block}
