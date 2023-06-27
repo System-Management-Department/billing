@@ -130,7 +130,7 @@ Flow.start({{/literal}
 					.addTable("projects")
 					.andWhere("projects.id=?", Number(e.currentTarget.getAttribute("data-create")))
 					.leftJoin("orders ON projects.code=orders.project")
-					.addField("orders.*")
+					.addField("orders.*,orders.category as category_code")
 					.apply();
 				let values = {length: detail.length};
 				for(let row of detail){
