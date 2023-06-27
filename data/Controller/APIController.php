@@ -55,6 +55,7 @@ class APIController extends ControllerBase{
 		$v->setLayout(null)->setAction("_result");
 		$db = $this->auth();
 		if($db != null){
+			$db->beginTransaction();
 			$jsonTable = $db->getJsonArray2Tabel([
 				"dual" => [
 					"category_name text " => '$.category',
@@ -74,6 +75,17 @@ class APIController extends ControllerBase{
 				->addField("JSON_OBJECT('category',json_table.category_name)")
 				->addField("now(),now()");
 			$query();
+			
+			$jsonTable = $db->getJsonArray2Tabel([
+				"projects" => [
+					"code" => '$.project'
+				]
+			], "json_table");
+			$query = $db->updateSet("projects", [], [
+				"import_orders" => 1
+			])->andWhere("code IN(SELECT code FROM {$jsonTable})", $_POST["json"]);
+			$query();
+			$db->commit();
 			$v["message"] = "<h2>登録が完了しました。</h2>";
 		}else{
 			$v["message"] = "<h2>認証に失敗しました。</h2>設定から正しいメールアドレスとパスワードの入力してください。";
@@ -87,6 +99,7 @@ class APIController extends ControllerBase{
 		$v->setLayout(null)->setAction("_result");
 		$db = $this->auth();
 		if($db != null){
+			$db->beginTransaction();
 			$jsonTable = $db->getJsonArray2Tabel([
 				"dual" => [
 					"supplier_name text " => '$.supplier',
@@ -109,6 +122,17 @@ class APIController extends ControllerBase{
 				->addField("JSON_OBJECT('supplier',json_table.supplier_name,'status',json_table.status_name)")
 				->addField("now(),now()");
 			$query();
+			
+			$jsonTable = $db->getJsonArray2Tabel([
+				"projects" => [
+					"code" => '$.project'
+				]
+			], "json_table");
+			$query = $db->updateSet("projects", [], [
+				"import_purchases" => 1
+			])->andWhere("code IN(SELECT code FROM {$jsonTable})", $_POST["json"]);
+			$query();
+			$db->commit();
 			$v["message"] = "<h2>登録が完了しました。</h2>";
 		}else{
 			$v["message"] = "<h2>認証に失敗しました。</h2>設定から正しいメールアドレスとパスワードの入力してください。";
@@ -131,12 +155,15 @@ class APIController extends ControllerBase{
 			
 			$query = $db->select("ASSOC")
 				->addTable($jsonTable, $_POST["json"])
-				->addField("json_table.code,EXISTS(SELECT 1 FROM projects WHERE code=json_table.code) AS exist");
+				->leftJoin("projects on json_table.code=projects.code")
+				->addField("json_table.code,CASE WHEN projects.id IS NULL THEN 0 ELSE 1 END AS exist,projects.import_orders,projects.import_purchases");
 			$res = $query();
 			foreach($res as $code => $row){
 				if($row["exist"] == 1){
 					$rowElement = $documentElement->addChild("exist");
 					$rowElement->addAttribute("code", $code);
+					$rowElement->addAttribute("orders", $row["import_orders"]);
+					$rowElement->addAttribute("purchases", $row["import_purchases"]);
 				}
 			}
 		}else{
