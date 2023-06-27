@@ -50,7 +50,7 @@ Flow.start({{/literal}
 				return (obj.sales_slip == null) ? obj.id : obj.sales_slip
 			},
 			modalText(obj){
-				return (obj.sales_slip == null) ? "登録" : "編集";
+				return (obj.sales_slip == null) ? "登録" : "追加修正";
 			},
 			equals(a, b){
 				return (a == b) ? 1 : 0;
@@ -71,7 +71,7 @@ Flow.start({{/literal}
 			const button = approvalRows[i].querySelector('[data-edit]');
 			button.parentNode.replaceChild(span, button);
 		}
-		let buttons = document.querySelectorAll('[data-create],[data-edit],[data-detail]');
+		let buttons = document.querySelectorAll('[data-create],[data-edit],[data-detail],[data-detail2]');
 		for(let i = buttons.length - 1; i >= 0; i--){
 			buttons[i].addEventListener("click", this);
 		}
@@ -149,7 +149,7 @@ Flow.start({{/literal}
 			}
 			console.log(detail);
 			content.innerHTML = this.template.editForm(data, detail);
-		}else{
+		}else if(e.currentTarget.hasAttribute("data-detail")){
 			let data = this.response.select("ROW")
 				.addTable("sales_slips")
 				.addField("sales_slips.*")
@@ -173,6 +173,30 @@ Flow.start({{/literal}
 				detail.push(obj);
 			}
 			content.innerHTML = this.template.detailView(data, detail);
+		}else{
+			let data = this.response.select("ROW")
+				.addTable("sales_slips")
+				.addField("sales_slips.*")
+				.andWhere("sales_slips.id=?", Number(e.currentTarget.getAttribute("data-detail2")))
+				.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
+				.addField("managers.name AS manager_name")
+				.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
+				.addField("apply_clients.name AS apply_client_name")
+				.apply();
+			let values = JSON.parse(data.detail);
+			let keys = Object.keys(values).filter(k => Array.isArray(values[k]));
+			let detail = [];
+			for(let i = 0; i < values.length; i++){
+				let obj = {};
+				for(let k of keys){
+					let key = k.replace(/[A-Z]/g, function(ch){
+						return `_${ch.toLowerCase()}`;
+					});
+					obj[key] = values[k][i];
+				}
+				detail.push(obj);
+			}
+			content.innerHTML = this.template.detailView2(data, detail);
 		}
 		const detailList = document.getElementById("detail_list");
 		document.getElementById("add_detail_row").addEventListener("click", e => {
@@ -246,7 +270,7 @@ Flow.start({{/literal}
 							const button = approvalRows[i].querySelector('[data-edit]');
 							button.parentNode.replaceChild(span, button);
 						}
-						let buttons = document.querySelectorAll(`[data-range="${id}"] [data-create],[data-range="${id}"] [data-edit],[data-range="${id}"] [data-detail]`);
+						let buttons = document.querySelectorAll(`[data-range="${id}"] [data-create],[data-range="${id}"] [data-edit],[data-range="${id}"] [data-detail],[data-range="${id}"] [data-detail2]`);
 						for(let i = buttons.length - 1; i >= 0; i--){
 							buttons[i].addEventListener("click", this);
 						}
@@ -317,7 +341,7 @@ Flow.start({{/literal}
 				{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 				<td>{$obj.note}</td>
 				<td>
-					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
+					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm btn-info bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
 				</td>
 			</tr>
 		{/predefine}</tbody>
@@ -338,8 +362,8 @@ Flow.start({{/literal}
 				<th class="w-20">請求先名</th>
 				{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
 				<th class="w-20">備考</th>
-				<th>登録</th>
-				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">承認</th>{/if}
+				<th>売上追加修正</th>
+				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">確認承認</th>{/if}
 			</tr>
 		</thead>
 		<tbody id="list2">{predefine name="listItem2" constructor="sales" assign="obj"}
@@ -352,10 +376,10 @@ Flow.start({{/literal}
 				{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 				<td>{$obj.note}</td>
 				<td>
-					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
+					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm btn-info bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
 				</td>
 				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<td>{predef_repeat loop=$sales.equals|predef_invoke:($sales.formType|predef_invoke:$obj):"edit"}
-					<button type="button" data-detail="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">明細</button>
+					<button type="button" data-detail="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm btn-primary bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">確認承認</button>
 				{/predef_repeat}</td>{/if}
 			</tr>
 		{/predefine}</tbody>
@@ -374,7 +398,7 @@ Flow.start({{/literal}
 				{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
 				<th class="w-20">備考</th>
 				<th>登録</th>
-				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">承認</th>{/if}
+				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">確認承認解除</th>{/if}
 			</tr>
 		</thead>
 		<tbody id="list3">{predefine name="listItem3" constructor="sales" assign="obj"}
@@ -389,9 +413,9 @@ Flow.start({{/literal}
 				<td>
 					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
 				</td>
-				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<td>{predef_repeat loop=$sales.equals|predef_invoke:($sales.formType|predef_invoke:$obj):"edit"}
-					<button type="button" data-detail="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">明細</button>
-				{/predef_repeat}</td>{/if}
+				{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<td>
+					<button type="button" data-detail2="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm btn-primary bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">確認承認解除</button>
+				</td>{/if}
 			</tr>
 		{/predefine}</tbody>
 	</table>
@@ -601,6 +625,76 @@ Flow.start({{/literal}
 			</form>
 			<div class="modal-footer flex-row">
 				<button type="button" class="btn btn-success" data-bs-dismiss="modal">承認</button>
+			</div>
+			{/predefine}{predefine name="detailView2" constructor="sales" assign="obj"}
+			<div class="modal-header flex-row">
+				<div class="text-center">売上明細</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
+			</div>
+			<form action="{url action="disapproval"}/{$obj.id}" method="POST" class="modal-body">
+				<div class="container border border-secondary rounded p-4 mb-5 bg-white">
+					<div class="row gap-4 align-items-start">
+						<div class="d-table col table">
+							<row-form label="案件番号" col="5">{$obj.project}</row-form>
+							<row-form label="伝票番号" col="5">{$obj.slip_number}</row-form>
+							<row-form label="売上日付" col="5">{$obj.accounting_date}</row-form>
+							<row-form label="当社担当者" col="10">{$obj.manager_name}</row-form>
+							<row-form label="請求書件名" col="10">{$obj.subject}</row-form>
+							<row-form label="入金予定日" col="5">{$obj.payment_date}</row-form>
+						</div>
+						<div class="d-table col table">
+							<row-form label="請求書パターン" type="hidden" col="6">{$obj.invoice_format}<div slot="content">{foreach from=[]|invoiceFormat item="text" key="value"}{predef_repeat loop=$sales.equals|predef_invoke:$value:$obj.invoice_format}{$text}{/predef_repeat}{/foreach}</div></row-form>
+							<row-form label="請求先" col="10">{$obj.apply_client_name}</row-form>
+							<row-form label="納品先" col="10">{$obj.delivery_destination}</row-form>
+							<row-form label="備考" col="10">{$obj.note}</row-form>
+						</div>
+					</div>
+				</div>
+				<div class="container border border-secondary rounded p-4 mb-5 bg-white table-responsive">
+					<input type="hidden" name="detail" value="{$obj.detail}" />
+					<input type="hidden" name="sales_tax" value="0" />
+					<table class="table table-md table_sticky_list">
+						<thead>
+							<tr>
+								<th>No</th>
+								<th>商品カテゴリー</th>
+								<th>内容（摘要）</th>
+								<th>単位</th>
+								<th>数量</th>
+								<th>単価</th>
+								<th>金額</th>
+								<th class="py-0 align-middle" data-visible="v3">{$obj.header1}</th>
+								<th class="py-0 align-middle" data-visible="v3">{$obj.header2}</th>
+								<th class="py-0 align-middle" data-visible="v3">{$obj.header3}</th>
+								<th data-visible="v2">発行部数</th>
+							</tr>
+						</thead>
+						<tfoot hidden>
+							<tr><th colspan="12"><button type="button" class="btn btn-primary bx bxs-message-add" id="add_detail_row">明細行を追加</button></th></tr>
+						</tfoot>
+						<tbody id="detail_list">
+							{predef_repeat loop=$detail.length index="i"}
+							<tr>
+								<td class="table-group-row-no align-middle"></td>
+								<td>{predef_repeat loop=$categories.length index="j"}
+									{predef_repeat loop=$sales.equals|predef_invoke:$categories[$j].code:$detail[$i].category_code}{$categories[$j].name}{/predef_repeat}
+								{/predef_repeat}</td>
+								<td>{$detail[$i].itemName}{$detail[$i].item_name}</td>
+								<td>{$detail[$i].unit}</td>
+								<td>{$detail[$i].quantity}</td>
+								<td>{$detail[$i].unitPrice}{$detail[$i].unit_price}</td>
+								<td>{$detail[$i].amount}</td>
+								<td data-visible="v3">{$detail[$i].data1}</td>
+								<td data-visible="v3">{$detail[$i].data2}</td>
+								<td data-visible="v3">{$detail[$i].data3}</td>
+								<td data-visible="v2">{$detail[$i].circulation}</td>
+							</tr>
+							{/predef_repeat}
+						</tbody>
+					</table>
+				</div>
+			</form>
+			<div class="modal-footer flex-row">
+				<button type="button" class="btn btn-success" data-bs-dismiss="modal">承認解除</button>
 			</div>
 			{/predefine}
 		</div>
