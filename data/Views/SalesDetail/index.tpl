@@ -372,7 +372,7 @@ Flow.start({{/literal}
 				<td>{$obj.apply_client_name}</td>
 				{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 				<td>{$obj.note}</td>
-				<td><button type="button" data-purchase="{$obj.code}" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#purchaseModal">仕入明細</button></td>
+				<td>{predef_repeat loop=$obj.import_purchases}<button type="button" data-purchase="{$obj.code}" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#purchaseModal">仕入明細</button>{/predef_repeat}</td>
 				<td>
 					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm btn-info bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
 				</td>
@@ -409,7 +409,7 @@ Flow.start({{/literal}
 				<td>{$obj.apply_client_name}</td>
 				{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 				<td>{$obj.note}</td>
-				<td><button type="button" data-purchase="{$obj.code}" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#purchaseModal">仕入明細</button></td>
+				<td>{predef_repeat loop=$obj.import_purchases}<button type="button" data-purchase="{$obj.code}" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#purchaseModal">仕入明細</button>{/predef_repeat}</td>
 				<td>
 					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm btn-info bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
 				</td>
@@ -446,7 +446,7 @@ Flow.start({{/literal}
 				<td>{$obj.apply_client_name}</td>
 				{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 				<td>{$obj.note}</td>
-				<td><button type="button" data-purchase="{$obj.code}" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#purchaseModal">仕入明細</button></td>
+				<td>{predef_repeat loop=$obj.import_purchases}<button type="button" data-purchase="{$obj.code}" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#purchaseModal">仕入明細</button>{/predef_repeat}</td>
 				<td>
 					<button type="button" data-{$sales.formType|predef_invoke:$obj}="{$sales.modalId|predef_invoke:$obj}" class="btn btn-sm bx bxs-edit" data-bs-toggle="modal" data-bs-target="#formModal">{$sales.modalText|predef_invoke:$obj}</button>
 				</td>
