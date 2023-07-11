@@ -49,42 +49,31 @@ class SalesDetailController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "manager", "leader")]
 	public function search(){
 		$db = Session::getDB();
-		$sdb = SQLite::cachedData();
 		$query1 = $db->select("EXPORT")
-			->setTable("projects")
-			->addField("projects.*")
-			->leftJoin("sales_slips on projects.code=sales_slips.project")
-			->addField("sales_slips.id AS sales_slip")
-			->andWhere("(sales_slips.close_processed=0 OR sales_slips.close_processed IS NULL)");
-		$query2 = $db->select("EXPORT")
-			->setTable("orders")
-			->addField("orders.*")
-			->leftJoin("sales_slips on orders.project=sales_slips.project")
-			->andWhere("(sales_slips.close_processed=0 OR sales_slips.close_processed IS NULL)");
-		$query3 = $db->select("EXPORT")
 			->setTable("sales_slips")
 			->andWhere("sales_slips.close_processed=0");
-		$query4 = $db->select("EXPORT")
+		$query2 = $db->select("EXPORT")
 			->setTable("purchases")
 			->addField("purchases.*")
-			->leftJoin("sales_slips on purchases.project=sales_slips.project")
+			->leftJoin("sales_slips on purchases.spreadsheet=sales_slips.spreadsheet")
 			->andWhere("(sales_slips.close_processed=0 OR sales_slips.close_processed IS NULL)");
 		if($_SESSION["User.role"] == "admin"){
 		}else if($_SESSION["User.role"] == "leader"){
-			$division = $db->select("ONE")
+			$divisionQuery = $db->select("ONE")
 				->setTable("managers")
 				->addField("division")
 				->andWhere("code=@manager");
-			$query1->andWhere("projects.manager IN(SELECT code FORM managers WHERE division=?)", $division());
+			$division = $divisionQuery();
+			$query1->andWhere("division=?", $division);
+			$query2->andWhere("sales_slips.division=?", $division);
 		}else{
-			$query1->andWhere("projects.manager=@manager");
+			$query1->andWhere("manager=@manager");
+			$query2->andWhere("sales_slips.manager=@manager");
 		}
 		
 		return new FileView(SQLite::memoryData([
-			"projects" => $query1(),
-			"orders"   => $query2(),
-			"sales_slips" => $query3(),
-			"purchases" => $query4()
+			"sales_slips" => $query1(),
+			"purchases" => $query2()
 		]), "application/vnd.sqlite3");
 	}
 	
