@@ -422,6 +422,103 @@ class SalesSlip{
 		}
 	}
 	
+	public static function checkInsert3($db, $q, $masterData, $context){
+		$check = new Validator();
+		self::validate2($check, $masterData, $db);
+		$check["billing_destination"]->required("請求先を入力してください。")
+			->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
+		$result = $check($q);
+		return $result;
+	}
+	
+	public static function execInsert3($db, $q, $context, $result){
+		$id = $q["sid"];
+		$month = date("ym"); 
+		$db->beginTransaction();
+		try{
+			$query = $db->select("ONE")
+				->setTable("basic_info")
+				->setField("`value`")
+				->andWhere("`key`=?", "slip_number_seq")
+				->andWhere("`value` like ?", "{$month}%");
+			$seq = $query();
+			$deleteQuery = $db->delete("basic_info")
+				->andWhere("`key`=?", "slip_number_seq");
+			$deleteQuery();
+			if($seq == null){
+				$number = sprintf("%04d%05d", $month, 1);
+			}else{
+				$str = substr($seq, 4);
+				$number = sprintf("%04d%05d", $month, intval($str) + 1);
+			}
+			$insertQuery = $db->insertSet("basic_info", [
+				"key"   => "slip_number_seq",
+				"value" => $number,
+			], []);
+			$insertQuery();
+			
+			$deleteQuery = $db->delete("sales_slips")
+				->andWhere("spreadsheet=?", $id);
+			$deleteQuery();
+			
+			$deleteQuery = $db->delete("purchases")
+				->andWhere("spreadsheet=?", $id);
+			$deleteQuery();
+			
+			
+			$insertQuery = $db->insertSet("sales_slips", [
+				"spreadsheet"          => $id,
+				"accounting_date"      => $q["accounting_date"],
+				"delivery_destination" => $q["delivery_destination"],
+				"subject"              => $q["subject"],
+				"note"                 => $q["note"],
+				"header1"              => $q["header1"],
+				"header2"              => $q["header2"],
+				"header3"              => $q["header3"],
+				"payment_date"         => $q["payment_date"],
+				"detail"               => $q["detail"],
+				"invoice_format"       => $q["invoice_format"],
+				"billing_destination"  => $q["billing_destination"],
+				"slip_number"          => $number,
+			],[
+				"division" => "@division",
+				"manager"  => "@manager",
+				"created"  => "now()",
+				"modified" => "now()",
+			]);
+			$insertQuery();
+			
+			$jsonTable = $db->getJsonArray2Tabel([
+				"purchases" => [
+					"payment_date" => '$.payment_date',
+					"unit"         => '$.unit',
+					"quantity"     => '$.quantity',
+					"unit_price"   => '$.unit_price',
+					"amount"       => '$.amount',
+					"subject"      => '$.subject',
+					"note"         => '$.note',
+					"ingest"       => '$.ingest'
+				]
+			], "json_table");
+			$insertQuery = $db->insertSelect("purchases", "spreadsheet,payment_date,unit,quantity,unit_price,amount,subject,note,ingest,created,modified")
+				->addField("?", $id)
+				->addTable($jsonTable, $q["purchases"])
+				->addField("json_table.payment_date,json_table.unit,json_table.quantity,json_table.unit_price,json_table.amount,json_table.subject,json_table.note,json_table.ingest")
+				->addField("now(),now()");
+			$insertQuery();
+			
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("編集保存に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@Logger::record($db, "登録", ["spreadsheet" => $id]);
+		}
+	}
+	
 	public static function approval($db, $q, $context, $result){
 		$id = $context->id;
 		$db->beginTransaction();

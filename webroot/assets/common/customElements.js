@@ -482,6 +482,15 @@ class ModalSelectElement extends HTMLElement{
 			}
 		};
 	}
+	set keyword(str){
+		this.#elements.i.value = str;
+		if(this.#callback.searchKeyword != null){
+			this.#callback.searchKeyword(str);
+		}
+	}
+	get keyword(){
+		return this.#elements.i.value;
+	}
 	static observedAttributes = ["placeholder", "invalid"];
 	static styleSheet = URL.createObjectURL(new Blob([`
 		#i, #d{
