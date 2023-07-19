@@ -16,11 +16,7 @@ class DefaultController extends ControllerBase{
 	public function index(){
 		if(Session::isLogin()){
 			// ログインされていればリダイレクト
-			if(($_SESSION["User.role"] == "admin") || ($_SESSION["User.role"] == "entry")){
-				return new RedirectResponse("Home", "sales");
-			}else{
-				return new RedirectResponse("SalesDetail", "index");
-			}
+			return new RedirectResponse("Home", "index");
 		}else{
 			// ログインされていなければフォームを表示
 			$v = new View();
@@ -47,7 +43,6 @@ class DefaultController extends ControllerBase{
 		return new RedirectResponse("", "index");
 	}
 	
-	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function master(){
 		$fileName = SQLite::getCachedMasterFileName();
 		$_SESSION["SQLite.masterUpdate"] = filemtime($fileName);

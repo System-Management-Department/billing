@@ -246,8 +246,7 @@ class SalesSlip{
 				"closing_date" => "CURRENT_DATE()",
 				"closed_count" => "closed_count+1",
 			]);
-			$updateQuery->andWhere("id IN (SELECT id FROM JSON_TABLE(?, '$[*]' COLUMNS(id INT PATH '$.id')) AS t)", json_encode($t))
-				->andWhere("output_processed=1");
+			$updateQuery->andWhere("id IN (SELECT id FROM JSON_TABLE(?, '$[*]' COLUMNS(id INT PATH '$.id')) AS t)", json_encode($t));
 			$updateQuery();
 			$db->commit();
 		}catch(Exception $ex){
@@ -431,6 +430,16 @@ class SalesSlip{
 		return $result;
 	}
 	
+	public static function checkUpdate3($db, $q, $masterData, $context){
+		$id = $context->id;
+		$check = new Validator();
+		self::validate2($check, $masterData, $db);
+		$check["billing_destination"]->required("請求先を入力してください。")
+			->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
+		$result = $check($q);
+		return $result;
+	}
+	
 	public static function execInsert3($db, $q, $context, $result){
 		$id = $q["sid"];
 		$month = date("ym"); 
@@ -516,6 +525,65 @@ class SalesSlip{
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
 			@Logger::record($db, "登録", ["spreadsheet" => $id]);
+		}
+	}
+	
+	public static function execUpdate3($db, $q, $context, $result){
+		$id = $q["sid"];
+		$month = date("ym"); 
+		$db->beginTransaction();
+		try{
+			$deleteQuery = $db->delete("purchases")
+				->andWhere("spreadsheet=?", $id);
+			$deleteQuery();
+			
+			
+			$updateQuery = $db->updateSet("sales_slips", [
+				"accounting_date"      => $q["accounting_date"],
+				"delivery_destination" => $q["delivery_destination"],
+				"subject"              => $q["subject"],
+				"note"                 => $q["note"],
+				"header1"              => $q["header1"],
+				"header2"              => $q["header2"],
+				"header3"              => $q["header3"],
+				"payment_date"         => $q["payment_date"],
+				"detail"               => $q["detail"],
+				"invoice_format"       => $q["invoice_format"],
+				"billing_destination"  => $q["billing_destination"],
+			],[
+				"modified" => "now()",
+			]);
+			$updateQuery->andWhere("spreadsheet=?", $id);
+			$updateQuery();
+			
+			$jsonTable = $db->getJsonArray2Tabel([
+				"purchases" => [
+					"payment_date" => '$.payment_date',
+					"unit"         => '$.unit',
+					"quantity"     => '$.quantity',
+					"unit_price"   => '$.unit_price',
+					"amount"       => '$.amount',
+					"subject"      => '$.subject',
+					"note"         => '$.note',
+					"ingest"       => '$.ingest'
+				]
+			], "json_table");
+			$insertQuery = $db->insertSelect("purchases", "spreadsheet,payment_date,unit,quantity,unit_price,amount,subject,note,ingest,created,modified")
+				->addField("?", $id)
+				->addTable($jsonTable, $q["purchases"])
+				->addField("json_table.payment_date,json_table.unit,json_table.quantity,json_table.unit_price,json_table.amount,json_table.subject,json_table.note,json_table.ingest")
+				->addField("now(),now()");
+			$insertQuery();
+			
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("編集保存に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("編集保存が完了しました。", "INFO", "");
+			@Logger::record($db, "更新", ["spreadsheet" => $id]);
 		}
 	}
 	

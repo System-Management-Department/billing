@@ -14,7 +14,7 @@ use Model\SalesSlip;
 use Model\SQLite;
 
 class BillingController extends ControllerBase{
-	#[\Attribute\AcceptRole("admin", "entry")]
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function index(){
 		$db = Session::getDB();
 		$v = new View();
@@ -23,71 +23,75 @@ class BillingController extends ControllerBase{
 		return $v;
 	}
 	
-	#[\Attribute\AcceptRole("admin", "entry")]
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function search(){
 		$db = Session::getDB();
-		$query = $db->select("EXPORT")->setTable("sales_slips");
-		if(isset($_POST["close_processed"])){
-			$query->andWhere("close_processed=?", $_POST["close_processed"]);
-		}
-		if(isset($_POST["output_processed"])){
-			$query->andWhere("output_processed=?", $_POST["output_processed"]);
+		$query1 = $db->select("EXPORT")
+			->setTable("sales_slips")
+			->andWhere("close_processed=1");
+		$query2 = $db->select("EXPORT")
+			->setTable("purchases")
+			->addField("purchases.*")
+			->leftJoin("sales_slips on purchases.spreadsheet=sales_slips.spreadsheet")
+			->andWhere("sales_slips.close_processed=1");
+		if(($_SESSION["User.role"] == "admin") || ($_SESSION["User.role"] == "entry")){
+		}else if($_SESSION["User.role"] == "leader"){
+			$divisionQuery = $db->select("ONE")
+				->setTable("managers")
+				->addField("division")
+				->andWhere("code=@manager");
+			$division = $divisionQuery();
+			$query1->andWhere("division=?", $division);
+			$query2->andWhere("sales_slips.division=?", $division);
+		}else{
+			$query1->andWhere("manager=@manager");
+			$query2->andWhere("sales_slips.manager=@manager");
 		}
 		
 		$parameter = false;
-		if(!empty($_POST["slip_number"])){
-			$parameter = true;
-			$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
-		}
-		if(!empty($_POST["accounting_date"])){
-			if(!empty($_POST["accounting_date"]["from"])){
+		if(!empty($_POST)){
+			if(!empty($_POST["slip_number"])){
 				$parameter = true;
-				$query->andWhere("DATEDIFF(accounting_date,?) BETWEEN 0 AND 365", $_POST["accounting_date"]["from"]);
+				$query1->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
+				$query2->andWhere("sales_slips.slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
 			}
-			if(!empty($_POST["accounting_date"]["to"])){
+			if(!empty($_POST["accounting_date"])){
+				if(!empty($_POST["accounting_date"]["from"])){
+					$parameter = true;
+					$query1->andWhere("DATEDIFF(accounting_date,?) BETWEEN 0 AND 365", $_POST["accounting_date"]["from"]);
+					$query2->andWhere("DATEDIFF(sales_slips.accounting_date,?) BETWEEN 0 AND 365", $_POST["accounting_date"]["from"]);
+				}
+				if(!empty($_POST["accounting_date"]["to"])){
+					$parameter = true;
+					$query1->andWhere("DATEDIFF(accounting_date,?) BETWEEN -365 AND 0", $_POST["accounting_date"]["to"]);
+					$query2->andWhere("DATEDIFF(sales_slips.accounting_date,?) BETWEEN -365 AND 0", $_POST["accounting_date"]["to"]);
+				}
+			}
+			if(!empty($_POST["division"])){
 				$parameter = true;
-				$query->andWhere("DATEDIFF(accounting_date,?) BETWEEN -365 AND 0", $_POST["accounting_date"]["to"]);
+				$query1->andWhere("division=?", $_POST["division"]);
+				$query2->andWhere("sales_slips.division=?", $_POST["division"]);
 			}
-		}
-		if(!empty($_POST["division"])){
-			$parameter = true;
-			$query->andWhere("division=?", $_POST["division"]);
-		}
-		if(!empty($_POST["team"])){
-			$parameter = true;
-			$query->andWhere("team=?", $_POST["team"]);
-		}
-		if(!empty($_POST["manager"])){
-			$parameter = true;
-			$query->andWhere("manager=?", $_POST["manager"]);
-		}
-		if(!empty($_POST["billing_destination"])){
-			$parameter = true;
-			$query->andWhere("billing_destination=?", $_POST["billing_destination"]);
-		}
-		if(!empty($_POST["itemName"])){
-			$parameter = true;
-			$query->addTable("JSON_TABLE(detail, '\$.itemName[*]' COLUMNS(item_name TEXT PATH '\$')) AS t")
-				->setField("DISTINCT sales_slips.*")
-				->andWhere("item_name like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["itemName"]));
+			if(!empty($_POST["manager"])){
+				$parameter = true;
+				$query1->andWhere("manager=?", $_POST["manager"]);
+				$query2->andWhere("sales_slips.manager=?", $_POST["manager"]);
+			}
+			if(!empty($_POST["billing_destination"])){
+				$parameter = true;
+				$query1->andWhere("billing_destination=?", $_POST["billing_destination"]);
+				$query2->andWhere("sales_slips.billing_destination=?", $_POST["billing_destination"]);
+			}
 		}
 		
 		if(!$parameter){
 			$query->setLimit(0);
 		}
+		
 		return new FileView(SQLite::memoryData([
-			"sales_slips" => $query()
+			"sales_slips" => $query1(),
+			"purchases" => $query2()
 		]), "application/vnd.sqlite3");
-	}
-	
-	#[\Attribute\AcceptRole("admin", "entry")]
-	public function closedIndex(){
-		return new View();
-	}
-	
-	#[\Attribute\AcceptRole("admin", "entry")]
-	public function closedIndex2(){
-		return new View();
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]

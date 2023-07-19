@@ -13,14 +13,16 @@ use Model\Result;
 use Model\SalesSlip;
 use Model\SQLite;
 
-class SalesController extends ControllerBase{
+class CommittedController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function index(){
-		$db = Session::getDB();
+		return new View();
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function edit(){
 		$v = new View();
-		$query = $db->select("ASSOC")->setTable("basic_info");
-		$v["basicInfo"] = $query();
-		return $v;
+		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
@@ -28,12 +30,14 @@ class SalesController extends ControllerBase{
 		$db = Session::getDB();
 		$query1 = $db->select("EXPORT")
 			->setTable("sales_slips")
-			->andWhere("approval=1");
+			->andWhere("close_processed=0")
+			->andWhere("approval=0");
 		$query2 = $db->select("EXPORT")
 			->setTable("purchases")
 			->addField("purchases.*")
 			->leftJoin("sales_slips on purchases.spreadsheet=sales_slips.spreadsheet")
-			->andWhere("sales_slips.approval=1");
+			->andWhere("sales_slips.close_processed=0")
+			->andWhere("sales_slips.approval=0");
 		if(($_SESSION["User.role"] == "admin") || ($_SESSION["User.role"] == "entry")){
 		}else if($_SESSION["User.role"] == "leader"){
 			$divisionQuery = $db->select("ONE")
@@ -94,22 +98,26 @@ class SalesController extends ControllerBase{
 		]), "application/vnd.sqlite3");
 	}
 	
-	#[\Attribute\AcceptRole("admin", "leader")]
-	public function disapproval(){
+	#[\Attribute\AcceptRole("admin", "manager", "leader")]
+	public function update(){
 		$db = Session::getDB();
 		
-		$result = new Result();
-		SalesSlip::disapproval($db, $_POST, $this->requestContext, $result);
+		// 検証
+		$result = SalesSlip::checkUpdate3($db, $_POST, [], $this->requestContext);
+		
+		if(!$result->hasError()){
+			SalesSlip::execUpdate3($db, $_POST, $this->requestContext, $result);
+		}
 		
 		return new JsonView($result);
 	}
 	
-	#[\Attribute\AcceptRole("admin", "entry")]
-	public function close(){
+	#[\Attribute\AcceptRole("admin", "leader")]
+	public function approval(){
 		$db = Session::getDB();
-		$result = new Result();
 		
-		SalesSlip::execClose($db, $_POST, $this->requestContext, $result);
+		$result = new Result();
+		SalesSlip::approval($db, $_POST, $this->requestContext, $result);
 		
 		return new JsonView($result);
 	}

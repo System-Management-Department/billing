@@ -1,114 +1,31 @@
 <!DOCTYPE html>
 <html lang="ja" class="h-100">
 {capture name="body"}<body class="bg-light h-100">
-	<div class="d-flex flex-row h-100 w-100">
-		<div class="sidebar flex-shrink-0 py-2">
-			<nav class="px-3">
-				<header class="mt-1 position-relative">
-					<div class="image-text d-flex align-items-center">
-						<div class="d-flex align-items-center justify-content-center p-2">
-							<img src="/assets/common/image/logo.svg" width="40" height="30" alt="ダイレクト・ホールディングス" />
-						</div>
-						<div class="text logo-text d-flex flex-column">
-							<div class="name">販売管理システム</div>
-							<div class="profession">Sales Management</div>
-						</div>
+	<div class="flex-grow-1 overflow-auto d-flex h-100 w-100 flex-column gap-3" data-scroll-y="layout">
+		<header class="sticky-top start-0">
+			<nav class="navbar ps-4 py-2 bg-white border-bottom border-success border-2 shadow-sm">
+				<div class="container-fluid gap-2">
+					<div class="navbar-brand flex-grow-1">
+						<span class="navbar-text text-dark">{block name="title"}{/block}</span>
 					</div>
-					<label class="bx bx-chevron-right toggle d-flex align-items-center justify-content-center position-absolute top-50">
-						<input type="checkbox" checked />
-					</label>
-				</header>
-			</nav>
-			<nav class="px-3 overflow-hidden">
-				<div class="menu-bar">
-					<ul class="menu-links px-0 py-3">
-						{if ($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "manager") or ($smarty.session["User.role"] eq "leader")}
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="SalesDetail" action="index"}">
-								<i class="bx bx-message-alt icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">案件一覧</span>
-							</a>
-						</li>
-						{/if}
-						{if ($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "entry")}
-						<!--
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Dashboard" action="index"}">
-								<i class="bx bxs-dashboard icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">Dashboard</span>
-							</a>
-						</li>
-						-->
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Purchase" action="index"}">
-								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">仕入れ検索</span>
-							</a>
-						</li>
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Home" action="sales"}">
-								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">売上処理</span>
-							</a>
-						</li>
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Home" action="billing"}">
-								<i class="bx bxs-edit icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">請求処理</span>
-							</a>
-						</li>
-						{/if}
-						{if $smarty.session["User.role"] eq "admin"}
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Home" action="master"}">
-								<i class="bx bx-cog icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">マスタ設定</span>
-							</a>
-						</li>
-						{*<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Drive" action="x_config"}">
-								<i class="bx bxl-google-cloud icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">サービスアカウント</span>
-							</a>
-						</li>*}
-						<li class="nav-link d-flex align-items-center">
-							<a class="d-contents" href="{url controller="Log" action="index"}">
-								<i class="bx bx-history icon d-flex align-items-center justify-content-center"></i>
-								<span class="text nav-text d-flex flex-column">履歴</span>
-							</a>
-						</li>
-						{/if}
-					</ul>
+					<div class="bi bi-person-circle fs-2"></div>
+					<div>
+						<div class="d-flex gap-3">
+							<div>{$smarty.session["User.department"]}</div>
+							<div class="flex-grow-1">{$smarty.session["User.username"]}</div>
+						</div>
+						<div>{$smarty.session["User.email"]}</div>
+					</div>
+					<div>
+						<a href="{url controller="Default" action="logout"}" class="btn btn-primary">ログアウト</a>
+					</div>
 				</div>
 			</nav>
-		</div>
-		<div class="flex-grow-1 overflow-auto" data-scroll-y="layout">
-			<header class="sticky-top">
-				<nav class="navbar ps-4 py-2 bg-white border-bottom border-success border-2 shadow-sm">
-					<div class="container-fluid gap-2">
-						<div class="navbar-brand flex-grow-1">
-							<span class="navbar-text text-dark">{block name="title"}{/block}</span>
-						</div>
-						<div class="bi bi-person-circle fs-2"></div>
-						<div>
-							<div class="d-flex gap-3">
-								<div>{$smarty.session["User.department"]}</div>
-								<div class="flex-grow-1">{$smarty.session["User.username"]}</div>
-							</div>
-							<div>{$smarty.session["User.email"]}</div>
-						</div>
-						<div>
-							<a href="{url controller="Default" action="logout"}" class="btn btn-primary">ログアウト</a>
-						</div>
-					</div>
-				</nav>
-				<nav class="d-flex align-items-center bg-white shadow-sm">
-					<ol class="breadcrumb p-3 mb-0 flex-grow-1"></ol>
-					<div class="px-3">{block name="tools"}{/block}</div>
-				</nav>
-			</header>
-			<main class="py-4">{block name="body"}{/block}</main>
-		</div>
+			<nav class="d-flex align-items-center bg-white shadow-sm">
+				<div class="px-3">{block name="tools"}{/block}</div>
+			</nav>
+		</header>
+		<main class="d-contents">{block name="body"}{/block}</main>
 	</div>
 	<div class="position-fixed top-0 bottom-0 start-0 end-0 w-auto h-auto m-0 p-0 d-grid grid-template-toast invisible zindex-toast">
 		<div class="position-relative toast-container visible grid-area-2-2"></div>
@@ -147,7 +64,6 @@ Flow.start({{/literal}
 		{/literal}{db_download test="Object.keys(this.db.tables).length < 1"}yield* this.dbUpdate();{/db_download}
 		{master_download test="Object.keys(Flow.Master.tables).length < 1"}yield* this.masterUpdate();{/master_download}{literal}
 		Flow.DbLocked = false;
-		yield* this.breadcrumbs();
 		yield* this.toast();
 		let prev = localStorage.getItem("session");
 		let pObj = {resolve: null, reject: null};
@@ -186,35 +102,6 @@ Flow.start({{/literal}
 			});
 		});
 	},
-	*breadcrumbs(){
-		let query = this.db.select("ALL")
-			.addWith("recursive t as (select *,1 as active from breadcrumbs where url=? UNION ALL select breadcrumbs.*,0 as active from breadcrumbs,t where breadcrumbs.url=t.parent)", this.location)
-			.addTable("t")
-			.andWhere("depth>0")
-			.setOrderBy("depth");
-		let res = query.apply();
-		let breadcrumb = document.querySelector("ol.breadcrumb");
-		for(let row of res){
-			let li = document.createElement("li");
-			if(row.active == 0){
-				let a = document.createElement("a");
-				li.setAttribute("class", "breadcrumb-item");
-				a.setAttribute("href", row.url);
-				a.textContent = row.title;
-				li.appendChild(a);
-			}else{
-				li.setAttribute("class", "breadcrumb-item active");
-				li.textContent = row.title;
-			}
-			breadcrumb.appendChild(li);
-		}
-		let firstBread = breadcrumb.querySelector('li');
-		if(firstBread != null){
-			firstBread.insertAdjacentHTML("afterbegin", '<i class="bi bi-gear-fill pe-2"></i>');
-		}else{
-			breadcrumb.innerHTML = '<i class="bi bi-gear-fill pe-2"></i>';
-		}
-	},
 	*toast(){
 		let messages = this.db
 			.select("ALL")
@@ -228,22 +115,6 @@ Flow.start({{/literal}
 		}
 	}
 });
-/*
-document.addEventListener("DOMContentLoaded", e => {
-	const sidebar = document.querySelector('nav');
-	const searchBtn = document.querySelector(".search-box");
-	const modeSwitchBtn = document.querySelector(".toggle-switch");
-	const modeText = document.querySelector(".mode-text");
-	const search = e => {  sidebar.classList.remove("close"); };
-	const modeSwitch = e => {
-		document.body.classList.toggle("dark");
-		modeText.textContent = `${document.body.classList.contains("dark") ? "Light" : "Dark"} mode`;
-	};
-	
-	searchBtn.addEventListener("click", search);
-	modeSwitchBtn.addEventListener("click", modeSwitch);
-});
-*/
 {/literal}</script>
 {/block}
 </head>

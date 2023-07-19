@@ -9,11 +9,7 @@ use App\MySQL;
 class HomeController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function index(){
-		if(($_SESSION["User.role"] == "admin") || ($_SESSION["User.role"] == "entry")){
-			return new RedirectResponse("*", "sales");
-		}else{
-			return new RedirectResponse("SalesDetail", "index");
-		}
+		return new View();
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]

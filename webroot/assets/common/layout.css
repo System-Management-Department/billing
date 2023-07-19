@@ -124,9 +124,10 @@ header .image-text .profession{
   text-align: center;
 }
 .table_sticky_list {
-  display: block;
+  white-space: nowrap;
+  margin-bottom: 0;
   overflow-y: scroll;
-  height: calc(100vh/2);
+  max-height: 100%;
   border:1px solid #dedede;
   border-collapse: collapse;
 }
@@ -169,6 +170,15 @@ header .image-text .profession{
 
 .d-contents{
 	display: contents!important;
+}
+.overflow-x-auto{
+	overflow-x: auto!important;
+}
+.overflow-y-var{
+	overflow-y: auto;
+}
+.position-sticky.mx-5{
+	left: 3rem!important;
 }
 
 

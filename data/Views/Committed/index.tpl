@@ -1,4 +1,4 @@
-{block name="title"}売上一覧画面{/block}
+{block name="title"}確定一覧画面{/block}
 {block name="tools"}<a class="btn btn-success my-2" href="{url controller="Home" action="index"}">メインメニュー</a>{/block}
 {block name="styles" append}
 <link rel="stylesheet" type="text/css" href="/assets/common/form.css" />
@@ -32,272 +32,11 @@ body:has(input[name="invoice_format"][value="3"]) [data-visible="v3"]{
 #detailModal:has(.modal-header select [value="2"]:checked) [data-detail-modal="3"]{
 	display: none;
 }
-
-[data-colosed="1"]{
-	--bs-table-bg: #cceced;
-}
 </style>
 {/block}
 
 {block name="scripts" append}
-<script type="text/javascript" src="/assets/encoding.js/encoding.min.js"></script>
-<script type="text/javascript" src="/assets/common/CSVSerializer.js"></script>
 <script type="text/javascript">{literal}
-class SalesClose{{/literal}
-	static account = "{$basicInfo.rakurakumeisai_account.value}";
-	static apitoken = "{$basicInfo.rakurakumeisai_apitoken.value}";{literal}
-	static csvHeader = [
-		"対象日付",
-		"帳票No",
-		"顧客コード",
-		"顧客名",
-		"税抜金額",
-		"消費税",
-		"合計金額",
-		"支払期限",
-		"明細日付",
-		"摘要",
-		"数量",
-		"明細単価",
-		"明細金額",
-		"備考(見出し)",
-		"税抜金額(8%)",
-		"税抜金額(10%)",
-		"消費税(8%)",
-		"消費税(10%)",
-		"税率",
-		"顧客名カナ",
-		"請求日",
-		"請求金額",
-		"件名",
-		"単位",
-		"摘要ヘッダー１",
-		"摘要ヘッダー２",
-		"摘要ヘッダー３",
-		"摘要ヘッダー１値",
-		"摘要ヘッダー２値",
-		"摘要ヘッダー３値",
-		"消費税(明細別合計)",
-		"税込金額(明細合計)",
-		"消費税(明細別)",
-		"税込金額(明細別)",
-		"担当者氏名",
-		"発行部数",
-		"明細単価",
-		"売上日"
-	];
-	constructor(db){
-		this.response = db;
-		this.isChecked = {
-			length: 1,
-			apply: function(dummy, args){
-				let id = args[0].toString();
-				return this.values.includes(id) ? 1 : 0;
-			},
-			values: null,
-			reset: function(checked){
-				this.values = [];
-				let n = checked.length;
-				for(let i = 0; i < n; i++){
-					this.values.push(checked[i].value);
-				}
-			}
-		};
-		this.response.create_function("is_checked", this.isChecked);
-		this.response.create_function("detail_each", {
-			length: 1,
-			apply(dummy, args){
-				let taxRate = 0.1;
-				let obj = JSON.parse(args[0]);
-				let values = {amount: 0, amountPt: 0, amountSt: 0};
-				for(let i = 0; i < obj.length; i++){
-					if(typeof obj.amount[i] === "number"){
-						values.amount += obj.amount[i];
-						values.amountPt += obj.amount[i] * taxRate;
-					}
-				}
-				values.amountSt = values.amount * taxRate;
-				let res = new Array(obj.length).fill(values);
-				return JSON.stringify(res);
-			}
-		});
-	}
-	getQuery(){
-		return this.response.select("ALL")
-			.addTable("sales_slips")
-			.addTable("json_each(detail_each(sales_slips.detail)) as d")
-			.addField("sales_slips.*")
-			.addField("json_extract(sales_slips.detail, '$.amount[' || d.key || ']') as amount")
-			.addField("json_extract(sales_slips.detail, '$.itemName[' || d.key || ']') as item_name")
-			.addField("json_extract(sales_slips.detail, '$.quantity[' || d.key || ']') as quantity")
-			.addField("json_extract(sales_slips.detail, '$.unitPrice[' || d.key || ']') as unit_price")
-			.addField("json_extract(sales_slips.detail, '$.unit[' || d.key || ']') as unit")
-			.addField("json_extract(sales_slips.detail, '$.data1[' || d.key || ']') as data1")
-			.addField("json_extract(sales_slips.detail, '$.data2[' || d.key || ']') as data2")
-			.addField("json_extract(sales_slips.detail, '$.data3[' || d.key || ']') as data3")
-			.addField("json_extract(d.value, '$.amount') as total_amount")
-			.addField("json_extract(d.value, '$.amountPt') as total_amount_p")
-			.addField("json_extract(d.value, '$.amountSt') as total_amount_s")
-			.leftJoin("master.managers as managers on sales_slips.manager=managers.code")
-			.addField("managers.name as manager_name")
-			.leftJoin("master.apply_clients as apply_clients on sales_slips.billing_destination=apply_clients.code")
-			.addField("apply_clients.name as client_name,apply_clients.kana as client_kana,apply_clients.close_date as client_close");
-	}
-	getSerializer(){
-		return new CSVSerializer((val, col) => {
-			if(col == 2){
-				return (typeof val === 'string') ? val.replace(/-.*$/, "") : val;
-			}
-			if(
-				(col == 4) || (col == 5) || (col == 6) ||
-				(col == 12) || (col == 21) || (col == 30) ||
-				(col == 31) || (col == 32) || (col == 33)){
-				return (typeof val === "number") ? Math.floor(val) : "";
-			}
-			if((col == 7) || (col == 8)){
-				return (typeof val === "string") ? val.split("-").join("/") : val;
-			}
-			if(col == 37){
-				if(Array.isArray(val)){
-					let date = new Date(val[0]);
-					if(val[1] == 99){
-						date.setMonth(date.getMonth() + 1);
-						date.setDate(-1);
-					}else{
-						date.setDate(val[1]);
-					}
-					return Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(date);
-				}
-			}
-			return val;
-		}).setHeader(SalesClose.csvHeader)
-		.setFilter(data => data[6] > 0)
-		.setConverter(data => new Blob([new Uint8Array(Encoding.convert(Encoding.stringToCode(data), {to: "SJIS", from: "UNICODE"}))], {type: "text/csv"}));
-	}
-	*export(){
-		let reportTypes = this.response.select("COL")
-			.addTable("sales_slips")
-			.setField("distinct invoice_format")
-			.andWhere("is_checked(id)=1")
-			.andWhere("invoice_format is not null")
-			.apply();
-		let vSerializer = this.getSerializer();
-		let now = new Date();
-		let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(now);
-		let csvData = {};
-		for(let type of reportTypes){
-			csvData[type] = [[], []];
-		}
-		
-		let table = this.getQuery().andWhere("is_checked(sales_slips.id)=1").apply();
-		for(let item of table){
-			if(!(item.invoice_format in csvData)){
-				continue;
-			}
-			item.detail = JSON.parse(item.detail);
-			let taxRate = 0.1;
-			csvData[item.invoice_format][item.closed_count == 0 ? 1 : 0].push([
-				item.accounting_date.split("-").join("/"),
-				item.slip_number,
-				item.billing_destination,
-				item.client_name,
-				item.total_amount,
-				item.total_amount_s,
-				item.total_amount + item.total_amount_s,
-				item.payment_date,
-				item.accounting_date,
-				item.item_name,
-				item.quantity,
-				item.unit_price,
-				item.amount,
-				item.note,
-				"",
-				"",
-				"",
-				"",
-				"",
-				item.client_kana,
-				today,
-				item.total_amount + item.total_amount_s,
-				item.subject,
-				item.unit,
-				item.header1,
-				item.header2,
-				item.header3,
-				item.data1,
-				item.data2,
-				item.data3,
-				item.total_amount_p,
-				item.total_amount + item.total_amount_p,
-				(typeof item.amount === "number") ? item.amount * taxRate : "",
-				(typeof item.amount === "number") ? (item.amount + item.amount * taxRate) : "",
-				item.manager_name,
-				item.circulation,
-				item.unit_price,
-				(item.client_close == null) ? today : [now, item.client_close]
-			]);
-		}
-		
-		let apiPL = [];
-		let apiHeader = new Headers();
-		apiHeader.set("X-WB-apitoken", SalesClose.apitoken);
-		for(let type of reportTypes){
-			for(let isNewIssues = 0; isNewIssues <= 1; isNewIssues++){
-				if(csvData[type][isNewIssues].length < 1){
-					continue;
-				}
-				let blob = vSerializer.serializeToString(csvData[type][isNewIssues]);
-				let apiBody = new FormData();
-				apiBody.append("json", JSON.stringify({
-					reportTypeId: type,
-					isNewIssues: isNewIssues,
-					importProcessName: `取込`,
-					skipFirst: 1,
-					isImmApproval: 0
-				}));
-				apiBody.append("files[0]", blob, "data.csv");
-				apiPL.push(fetch(`https://${SalesClose.account}/api/v1/reports/imports`, {
-					method: "POST",
-					mode: 'cors',
-					headers: apiHeader,
-					body: apiBody
-				}).then(res => {
-					return res.json();
-				}));
-			}
-		}
-		let apiRes = yield Promise.all(apiPL);
-		if(apiRes.length > 0 && apiRes[0].code == "200"){
-			let formData = new FormData();
-			this.isChecked.values.forEach(v => { formData.append("id[]", v); });
-			let response = yield fetch(document.getElementById("close").getAttribute("data-close"), {
-				method: "POST",
-				body: formData
-			}).then(res => res.json());
-			if(response.success){
-				for(let message of response.messages){
-					Flow.DB.insertSet("messages", {title: "請求締データ", message: message[0], type: message[1], name: message[2]}, {}).apply();
-				}
-				yield Flow.DB.commit();
-				location.reload();
-			}else{
-				for(let message of response.messages){
-					Flow.DB.insertSet("messages", {title: "請求締データ", message: message[0], type: message[1], name: message[2]}, {}).apply();
-				}
-				let messages = Flow.DB
-					.select("ALL")
-					.addTable("messages")
-					.leftJoin("toast_classes using(type)")
-					.apply();
-				if(messages.length > 0){
-					Toaster.show(messages);
-					Flow.DB.delete("messages").apply();
-				}
-			}
-		}
-	}
-}
-
 Flow.start({{/literal}
 	dbDownloadURL: "{url action="search"}",{literal}
 	strage: null,
@@ -305,7 +44,6 @@ Flow.start({{/literal}
 	detail: null,
 	detailModal: null,
 	template: null,
-	close: null,
 	*[Symbol.iterator](){
 		const form = document.querySelector('form');
 		yield* this.init(form);
@@ -507,8 +245,6 @@ Flow.start({{/literal}
 		this.detailModal = new bootstrap.Modal(document.getElementById("detailModal"));
 		document.getElementById("closeDetailModal").addEventListener("click", e => { this.detailModal.hide(); });
 		document.getElementById("approval").addEventListener("click", this);
-		document.getElementById("close").addEventListener("click", this);
-		document.getElementById("output").addEventListener("click", this);
 		
 		// フォームを有効化
 		form.querySelector('fieldset').disabled = false;
@@ -520,20 +256,12 @@ Flow.start({{/literal}
 		}).then(response => response.arrayBuffer());
 		this.response.import(buffer, "list");
 		this.response.attach(Flow.Master, "master");
-		this.close = new SalesClose(this.response);
 		let table = this.listItemQuery("ALL").apply();
 		const tbody = document.getElementById("list");
 		tbody.innerHTML = table.map(row => this.template.listItem(row)).join("");
-		let trElements = tbody.querySelectorAll('[data-range][data-colosed]');
+		let trElements = tbody.querySelectorAll('[data-range]');
 		for(let i = trElements.length - 1; i >= 0; i--){
 			trElements[i].addEventListener("click", this, {capture: true});
-			const colsed = trElements[i].getAttribute("data-colosed");
-			if(colsed == "1"){
-				const checkbox = trElements[i].querySelector('input[type="checkbox"]');
-				checkbox.parentNode.removeChild(checkbox);
-				const disapproval = trElements[i].querySelector('[data-detail="3"]');
-				disapproval.parentNode.removeChild(disapproval);
-			}
 		}
 	},
 	listItemQuery(mode){
@@ -579,6 +307,41 @@ Flow.start({{/literal}
 				document.querySelector('#detailModal .modal-header select').value = e.target.getAttribute("data-detail");
 				document.querySelector('#detailModal .modal-body').innerHTML = this.template.detailView(data, detail, detail2);
 				this.detailModal.show();
+			}else if(e.target.hasAttribute("href")){
+				e.stopPropagation();
+				e.preventDefault();
+				this.detail = id;
+				let data = this.response.select("ROW")
+					.addTable("sales_slips")
+					.addField("sales_slips.*")
+					.andWhere("sales_slips.id=?", id)
+					.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
+					.addField("managers.name AS manager_name")
+					.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
+					.addField("apply_clients.name AS apply_client_name")
+					.apply();
+				let values = JSON.parse(data.detail);
+				let keys = Object.keys(values).filter(k => Array.isArray(values[k]));
+				let detail = [];
+				for(let i = 0; i < values.length; i++){
+					let obj = {};
+					for(let k of keys){
+						let key = k.replace(/[A-Z]/g, function(ch){
+							return `_${ch.toLowerCase()}`;
+						});
+						obj[key] = values[k][i];
+					}
+					detail.push(obj);
+				}
+				let detail2 = this.response.select("ALL")
+					.addTable("purchases")
+					.andWhere("spreadsheet=?", data.spreadsheet)
+					.apply();
+				const [w, h] = [1200, 900];
+				const editWindow = window.open(e.target.getAttribute("href"), "regist", `left=${0},top=${0},width=${w},height=${h}`);
+				editWindow.addEventListener("load", e => {
+					editWindow.postMessage(JSON.stringify({data, detail, detail2}), "*");
+				});
 			}
 		}else if(e.currentTarget == document.getElementById("approval")){
 			const url = document.querySelector('#detailModal [data-approval]').getAttribute("data-approval");
@@ -593,63 +356,6 @@ Flow.start({{/literal}
 				Flow.DB.commit().then(e => { location.reload(); });
 			});
 			this.detailModal.hide();
-		}else if(e.currentTarget == document.getElementById("close")){
-			this.close.isChecked.reset(document.querySelectorAll('#list input[type="checkbox"]'));
-			co(this.close.export());
-		}else if(e.currentTarget == document.getElementById("output")){
-			let vSerializer = this.close.getSerializer();
-			let now = new Date();
-			let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(now);
-			let csvData = [];
-			let table = this.close.getQuery().apply();
-			for(let item of table){
-				let taxRate = 0.1;
-				csvData.push([
-					item.accounting_date.split("-").join("/"),
-					item.slip_number,
-					item.billing_destination,
-					item.client_name,
-					item.total_amount,
-					item.total_amount_s,
-					item.total_amount + item.total_amount_s,
-					item.payment_date,
-					item.accounting_date,
-					item.item_name,
-					item.quantity,
-					item.unit_price,
-					item.amount,
-					item.note,
-					"",
-					"",
-					"",
-					"",
-					"",
-					item.client_kana,
-					today,
-					item.total_amount + item.total_amount_s,
-					item.subject,
-					item.unit,
-					item.header1,
-					item.header2,
-					item.header3,
-					item.data1,
-					item.data2,
-					item.data3,
-					item.total_amount_p,
-					item.total_amount + item.total_amount_p,
-					(typeof item.amount === "number") ? item.amount * taxRate : "",
-					(typeof item.amount === "number") ? (item.amount + item.amount * taxRate) : "",
-					item.manager_name,
-					item.circulation,
-					item.unit_price,
-					(item.client_close == null) ? today : [now, item.client_close]
-				]);
-			}
-			let blob = vSerializer.serializeToString(csvData);
-			let a = document.createElement("a");
-			a.setAttribute("href", URL.createObjectURL(blob));
-			a.setAttribute("download", "売上伝票.csv");
-			a.click();
 		}
 	}
 });
@@ -663,7 +369,7 @@ Flow.start({{/literal}
 <datalist id="division"><option value="">選択</option></datalist>
 <datalist id="team"><option value="">選択</option></datalist>
 <form method="POST" action="{url}" class="card position-sticky mx-5">
-	<label id="search-header" class="card-header"><input type="checkbox" class="d-contents" />売上一覧検索</label>
+	<label id="search-header" class="card-header"><input type="checkbox" class="d-contents" />確定一覧検索</label>
 	<fieldset class="card-body row" disabled>
 		<div class="d-table table w-50">
 			<row-form label="伝票番号" col="5" name="slip_number" type="text"></row-form>
@@ -684,17 +390,11 @@ Flow.start({{/literal}
 	</div>
 </form>
 
-<div class="mx-5 text-end">
-	<button type="button" class="btn btn-dark me-3" id="output">売上伝票出力</button>
-	<button type="button" class="btn btn-primary" id="close" data-close="{url action="close"}">請求締</button>
-</div>
-
 <div class="flex-grow-1 mx-5 position-relative">
 	<div class="position-absolute h-100 w-100 overflow-auto">
 		<table class="table bg-white table_sticky_list" data-scroll-y="list">
 			<thead>
 				<tr>
-					<th></th>
 					<th class="w-10">伝票番号</th>
 					<th class="w-10">取込日時</th>
 					<th class="w-10">件名</th>
@@ -704,12 +404,12 @@ Flow.start({{/literal}
 					<th class="w-20">備考</th>
 					<th class="w-10">仕入明細</th>
 					<th class="w-10">売上明細</th>
-					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">承認解除</th>{/if}
+					<th>売上追加修正</th>
+					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">確認承認</th>{/if}
 				</tr>
 			</thead>
 			<tbody id="list">{predefine name="listItem" constructor="sales" assign="obj"}
-				<tr data-range="{$obj.id}" data-colosed="{$obj.close_processed}">
-					<td><input type="checkbox" value="{$obj.id}" checked /></td>
+				<tr data-range="{$obj.id}">
 					<td>{$obj.slip_number}</td>
 					<td>{$obj.created}</td>
 					<td>{$obj.subject}</td>
@@ -719,8 +419,9 @@ Flow.start({{/literal}
 					<td>{$obj.note}</td>
 					<td data-purchases="{$obj.import_purchases}"><button type="button" data-detail="1" class="btn btn-sm btn-success bx">仕入明細</button></td>
 					<td><button type="button" data-detail="2" class="btn btn-sm btn-success bx">売上明細</button></td>
+					<td><a href="{url action="edit"}" class="btn btn-sm btn-info bx bxs-edit">追加修正</a></td>
 					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}
-						<td><button type="button" data-detail="3" class="btn btn-sm btn-primary bx bxs-edit">承認解除</button></td>
+						<td><button type="button" data-detail="3" class="btn btn-sm btn-primary bx bxs-edit">確認承認</button></td>
 					{/if}
 				</tr>
 			{/predefine}</tbody>
@@ -799,10 +500,10 @@ Flow.start({{/literal}
 	<div class="modal-dialog modal-dialog-centered modal-form">
 		<div class="modal-content">
 			<div class="modal-header flex-row">
-				<select tabindex="-1"><option value="1">仕入明細</option><option value="2">売上明細</option>{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<option value="3">承認解除</option>{/if}</select><i class="bi bi-x" data-bs-dismiss="modal"></i>
+				<select tabindex="-1"><option value="1">仕入明細</option><option value="2">売上明細</option>{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<option value="3">売上承認</option>{/if}</select><i class="bi bi-x" data-bs-dismiss="modal"></i>
 			</div>
 			<div class="modal-body">{predefine name="detailView" constructor=["sales", "categories"] assign=["obj", "detail", "detail2"]}
-				<div class="container border border-secondary rounded p-4 mb-5 bg-white" data-approval="{url action="disapproval"}/{$obj.id}">
+				<div class="container border border-secondary rounded p-4 mb-5 bg-white" data-approval="{url action="approval"}/{$obj.id}">
 					<div class="row gap-4 align-items-start">
 						<div class="d-table col table">
 							<row-form label="伝票番号" col="5">{$obj.slip_number}</row-form>
@@ -882,7 +583,7 @@ Flow.start({{/literal}
 			{/predefine}</div>
 			<div class="modal-footer flex-row">
 				<button type="button" class="btn btn-success" id="closeDetailModal">閉じる</button>
-				<button type="button" class="btn btn-success" id="approval" data-detail-modal="3">承認解除</button>
+				<button type="button" class="btn btn-success" id="approval" data-detail-modal="3">承認</button>
 			</div>
 		</div>
 	</div>
