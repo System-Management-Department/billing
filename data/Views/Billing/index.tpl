@@ -82,6 +82,19 @@ class SalesClose{{/literal}
 		"明細単価",
 		"売上日"
 	];
+	static csvHeader2 = [
+		"売上日付",
+		"帳票No",
+		"顧客コード",
+		"顧客名",
+		"税抜金額",
+		"消費税",
+		"合計金額",
+		"支払期限",
+		"備考",
+		"請求締日",
+		"件名"
+	];
 	constructor(db){
 		this.response = db;
 		this.isChecked = {
@@ -168,6 +181,23 @@ class SalesClose{{/literal}
 			return val;
 		}).setHeader(SalesClose.csvHeader)
 		.setFilter(data => data[6] > 0)
+		.setConverter(data => new Blob([new Uint8Array(Encoding.convert(Encoding.stringToCode(data), {to: "SJIS", from: "UNICODE"}))], {type: "text/csv"}));
+	}
+	getSerializer2(){
+		return new CSVSerializer((val, col) => {
+			if(col == 2){
+				return (typeof val === 'string') ? val.replace(/-.*$/, "") : val;
+			}
+			if(
+				(col == 4) || (col == 5) || (col == 6)){
+				const formater = new Intl.NumberFormat();
+				return (typeof val === "number") ? formater.format(Math.floor(val)) : "";
+			}
+			if(col == 7){
+				return (typeof val === "string") ? val.split("-").join("/") : val;
+			}
+			return val;
+		}).setHeader(SalesClose.csvHeader2)
 		.setConverter(data => new Blob([new Uint8Array(Encoding.convert(Encoding.stringToCode(data), {to: "SJIS", from: "UNICODE"}))], {type: "text/csv"}));
 	}
 }
@@ -530,6 +560,40 @@ Flow.start({{/literal}
 				}
 			});
 		}else if(e.currentTarget == document.getElementById("export")){
+			let vSerializer = this.close.getSerializer2();
+			let now = new Date();
+			let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(now);
+			let csvData = [];
+			let table = this.response.select("ALL")
+				.addTable("sales_slips")
+				.addTable("json_each(detail_each(sales_slips.detail)) as d")
+				.addField("distinct sales_slips.*")
+				.addField("json_extract(d.value, '$.amount') as total_amount")
+				.addField("json_extract(d.value, '$.amountPt') as total_amount_p")
+				.addField("json_extract(d.value, '$.amountSt') as total_amount_s")
+				.leftJoin("master.apply_clients as apply_clients on sales_slips.billing_destination=apply_clients.code")
+				.addField("apply_clients.name as client_name").apply();
+			for(let item of table){
+				let taxRate = 0.1;
+				csvData.push([
+					item.accounting_date.split("-").join("/"),
+					item.slip_number,
+					item.billing_destination,
+					item.client_name,
+					item.total_amount,
+					item.total_amount_s,
+					item.total_amount + item.total_amount_s,
+					item.payment_date,
+					item.note,
+					item.closing_date.split("-").join("/"),
+					item.subject
+				]);
+			}
+			let blob = vSerializer.serializeToString(csvData);
+			let a = document.createElement("a");
+			a.setAttribute("href", URL.createObjectURL(blob));
+			a.setAttribute("download", "請求一覧.csv");
+			a.click();
 		}
 	}
 });
