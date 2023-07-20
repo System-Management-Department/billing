@@ -2,3 +2,6 @@
     RewriteEngine Off
 </IfModule>
 Options +Indexes
+IndexOptions NameWidth=* Charset=UTF-8 -FancyIndexing +HTMLTable
+IndexStyleSheet "/x-reports/style.css"
+IndexHeadInsert "<script type=\"text/javascript\" src=\"/x-reports/script.js\"></script>"
