@@ -41,8 +41,6 @@ class SalesSlip{
 		登録・更新共通の検証
 	*/
 	public static function validate($check, $masterData, $db){
-		$check["accounting_date"]->required("売上日付を入力してください。")
-			->date("売上日付を正しく入力してください。");
 		$check["division"]->required("部門を入力してください。")
 			->range("部門を正しく入力してください。", "in", ($db->select("COL")->setTable("divisions")->setField("code"))());
 		$check["team"] //->required("チームを入力してください。")
@@ -149,7 +147,6 @@ class SalesSlip{
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("sales_slips", [
-				"accounting_date" => $q["accounting_date"],
 				"division" => $q["division"],
 				"team" => $q["team"],
 				"manager" => $q["manager"],
@@ -272,7 +269,8 @@ class SalesSlip{
 				"approval" => 0,
 				"output_processed" => 0,
 				"close_processed" => 0,
-				"closing_date" => "NULL"
+				"accounting_date" => "NULL",
+				"closing_date" => "NULL",
 			]);
 			$updateQuery->andWhere("id IN (SELECT id FROM JSON_TABLE(?, '$[*]' COLUMNS(id INT PATH '$.id')) AS t)", json_encode($t));
 			$updateQuery();
@@ -307,8 +305,6 @@ class SalesSlip{
 		登録・更新共通の検証
 	*/
 	public static function validate2($check, $masterData, $db){
-		$check["accounting_date"]->required("売上日付を入力してください。")
-			->date("売上日付を正しく入力してください。");
 		$check["delivery_destination"]->required("納品先を入力してください。")
 			->length("納品先は80文字以下で入力してください。", null, 255);
 		$check["subject"]->required("件名を入力してください。");
@@ -346,7 +342,7 @@ class SalesSlip{
 			
 			$extendFields = ["manager"];
 			$overrideFields = [
-				"accounting_date", "delivery_destination", "subject",
+				"delivery_destination", "subject",
 				"note", "header1", "header2", "header3",
 				"payment_date", "detail", "invoice_format",
 			];
@@ -392,7 +388,6 @@ class SalesSlip{
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("sales_slips", [
-				"accounting_date" => $q["accounting_date"],
 				"delivery_destination" => $q["delivery_destination"],
 				"subject" => $q["subject"],
 				"note" => $q["note"],
@@ -477,7 +472,6 @@ class SalesSlip{
 			
 			$insertQuery = $db->insertSet("sales_slips", [
 				"spreadsheet"          => $id,
-				"accounting_date"      => $q["accounting_date"],
 				"delivery_destination" => $q["delivery_destination"],
 				"subject"              => $q["subject"],
 				"note"                 => $q["note"],
@@ -539,7 +533,6 @@ class SalesSlip{
 			
 			
 			$updateQuery = $db->updateSet("sales_slips", [
-				"accounting_date"      => $q["accounting_date"],
 				"delivery_destination" => $q["delivery_destination"],
 				"subject"              => $q["subject"],
 				"note"                 => $q["note"],
@@ -593,6 +586,7 @@ class SalesSlip{
 		try{
 			$updateQuery = $db->updateSet("sales_slips", [],[
 				"approval" => 1,
+				"accounting_date" => "CURDATE()",
 			]);
 			$updateQuery->andWhere("id=?", $id);
 			$updateQuery();
@@ -614,6 +608,7 @@ class SalesSlip{
 		try{
 			$updateQuery = $db->updateSet("sales_slips", [],[
 				"approval" => 0,
+				"accounting_date" => "NULL",
 			]);
 			$updateQuery->andWhere("id=?", $id);
 			$updateQuery();

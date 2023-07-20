@@ -62,13 +62,13 @@ class CommittedController extends ControllerBase{
 			if(!empty($_POST["accounting_date"])){
 				if(!empty($_POST["accounting_date"]["from"])){
 					$parameter = true;
-					$query1->andWhere("DATEDIFF(accounting_date,?) BETWEEN 0 AND 365", $_POST["accounting_date"]["from"]);
-					$query2->andWhere("DATEDIFF(sales_slips.accounting_date,?) BETWEEN 0 AND 365", $_POST["accounting_date"]["from"]);
+					$query1->andWhere("DATEDIFF(created,?) BETWEEN 0 AND 365", $_POST["accounting_date"]["from"]);
+					$query2->andWhere("DATEDIFF(sales_slips.created,?) BETWEEN 0 AND 365", $_POST["accounting_date"]["from"]);
 				}
 				if(!empty($_POST["accounting_date"]["to"])){
 					$parameter = true;
-					$query1->andWhere("DATEDIFF(accounting_date,?) BETWEEN -365 AND 0", $_POST["accounting_date"]["to"]);
-					$query2->andWhere("DATEDIFF(sales_slips.accounting_date,?) BETWEEN -365 AND 0", $_POST["accounting_date"]["to"]);
+					$query1->andWhere("DATEDIFF(created,?) BETWEEN -365 AND 0", $_POST["accounting_date"]["to"]);
+					$query2->andWhere("DATEDIFF(sales_slips.created,?) BETWEEN -365 AND 0", $_POST["accounting_date"]["to"]);
 				}
 			}
 			if(!empty($_POST["division"])){

@@ -131,6 +131,15 @@ Flow.start({{/literal}
 	},
 	handleEvent(e){
 		if(e.type == "message" && (e.currentTarget == this.dataPort)){
+			const dateFormat = val => {
+				const i = new Intl.DateTimeFormat("ja-JP", {dateStyle: "short"});
+				try{
+					const v = new Date(val);
+					return i.format(v).replace(/\//g, "-");
+				}catch(ex){
+					return "";
+				}
+			};
 			const data = JSON.parse(e.data);
 			const res = document.getElementById("res");
 			let reportMap = {};
@@ -138,10 +147,10 @@ Flow.start({{/literal}
 				reportMap[row[0]] = row[1];
 			}
 			document.getElementById("project").value = data.sid;
-			document.getElementById("date").value = reportMap["見積年月日"].replace(/T.+$/, "");
+			document.getElementById("date").value = dateFormat(reportMap["見積年月日"]);
 			document.getElementById("subject").value = reportMap["件名"];
 			document.getElementById("client").value = reportMap["クライアント名"];
-			document.getElementById("note").value = reportMap["仕様"];
+			document.getElementById("note").value = reportMap["備考"];
 			document.querySelector('#apply_client modal-select').keyword = reportMap["クライアント名"];
 			document.getElementById("header1").textContent = reportMap["摘要ヘッダ１"];
 			document.getElementById("header2").textContent = reportMap["摘要ヘッダ２"];
@@ -218,7 +227,6 @@ Flow.start({{/literal}
 					}
 				});
 			}
-			formData.append("accounting_date", form.querySelector('[name="accounting_date"]').value);
 			formData.append("billing_destination", form.querySelector('[name="billing_destination"]').value);
 			formData.append("delivery_destination", form.querySelector('[name="delivery_destination"]').value);
 			formData.append("subject", form.querySelector('[name="subject"]').value);
@@ -303,14 +311,13 @@ Flow.start({{/literal}
 			<div class="d-table col table">
 				<row-form label="見積番号" col="12" name="project" id="project"></row-form>
 				<row-form label="見積年月日" col="5" name="date" type="date" id="date"></row-form>
-				<row-form label="売上日付" col="5" name="accounting_date" type="date" require></row-form>
 				<row-form label="請求書件名" col="10" name="subject" type="text" id="subject" require></row-form>
 				<row-form label="入金予定日" col="5" name="payment_date" type="date" require></row-form>
 			</div>
 			<div class="d-table col table">
 				<row-form label="請求先" col="10" name="billing_destination" placeholder="請求先CD、会社名で検索" id="apply_client" require></row-form>
 				<row-form label="納品先" col="10" name="delivery_destination" type="text" id="client" require></row-form>
-				<row-form label="仕様" col="10" name="note" type="textarea" id="note"></row-form>
+				<row-form label="備考" col="10" name="note" type="textarea" id="note"></row-form>
 				<row-form label="PDF" col="10" id="pdf"></row-form>
 			</div>
 		</div>

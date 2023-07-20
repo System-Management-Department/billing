@@ -28,7 +28,6 @@
 		<div class="row gap-4 align-items-start">
 			<div class="d-table col table">
 				<row-form label="伝票番号" col="12" name="slip_number">{$obj.slip_number}</row-form>
-				<row-form label="売上日付" col="5" name="accounting_date" type="date" require>{$obj.accounting_date}</row-form>
 				<row-form label="当社担当者" col="10">{$obj.manager_name}</row-form>
 				<row-form label="請求書件名" col="10" name="subject" type="text" id="subject" require>{$obj.subject}</row-form>
 				<row-form label="入金予定日" col="5" name="payment_date" type="date" require>{$obj.payment_date}</row-form>
