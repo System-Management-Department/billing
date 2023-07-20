@@ -45,7 +45,7 @@
 						<div>売上の承認</div>
 						<div>確定一覧表の印刷</div>
 					</div></td>
-						<td><a class="btn btn-info">見積書フォルダ</a></td>
+						<td><a class="btn btn-info" href="/x-reports/billing/">見積書フォルダ</a></td>
 					</tr>
 					<tr class="table-success">
 						<td><a href="{url controller="Sales" action="index"}" class="btn btn-info">売上一覧表</a></td>
@@ -55,7 +55,7 @@
 						<div>請求締めの実施</div>
 						<div>売上一覧表の印刷</div>
 					</div></td>
-						<td><a class="btn btn-info">売上一覧表フォルダ</a></td>
+						<td><a class="btn btn-info" href="/x-reports/sales/">売上一覧表フォルダ</a></td>
 					</tr>
 					<tr class="table-warning">
 						<td><a href="{url controller="Billing" action="index"}" class="btn btn-info">請求一覧表</a></td>
@@ -64,7 +64,7 @@
 						<div>請求締め解除の実施</div>
 						<div>請求一覧表の印刷</div>
 					</div></td>
-						<td><a class="btn btn-info">請求一覧表フォルダ</a></td>
+						<td><a class="btn btn-info" href="/x-reports/estimate/">請求一覧表フォルダ</a></td>
 					</tr>
 				</tbody></table>
 			</div>
