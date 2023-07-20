@@ -75,7 +75,7 @@
 <div class="card mx-5">
 	<div class="card-header">マスター管理</div>
 	<div class="card-body">
-		<a class="btn btn-info">管理画面</a>
+		<a class="btn btn-info" href="/exment/admin/">管理画面</a>
 	</div>
 </div>
 </div>

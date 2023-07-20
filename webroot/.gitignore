@@ -1,0 +1,7 @@
+exment/*
+
+# exment/publicをコピーしてきて設置
+# index.phpのexmentのパスを書き換えが必要
+# __DIR__.'/../storage/framework/maintenance.php'   => __DIR__.'/../../../exment/storage/framework/maintenance.php'
+# __DIR__.'/../vendor/autoload.php'                 => __DIR__.'/../../../exment/vendor/autoload.php'
+# __DIR__.'/../bootstrap/app.php'                   => __DIR__.'/../../../exment/bootstrap/app.php'
