@@ -395,21 +395,26 @@ Flow.start({{/literal}
 		<table class="table bg-white table_sticky_list" data-scroll-y="list">
 			<thead>
 				<tr>
+					<th class="w-10">仕入明細</th>
+					<th class="w-10">売上明細</th>
+					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">確認承認</th>{/if}
 					<th class="w-10">伝票番号</th>
-					<th class="w-10">取込日時</th>
+					<th class="w-10">確定日時</th>
 					<th class="w-10">件名</th>
 					<th class="w-10">クライアント名</th>
 					<th class="w-20">請求先名</th>
 					{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
 					<th class="w-20">備考</th>
-					<th class="w-10">仕入明細</th>
-					<th class="w-10">売上明細</th>
 					<th>売上追加修正</th>
-					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">確認承認</th>{/if}
 				</tr>
 			</thead>
 			<tbody id="list">{predefine name="listItem" constructor="sales" assign="obj"}
 				<tr data-range="{$obj.id}">
+					<td data-purchases="{$obj.import_purchases}"><button type="button" data-detail="1" class="btn btn-sm btn-success bx">仕入明細</button></td>
+					<td><button type="button" data-detail="2" class="btn btn-sm btn-success bx">売上明細</button></td>
+					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}
+						<td><button type="button" data-detail="3" class="btn btn-sm btn-primary bx bxs-edit">確認承認</button></td>
+					{/if}
 					<td>{$obj.slip_number}</td>
 					<td>{$obj.created}</td>
 					<td>{$obj.subject}</td>
@@ -417,12 +422,7 @@ Flow.start({{/literal}
 					<td>{$obj.apply_client_name}</td>
 					{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 					<td>{$obj.note}</td>
-					<td data-purchases="{$obj.import_purchases}"><button type="button" data-detail="1" class="btn btn-sm btn-success bx">仕入明細</button></td>
-					<td><button type="button" data-detail="2" class="btn btn-sm btn-success bx">売上明細</button></td>
 					<td><a href="{url action="edit"}" class="btn btn-sm btn-info bx bxs-edit">追加修正</a></td>
-					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}
-						<td><button type="button" data-detail="3" class="btn btn-sm btn-primary bx bxs-edit">確認承認</button></td>
-					{/if}
 				</tr>
 			{/predefine}</tbody>
 		</table>
@@ -507,7 +507,8 @@ Flow.start({{/literal}
 					<div class="row gap-4 align-items-start">
 						<div class="d-table col table">
 							<row-form label="伝票番号" col="5">{$obj.slip_number}</row-form>
-							<row-form label="売上日付" col="5">{$obj.accounting_date}</row-form>
+							<row-form label="確定日時" col="5">{$obj.created}</row-form>
+							<row-form label="売上日付" col="5">{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}{$smarty.now|date_format:"%Y-%m-%d"}{/if}</row-form>
 							<row-form label="当社担当者" col="10">{$obj.manager_name}</row-form>
 							<row-form label="請求書件名" col="10">{$obj.subject}</row-form>
 							<row-form label="入金予定日" col="5">{$obj.payment_date}</row-form>

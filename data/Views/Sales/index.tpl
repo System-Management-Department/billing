@@ -86,6 +86,18 @@ class SalesClose{{/literal}
 		"明細単価",
 		"売上日"
 	];
+	static csvHeader2 = [
+		"売上日付",
+		"帳票No",
+		"顧客コード",
+		"顧客名",
+		"税抜金額",
+		"消費税",
+		"合計金額",
+		"支払期限",
+		"備考",
+		"件名"
+	];
 	constructor(db){
 		this.response = db;
 		this.isChecked = {
@@ -172,6 +184,23 @@ class SalesClose{{/literal}
 			return val;
 		}).setHeader(SalesClose.csvHeader)
 		.setFilter(data => data[6] > 0)
+		.setConverter(data => new Blob([new Uint8Array(Encoding.convert(Encoding.stringToCode(data), {to: "SJIS", from: "UNICODE"}))], {type: "text/csv"}));
+	}
+	getSerializer2(){
+		return new CSVSerializer((val, col) => {
+			if(col == 2){
+				return (typeof val === 'string') ? val.replace(/-.*$/, "") : val;
+			}
+			if(
+				(col == 4) || (col == 5) || (col == 6)){
+				const formater = new Intl.NumberFormat();
+				return (typeof val === "number") ? formater.format(Math.floor(val)) : "";
+			}
+			if(col == 7){
+				return (typeof val === "string") ? val.split("-").join("/") : val;
+			}
+			return val;
+		}).setHeader(SalesClose.csvHeader2)
 		.setConverter(data => new Blob([new Uint8Array(Encoding.convert(Encoding.stringToCode(data), {to: "SJIS", from: "UNICODE"}))], {type: "text/csv"}));
 	}
 	*export(){
@@ -597,11 +626,19 @@ Flow.start({{/literal}
 			this.close.isChecked.reset(document.querySelectorAll('#list input[type="checkbox"]'));
 			co(this.close.export());
 		}else if(e.currentTarget == document.getElementById("output")){
-			let vSerializer = this.close.getSerializer();
+			let vSerializer = this.close.getSerializer2();
 			let now = new Date();
 			let today = Intl.DateTimeFormat("ja-JP", {dateStyle: 'short'}).format(now);
 			let csvData = [];
-			let table = this.close.getQuery().apply();
+			let table = this.response.select("ALL")
+				.addTable("sales_slips")
+				.addTable("json_each(detail_each(sales_slips.detail)) as d")
+				.addField("distinct sales_slips.*")
+				.addField("json_extract(d.value, '$.amount') as total_amount")
+				.addField("json_extract(d.value, '$.amountPt') as total_amount_p")
+				.addField("json_extract(d.value, '$.amountSt') as total_amount_s")
+				.leftJoin("master.apply_clients as apply_clients on sales_slips.billing_destination=apply_clients.code")
+				.addField("apply_clients.name as client_name").apply();
 			for(let item of table){
 				let taxRate = 0.1;
 				csvData.push([
@@ -613,36 +650,8 @@ Flow.start({{/literal}
 					item.total_amount_s,
 					item.total_amount + item.total_amount_s,
 					item.payment_date,
-					item.accounting_date,
-					item.item_name,
-					item.quantity,
-					item.unit_price,
-					item.amount,
 					item.note,
-					"",
-					"",
-					"",
-					"",
-					"",
-					item.client_kana,
-					today,
-					item.total_amount + item.total_amount_s,
-					item.subject,
-					item.unit,
-					item.header1,
-					item.header2,
-					item.header3,
-					item.data1,
-					item.data2,
-					item.data3,
-					item.total_amount_p,
-					item.total_amount + item.total_amount_p,
-					(typeof item.amount === "number") ? item.amount * taxRate : "",
-					(typeof item.amount === "number") ? (item.amount + item.amount * taxRate) : "",
-					item.manager_name,
-					item.circulation,
-					item.unit_price,
-					(item.client_close == null) ? today : [now, item.client_close]
+					item.subject
 				]);
 			}
 			let blob = vSerializer.serializeToString(csvData);
@@ -695,21 +704,26 @@ Flow.start({{/literal}
 			<thead>
 				<tr>
 					<th></th>
+					<th class="w-10">仕入明細</th>
+					<th class="w-10">売上明細</th>
+					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">承認解除</th>{/if}
 					<th class="w-10">伝票番号</th>
-					<th class="w-10">取込日時</th>
+					<th class="w-10">確定日時</th>
 					<th class="w-10">件名</th>
 					<th class="w-10">クライアント名</th>
 					<th class="w-20">請求先名</th>
 					{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
 					<th class="w-20">備考</th>
-					<th class="w-10">仕入明細</th>
-					<th class="w-10">売上明細</th>
-					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">承認解除</th>{/if}
 				</tr>
 			</thead>
 			<tbody id="list">{predefine name="listItem" constructor="sales" assign="obj"}
 				<tr data-range="{$obj.id}" data-colosed="{$obj.close_processed}">
 					<td><input type="checkbox" value="{$obj.id}" checked /></td>
+					<td data-purchases="{$obj.import_purchases}"><button type="button" data-detail="1" class="btn btn-sm btn-success bx">仕入明細</button></td>
+					<td><button type="button" data-detail="2" class="btn btn-sm btn-success bx">売上明細</button></td>
+					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}
+						<td><button type="button" data-detail="3" class="btn btn-sm btn-primary bx bxs-edit">承認解除</button></td>
+					{/if}
 					<td>{$obj.slip_number}</td>
 					<td>{$obj.created}</td>
 					<td>{$obj.subject}</td>
@@ -717,11 +731,6 @@ Flow.start({{/literal}
 					<td>{$obj.apply_client_name}</td>
 					{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 					<td>{$obj.note}</td>
-					<td data-purchases="{$obj.import_purchases}"><button type="button" data-detail="1" class="btn btn-sm btn-success bx">仕入明細</button></td>
-					<td><button type="button" data-detail="2" class="btn btn-sm btn-success bx">売上明細</button></td>
-					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}
-						<td><button type="button" data-detail="3" class="btn btn-sm btn-primary bx bxs-edit">承認解除</button></td>
-					{/if}
 				</tr>
 			{/predefine}</tbody>
 		</table>
@@ -806,6 +815,7 @@ Flow.start({{/literal}
 					<div class="row gap-4 align-items-start">
 						<div class="d-table col table">
 							<row-form label="伝票番号" col="5">{$obj.slip_number}</row-form>
+							<row-form label="確定日時" col="5">{$obj.created}</row-form>
 							<row-form label="売上日付" col="5">{$obj.accounting_date}</row-form>
 							<row-form label="当社担当者" col="10">{$obj.manager_name}</row-form>
 							<row-form label="請求書件名" col="10">{$obj.subject}</row-form>

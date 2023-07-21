@@ -640,19 +640,20 @@ Flow.start({{/literal}
 			<thead>
 				<tr>
 					<th></th>
+					<th class="w-10">売上明細</th>
 					<th class="w-10">伝票番号</th>
-					<th class="w-10">取込日時</th>
+					<th class="w-10">確定日時</th>
 					<th class="w-10">件名</th>
 					<th class="w-10">クライアント名</th>
 					<th class="w-20">請求先名</th>
 					{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
 					<th class="w-20">備考</th>
-					<th class="w-10">売上明細</th>
 				</tr>
 			</thead>
 			<tbody id="list">{predefine name="listItem" constructor="sales" assign="obj"}
 				<tr data-range="{$obj.id}">
 					<td><input type="checkbox" value="{$obj.id}" checked /></td>
+					<td><button type="button" data-detail="2" class="btn btn-sm btn-success bx">売上明細</button></td>
 					<td>{$obj.slip_number}</td>
 					<td>{$obj.created}</td>
 					<td>{$obj.subject}</td>
@@ -660,7 +661,6 @@ Flow.start({{/literal}
 					<td>{$obj.apply_client_name}</td>
 					{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 					<td>{$obj.note}</td>
-					<td><button type="button" data-detail="2" class="btn btn-sm btn-success bx">売上明細</button></td>
 				</tr>
 			{/predefine}</tbody>
 		</table>
@@ -745,6 +745,7 @@ Flow.start({{/literal}
 					<div class="row gap-4 align-items-start">
 						<div class="d-table col table">
 							<row-form label="伝票番号" col="5">{$obj.slip_number}</row-form>
+							<row-form label="確定日時" col="5">{$obj.created}</row-form>
 							<row-form label="売上日付" col="5">{$obj.accounting_date}</row-form>
 							<row-form label="当社担当者" col="10">{$obj.manager_name}</row-form>
 							<row-form label="請求書件名" col="10">{$obj.subject}</row-form>
