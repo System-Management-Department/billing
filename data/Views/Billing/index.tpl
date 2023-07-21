@@ -767,8 +767,8 @@ Flow.start({{/literal}
 								<th>No</th>
 								<th>商品カテゴリー</th>
 								<th>内容（摘要）</th>
-								<th>単位</th>
 								<th>数量</th>
+								<th>単位</th>
 								<th>単価</th>
 								<th>金額</th>
 								<th class="py-0 align-middle" data-visible="v3">{$obj.header1}</th>
@@ -783,8 +783,8 @@ Flow.start({{/literal}
 								<td class="table-group-row-no align-middle"></td>
 								<td>{$sales.getName|predef_invoke:$categories[$detail[$i].category_code]}</td>
 								<td>{$detail[$i].itemName}{$detail[$i].item_name}</td>
-								<td>{$detail[$i].unit}</td>
 								<td>{$detail[$i].quantity}</td>
+								<td>{$detail[$i].unit}</td>
 								<td>{$detail[$i].unitPrice}{$detail[$i].unit_price}</td>
 								<td>{$detail[$i].amount}</td>
 								<td data-visible="v3">{$detail[$i].data1}</td>

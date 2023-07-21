@@ -97,31 +97,29 @@ Flow.start({{/literal}
 		document.querySelector('main').innerHTML = this.template.main(editValues.data);
 		this.tables.detail = new Handsontable(document.getElementById("list1"), {
 			data: editValues.detail,
-			colHeaders: ["商品カテゴリー","内容（摘要）","単位","数量","単価","金額",editValues.data.header1,editValues.data.header2,editValues.data.header3,"発行部数"],
 			columns: [
-				{data: "category", type: "autocomplete", source: Flow.Master.select("COL").setTable("categories").setField("name").apply(), strict: true},
-				{data: "item_name"},
-				{data: "unit"},
-				{data: "quantity", type: "numeric"},
-				{data: "unit_price", type: "numeric"},
-				{data: "amount", type: "numeric"},
-				{data: "data1"},
-				{data: "data2"},
-				{data: "data3"},
-				{data: "circulation", type: "numeric"}
+				{title: "商品カテゴリー",        data: "category",    type: "autocomplete", source: Flow.Master.select("COL").setTable("categories").setField("name").apply(), strict: true},
+				{title: "内容（摘要）",          data: "item_name"},
+				{title: "数量",                  data: "quantity",    type: "numeric"},
+				{title: "単位",                  data: "unit"},
+				{title: "単価",                  data: "unit_price",  type: "numeric"},
+				{title: "金額",                  data: "amount",      type: "numeric"},
+				{title: editValues.data.header1, data: "data1"},
+				{title: editValues.data.header2, data: "data2"},
+				{title: editValues.data.header3, data: "data3"},
+				{title: "発行部数",              data: "circulation", type: "numeric"}
 			]
 		});
 		this.tables.purchases = new Handsontable(document.getElementById("list2"), {
 			data: editValues.detail2,
-			colHeaders: ["内容（摘要）","単位","数量","単価","金額","仕入先","支払日"],
 			columns: [
-				{data: "subject"},
-				{data: "unit"},
-				{data: "quantity", type: "numeric"},
-				{data: "unit_price", type: "numeric"},
-				{data: "amount", type: "numeric"},
-				{data: "supplier"},
-				{data: "payment_date", type: "date", dateFormat: 'YYYY-MM-DD'}
+				{title: "内容（摘要）", data: "subject"},
+				{title: "数量",         data: "quantity",     type: "numeric"},
+				{title: "単位",         data: "unit"},
+				{title: "単価",         data: "unit_price",   type: "numeric"},
+				{title: "金額",         data: "amount",       type: "numeric"},
+				{title: "仕入先",       data: "supplier"},
+				{title: "支払日",       data: "payment_date", type: "date", dateFormat: 'YYYY-MM-DD'}
 			]
 		});
 		

@@ -25,8 +25,8 @@
 			<option value="{$categories[$j].code}">{$categories[$j].name}</option>
 		{/predef_repeat}</select></td>
 		<td>{$detail[$i][0]}</td>
-		<td>{$detail[$i][2]}</td>
 		<td>{$detail[$i][1]}</td>
+		<td>{$detail[$i][2]}</td>
 		<td>{$detail[$i][3]}</td>
 		<td>{$detail[$i][4]}</td>
 		<td data-visible="v3">{$detail[$i][6]}</td>
@@ -39,8 +39,8 @@
 	<tr>
 		<td class="table-group-row-no align-middle"></td>
 		<td>{$detail[$i][0]}</td>
-		<td>{$detail[$i][2]}</td>
 		<td>{$detail[$i][1]}</td>
+		<td>{$detail[$i][2]}</td>
 		<td>{$detail[$i][3]}</td>
 		<td>{$detail[$i][4]}</td>
 		<td><input type="text" name="supplier[]" class="form-control form-control-sm" /></td>
@@ -330,8 +330,8 @@ Flow.start({{/literal}
 					<th>No</th>
 					<th>商品カテゴリー</th>
 					<th>内容（摘要）</th>
-					<th>単位</th>
 					<th>数量</th>
+					<th>単位</th>
 					<th>単価</th>
 					<th>金額</th>
 					<th id="header1" data-visible="v3"></th>
@@ -350,8 +350,8 @@ Flow.start({{/literal}
 				<tr>
 					<th>No</th>
 					<th>内容</th>
-					<th>単位</th>
 					<th>数量</th>
+					<th>単位</th>
 					<th>単価</th>
 					<th>金額</th>
 					<th>仕入先</th>
