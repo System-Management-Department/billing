@@ -26,10 +26,10 @@
 			<div class="card-header">見積書フォーム選択</div>
 			<div class="card-body d-flex flex-column gap-3">
 				{foreach from=[]|invoiceFormat item="format" key="key"}
-				<div class="d-flex gap-3">
+				<a href="/form.html" class="d-flex gap-3">
 					<div style="width:120px;height:40px;line-height:40px;text-align:center;color:white;background:#008db5;">見積書{$key}</div>
 					<div class="flex-grow-1 text-center">{$format}</div>
-				</div>
+				</a>
 				{/foreach}
 			</div>
 		</div>

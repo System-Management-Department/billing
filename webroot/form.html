@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja" class="h-100">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+<link rel="icon" href="/assets/common/image/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="/assets/bootstrap/css/bootstrap.min.css" />
+<link rel="stylesheet" type="text/css" href="/assets/bootstrap/font/bootstrap-icons.css" />
+<link rel="stylesheet" type="text/css" href="/assets/boxicons/css/boxicons.min.css" />
+<link rel="stylesheet" type="text/css" href="/assets/common/layout.css" />
+<script type="text/javascript">
+class FormParts{
+	constructor(){
+	}
+	get header(){
+		return `<header class="flex-column">
+	<div class="text-end"><span data-type="date" data-name="">1970年 1月 1日</span></div>
+	<h1 class="text-center">御見積書</h1>
+	<div class="client"><span data-type="text" data-name="client">クライアント名</span></div>
+	<div class="flex-row flex-end"><div>
+		<div class="co">株式会社ダイレクト・ホールディングス</div>
+		<div class="me-2">
+			<div>担当者：<span data-type="text" data-name="">担当者名</span>・<span data-type="text" data-name="">担当者名</span></div>
+			<div>〒163-1439</div>
+			<div>東京都新宿区西新宿3丁目20番2号</div>
+			<div>東京オペラシティタワー39階</div>
+			<div>TEL：03-6416-4822</div>
+		</div>
+	</div></div>
+</header>`;
+	}
+	get subject(){
+		return `<div class="flex-row gap-1">
+	<div>件名</div>
+	<div><span data-type="text" data-name="subject">件名</span></div>
+</div>`;
+	}
+	get specification(){
+		return `<div>
+	<div class="border-xs border-ts border-bs">仕様</div>
+	<div class="border-xs border-bd"><span data-type="text" data-name="">仕様1</span></div>
+	<div class="border-xs border-bs"><span data-type="text" data-name="">仕様2</span></div>
+</div>`;
+	}
+	get note(){
+		return `<div class="grow-1 flex-column">
+	<div>備考</div>
+	<div class="grow-1 border-2"><span data-type="textarea" data-name="">text text text text text text text text text text text text text text<br />text text text text text text text text text</span></div>
+</div>`;
+	}
+	get detailTable(){
+		const type = 1;
+		const target = FormParts.detail[type];
+		let colgroup = [];
+		let theadRow = [];
+		let tbodyRow = [];
+		let tbody = new Array(target.rows);
+		let i = 1;
+		for(let data of target.data){
+			colgroup.push(`<col class="tw${i}" />`);
+			theadRow.push(data.th);
+			tbodyRow.push(data.td);
+			i++;
+		}
+		return `<table data-detail="${type}">
+	<colgroup>${colgroup.join("")}</colgroup>
+	<thead><tr>${theadRow.join("")}</tr></thead>
+	<tfoot>${target.foot.join("")}</tfoot>
+	<tbody>${tbody.fill(`<tr>${tbodyRow.join("")}</tr>`).join("")}</tbody>
+</table>`;
+	}
+	static detail = {
+		[1]: {
+			rows: 32,
+			data: [
+				{th: '<th>摘要</th>', td: '<td>DATA</td>', data: "a"},
+				{th: '<th>数量</th>', td: '<td class="text-end">0,000.00</td>', data: "b"},
+				{th: '<th>単位</th>', td: '<td>DATA</td>', data: "c"},
+				{th: '<th>単価</th>', td: '<td class="text-end">0,000.00</td>', data: "d"},
+				{th: '<th>金額</th>', td: '<td class="text-end">0,000,000</td>', data: "e"},
+			],
+			foot: [
+				'<tr><td colspan="4">上記計</td><td class="text-end">0,000,000</td></tr>',
+				'<tr><td colspan="4">消費税（10％）</td><td class="text-end">0,000,000</td></tr>',
+				'<tr><td colspan="4">合計</td><td class="text-end">0,000,000</td></tr>'
+			]
+		}
+	};
+	static style = URL.createObjectURL(new Blob([`:root{
+	background:lightgray;
+	--rate: calc(100 / 72);
+	--rem: calc(11px * var(--rate));
+	font-size: var(--rem);
+}
+article,body{
+	width: 827px;
+	height: 1169px;
+	margin: 10px auto;
+	padding: calc(50px * var(--rate));
+	box-sizing: border-box;
+	background: white;
+	font-size: calc(0.6 * var(--rem));
+	font-family: serif;
+}
+h1,h2{
+	margin: 0;
+	padding: 0;
+	font-size: calc(1.8 * var(--rem));
+	text-decoration: underline;
+}
+table{
+	border-collapse: collapse;
+}
+th,td{
+	border-left: calc(1px * var(--rate)) solid black;
+	border-right: calc(1px * var(--rate)) solid black;
+	padding: calc(0.05 * var(--rem)) calc(0.3 * var(--rem));
+}
+th:first-child,td:first-child{
+	border-left: calc(1.5px * var(--rate)) solid black;
+}
+th:last-child,td:last-child{
+	border-right: calc(1.5px * var(--rate)) solid black;
+}
+thead th{
+	border-top: calc(1.5px * var(--rate)) solid black;
+	border-bottom: calc(1px * var(--rate)) solid black;
+}
+tfoot td,tbody td{
+	border-bottom: calc(1px * var(--rate)) dashed black;
+}
+tfoot tr:first-child td{
+	border-top: calc(1.5px * var(--rate)) solid black;
+}
+tfoot tr:last-child td{
+	border-bottom: calc(1.5px * var(--rate)) solid black;
+}
+.h-100{
+	height: 100%;
+}
+.w-100{
+	width: 100%;
+}
+.flex-column{
+	display: flex;
+	flex-direction: column;
+}
+.flex-row{
+	display: flex;
+	flex-direction: row;
+}
+.flex-end::before{
+	content: "";
+	flex-grow: 1;
+}
+.gap-1{
+	gap: calc(0.8 * var(--rem));
+}
+.grow-1{
+	flex-grow: 1;
+}
+.text-end{
+	text-align: right;
+}
+.text-center{
+	text-align: center;
+}
+.client{
+	text-decoration: underline;
+	font-size: calc(0.8 * var(--rem));
+}
+.client::after{
+	content: "御中";
+}
+.co{
+	font-size: calc(0.9 * var(--rem));
+}
+.me-2{
+	margin-left: calc(2 * var(--rem));
+}
+.price{
+	text-decoration: underline;
+}
+.price::before{
+	content: "\\";
+}
+.price::after{
+	content: "-";
+}
+.border-xs{
+	border-left: calc(1px * var(--rate)) solid black;
+	border-right: calc(1px * var(--rate)) solid black;
+}
+.border-ts{
+	border-top: calc(1px * var(--rate)) solid black;
+}
+.border-bs{
+	border-bottom: calc(1px * var(--rate)) solid black;
+}
+.border-bd{
+	border-bottom: calc(1px * var(--rate)) dashed black;
+}
+.border-2{
+	border: calc(1.5px * var(--rate)) solid black;
+}
+.tw1{
+	width: 55%;
+}
+.tw2{
+	width: 11%;
+}
+.tw3{
+	width: 8%;
+}
+.tw4{
+	width: 11%;
+}
+.tw5{
+	width: 15%;
+}`], {type: "text/css"}));
+}
+class DetailOptions{
+	#initial;
+	constructor(table){
+		const height = table.clientHeight;
+		const thElements = table.querySelectorAll('th');
+		const n = thElements.length;
+		let columns = [];
+		for(let i = 0; i < n; i++){
+			const th = thElements[i];
+			columns.push({
+				title: th.textContent,
+				width: th.clientWidth,
+				data: FormParts.detail[table.getAttribute("data-detail")].data[i].data
+			});
+		}
+		console.log(columns);
+		this.#initial = JSON.stringify({
+			data: new Array(FormParts.detail[table.getAttribute("data-detail")].rows).fill(null).map(e => {return {}}),
+			columns: columns,
+			height: height
+		});
+		const iframe = document.createElement("iframe");
+		const sq = DetailOptions.search++;
+		DetailOptions.messageMap[`?${sq}`] = this;
+		iframe.setAttribute("src", `handsontable.html?${sq}`);
+		Object.assign(iframe.style, {
+			display: "block",
+			margin: "0",
+			padding: "0",
+			height: `${height}px`,
+			border: "none"
+		});
+		table.parentNode.replaceChild(iframe, table);
+	}
+	setPort(e){
+		this.port = e.ports[0];
+		this.port.addEventListener("message", this);
+		this.port.start();
+		this.port.postMessage(this.#initial);
+	}
+	static search = 0;
+	static messageMap = {};
+}
+addEventListener("message", function(e){
+	if(e.data in DetailOptions.messageMap){
+		DetailOptions.messageMap[e.data].setPort(e);
+	}
+});
+
+document.addEventListener("DOMContentLoaded", function(e){
+const root = document.querySelector("main").attachShadow({mode: "closed"});
+const fp = new FormParts();
+const link = document.createElement("link");
+link.setAttribute("rel", "stylesheet");
+link.setAttribute("type", "text/css");
+link.setAttribute("href", FormParts.style);
+root.appendChild(link);
+link.insertAdjacentHTML("afterend", '<link href="https://cdn.jsdelivr.net/npm/handsontable@6.2.2/dist/handsontable.full.min.css" rel="stylesheet" media="screen" /><slot name="tool"></slot>');
+
+let article = document.createElement("article");
+article.style.setProperty("--rate", "calc(100 / 72)");
+article.style.setProperty("--rem", "calc(11px * var(--rate))");
+let section = Object.assign(document.createElement("section"), {className: "flex-column gap-1 h-100"});
+article.appendChild(section);
+root.appendChild(article);
+section.insertAdjacentHTML("beforeend", fp.header);
+section.insertAdjacentHTML("beforeend", fp.subject);
+section.insertAdjacentHTML("beforeend", fp.specification);
+section.insertAdjacentHTML("beforeend", fp.detailTable);
+section.insertAdjacentHTML("beforeend", fp.note);
+let spanElements = section.querySelectorAll('[data-name]');
+for(let i = spanElements.length - 1; i >= 0; i--){
+	const input = document.createElement("input");
+	spanElements[i].parentNode.replaceChild(input, spanElements[i]);
+}
+setTimeout(() => {
+	new DetailOptions(section.querySelector('[data-detail]'));
+}, 0);
+
+
+});
+</script>
+</head>
+<body class="bg-light h-100">
+	<div class="flex-grow-1 overflow-auto d-flex h-100 w-100 flex-column gap-3">
+		<header class="sticky-top start-0">
+			<nav class="navbar ps-4 py-2 bg-white border-bottom border-success border-2 shadow-sm">
+				<div class="container-fluid gap-2">
+					<div class="navbar-brand flex-grow-1">
+						<span class="navbar-text text-dark">見積書登録</span>
+					</div>
+				</div>
+			</nav>
+			<nav class="d-flex align-items-center bg-white shadow-sm">
+				<div class="px-3"><a class="btn btn-success my-2" href="/">メインメニュー</a></div>
+			</nav>
+		</header>
+		<main>
+			<div slot="tool">
+				<button type="button" class="btn btn-info">見積書出力</button>
+				<button type="button" class="btn btn-info">見積データ出力</button>
+				<input type="file" class="btn btn-info" />
+				<button type="button" class="btn btn-info">確定</button>
+			</div>
+			
+		</main>
+	</div>
+</body>
+</html>
