@@ -41,14 +41,14 @@
 		</div>
 	</div>
 	<div class="container border border-secondary rounded p-4 mb-5 bg-white">
-		<div>明細</div>
+		<div>見積明細</div>
 		<input type="hidden" name="header1" value="{$obj.header1}" />
 		<input type="hidden" name="header2" value="{$obj.header2}" />
 		<input type="hidden" name="header3" value="{$obj.header3}" />
 		<div id="list1"></div>
 	</div>
 	<div class="container border border-secondary rounded p-4 mb-5 bg-white">
-		<div>仕入</div>
+		<div>仕入明細</div>
 		<div id="list2"></div>
 	</div>
 	<div class="d-flex p-0 mx-5 gap-5">
@@ -94,22 +94,62 @@ Flow.start({{/literal}
 				editValues.detail[i].category = "";
 			}
 		}
-		document.querySelector('main').innerHTML = this.template.main(editValues.data);
-		this.tables.detail = new Handsontable(document.getElementById("list1"), {
-			data: editValues.detail,
-			columns: [
-				{title: "商品カテゴリー",        data: "category",    type: "autocomplete", source: Flow.Master.select("COL").setTable("categories").setField("name").apply(), strict: true},
-				{title: "内容（摘要）",          data: "item_name"},
-				{title: "数量",                  data: "quantity",    type: "numeric"},
-				{title: "単位",                  data: "unit"},
-				{title: "単価",                  data: "unit_price",  type: "numeric"},
-				{title: "金額",                  data: "amount",      type: "numeric"},
-				{title: editValues.data.header1, data: "data1"},
-				{title: editValues.data.header2, data: "data2"},
-				{title: editValues.data.header3, data: "data3"},
-				{title: "発行部数",              data: "circulation", type: "numeric"}
-			]
+		
+class DetailTable{
+	#data; #headers; #categories; #bind; #filter;
+	constructor(data, headers, filter){
+		this.#data = data;
+		this.#headers = headers.map(a => a == "" ? "[摘要]" : a);
+		this.#categories = Flow.Master.select("COL").setTable("categories").setField("name").apply();
+		this.#bind = null;
+		this.#filter = filter;
+		Object.defineProperty(this, "data", {
+			enumerable: true,
+			get: this.#$data
 		});
+		Object.defineProperty(this, "columns", {
+			enumerable: true,
+			get: this.#$columns
+		});
+	}
+	handleEvent(e){
+		if(this.#bind != null){
+			this.#filter = e.target.value;
+			this.#bind.updateSettings({columns: this.columns});
+		}
+	}
+	set bind(value){
+		this.#bind = value;
+	}
+	#$data(){
+		return this.#data;
+	}
+	#$columns(){
+		let res = [
+			{title: "商品カテゴリー", data: "category",    type: "autocomplete", source: this.#categories, strict: true},
+			{title: "摘要",           data: "item_name"},
+			{title: "数量",           data: "quantity",    type: "numeric"},
+			{title: "単位",           data: "unit"},
+			{title: "単価",           data: "unit_price",  type: "numeric"},
+			{title: "金額",           data: "amount",      type: "numeric"},
+		];
+		if(this.#filter == "3"){
+			res.push(
+				{title: this.#headers[0], data: "data1"},
+				{title: this.#headers[1], data: "data2"},
+				{title: this.#headers[2], data: "data3"}
+			);
+		}
+		if(this.#filter == "2"){
+			res.push({title: "発行部数",       data: "circulation", type: "numeric"});
+		}
+		return res;
+	}
+}
+		document.querySelector('main').innerHTML = this.template.main(editValues.data);
+		let detailOptions = new DetailTable(editValues.detail, [editValues.data.header1, editValues.data.header2, editValues.data.header3], document.querySelector('[name="invoice_format"]').value);
+		detailOptions.bind = this.tables.detail = new Handsontable(document.getElementById("list1"), detailOptions);
+		document.querySelector('[name="invoice_format"]').addEventListener("change", detailOptions);
 		this.tables.purchases = new Handsontable(document.getElementById("list2"), {
 			data: editValues.detail2,
 			columns: [

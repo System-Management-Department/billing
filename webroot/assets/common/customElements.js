@@ -183,6 +183,7 @@ class RowFormElement extends HTMLElement{
 		}
 		this.#root = this.attachShadow({mode: "closed"});
 		this.#root.appendChild(this.#fragment);
+		this.#root.addEventListener("change", e => { this.dispatchEvent(new CustomEvent(e.type)); });
 	}
 	set value(v){
 		this.#input.value = v;
