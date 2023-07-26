@@ -66,6 +66,16 @@
 					</div></td>
 						<td><a class="btn btn-info" href="/x-reports/billing/">請求一覧表フォルダ</a></td>
 					</tr>
+					<tr class="table-danger">
+						<td><a href="{url controller="Purchase" action="index"}" class="btn btn-info">仕入一覧表</a></td>
+						<td><div class="flex-grow-1 text-center">
+						<div>仕入情報の確認</div>
+						<div>仕入情報の追記・登録</div>
+						<div>請求書受領確認</div>
+						<div>仕入一覧表の印刷</div>
+					</div></td>
+						<td><a class="btn btn-info" href="/x-reports/purchase/">仕入一覧表フォルダ</a></td>
+					</tr>
 				</tbody></table>
 			</div>
 		</div>

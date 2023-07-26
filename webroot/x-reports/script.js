@@ -23,6 +23,9 @@ document.addEventListener("DOMContentLoaded", function(e){
 	}else if((pos = location.pathname.indexOf("/x-reports/billing/")) >= 0){
 		pos += 18;
 		name = "請求一覧表フォルダ";
+	}else if((pos = location.pathname.indexOf("/x-reports/purchase/")) >= 0){
+		pos += 19;
+		name = "仕入一覧表フォルダ";
 	}
 	document.body.innerHTML = "";
 	fetch("/x-reports/header.html").then(res => res.text()).then(html => {
