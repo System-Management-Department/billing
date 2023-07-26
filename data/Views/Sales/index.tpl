@@ -360,6 +360,18 @@ Flow.start({{/literal}
 			},
 			date(datetime){
 				return datetime.split(" ")[0];
+			},
+			numberFormat(value){
+				if(typeof value === "number"){
+					return new Intl.NumberFormat().format(Math.round(value));
+				}
+				return value;
+			},
+			numberFormat2(value){
+				if(typeof value === "number"){
+					return new Intl.NumberFormat().format(Math.round(value)) + value.toFixed(2).slice(-3);
+				}
+				return value;
 			}
 		}, categories);
 		
@@ -853,14 +865,14 @@ Flow.start({{/literal}
 								<td class="table-group-row-no align-middle"></td>
 								<td>{$sales.getName|predef_invoke:$categories[$detail[$i].category_code]}</td>
 								<td>{$detail[$i].itemName}{$detail[$i].item_name}</td>
-								<td>{$detail[$i].quantity}</td>
+								<td class="text-end">{$sales.numberFormat2|predef_invoke:$detail[$i].quantity}</td>
 								<td>{$detail[$i].unit}</td>
-								<td>{$detail[$i].unitPrice}{$detail[$i].unit_price}</td>
-								<td>{$detail[$i].amount}</td>
+								<td class="text-end">{$sales.numberFormat2|predef_invoke:$detail[$i].unit_price}</td>
+								<td class="text-end">{$sales.numberFormat|predef_invoke:$detail[$i].amount}</td>
 								<td data-visible="v3">{$detail[$i].data1}</td>
 								<td data-visible="v3">{$detail[$i].data2}</td>
 								<td data-visible="v3">{$detail[$i].data3}</td>
-								<td data-visible="v2">{$detail[$i].circulation}</td>
+								<td class="text-end" data-visible="v2">{$sales.numberFormat|predef_invoke:$detail[$i].circulation}</td>
 							</tr>
 							{/predef_repeat}
 						</tbody>
@@ -882,7 +894,7 @@ Flow.start({{/literal}
 							<tr>
 								<td class="table-group-row-no align-middle"></td>
 								<td>{$detail2[$i].subject}</td>
-								<td>{$detail2[$i].amount}</td>
+								<td class="text-end">{$sales.numberFormat|predef_invoke:$detail2[$i].amount}</td>
 								<td>{$detail2[$i].payment_date}</td>
 							</tr>
 							{/predef_repeat}
