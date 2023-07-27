@@ -95,16 +95,6 @@ Flow.start({{/literal}
 			option.setAttribute("value", division.code);
 			datalist.appendChild(option);
 		}
-		datalist = document.getElementById("team");
-		mastarData = Flow.Master.select("ALL")
-			.addTable("teams")
-			.addField("code,name")
-			.apply();
-		for(let team of mastarData){
-			let option = Object.assign(document.createElement("option"), {textContent: team.name});
-			option.setAttribute("value", team.code);
-			datalist.appendChild(option);
-		}
 		
 		// ダイアログ初期化
 		const managerModal = new bootstrap.Modal(document.getElementById("managerModal"));
@@ -141,7 +131,7 @@ Flow.start({{/literal}
 		const applyClientSearch = Object.assign(document.createElement("modal-select"), {
 			getTitle: code => {
 				const value = Flow.Master.select("ONE")
-					.addTable("apply_clients")
+					.addTable("system_apply_clients")
 					.addField("name")
 					.andWhere("code=?", code)
 					.apply();
@@ -149,7 +139,7 @@ Flow.start({{/literal}
 			},
 			searchKeyword: keyword => {
 				const table = Flow.Master.select("ALL")
-					.setTable("apply_clients")
+					.setTable("system_apply_clients as apply_clients")
 					.addField("apply_clients.*")
 					.leftJoin("clients on apply_clients.client=clients.code")
 					.addField("clients.name as client_name")
@@ -282,7 +272,7 @@ Flow.start({{/literal}
 			.addField("sales_slips.*")
 			.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
 			.addField("managers.name AS manager_name")
-			.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
+			.leftJoin("master.system_apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
 			.addField("apply_clients.name AS apply_client_name");
 	},
 	handleEvent(e){
@@ -296,7 +286,7 @@ Flow.start({{/literal}
 					.andWhere("sales_slips.id=?", id)
 					.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
 					.addField("managers.name AS manager_name")
-					.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
+					.leftJoin("master.system_apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
 					.addField("apply_clients.name AS apply_client_name")
 					.apply();
 				let values = JSON.parse(data.detail);
@@ -329,7 +319,7 @@ Flow.start({{/literal}
 					.andWhere("sales_slips.id=?", id)
 					.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code")
 					.addField("managers.name AS manager_name")
-					.leftJoin("master.apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
+					.leftJoin("master.system_apply_clients AS apply_clients ON sales_slips.billing_destination=apply_clients.code")
 					.addField("apply_clients.name AS apply_client_name")
 					.apply();
 				let values = JSON.parse(data.detail);
@@ -379,7 +369,6 @@ Flow.start({{/literal}
 	<option value="{$value}">{$text}</option>
 {/foreach}</datalist>
 <datalist id="division"><option value="">選択</option></datalist>
-<datalist id="team"><option value="">選択</option></datalist>
 <form method="POST" action="{url}" class="card position-sticky mx-5">
 	<label id="search-header" class="card-header"><input type="checkbox" class="d-contents" />仕入一覧検索</label>
 	<fieldset class="card-body row" disabled>

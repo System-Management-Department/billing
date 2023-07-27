@@ -88,7 +88,7 @@ Flow.start({{/literal}
 		const applyClientSearch = Object.assign(document.createElement("modal-select"), {
 			getTitle: code => {
 				const value = Flow.Master.select("ONE")
-					.addTable("apply_clients")
+					.addTable("system_apply_clients")
 					.addField("name")
 					.andWhere("code=?", code)
 					.apply();
@@ -96,7 +96,7 @@ Flow.start({{/literal}
 			},
 			searchKeyword: keyword => {
 				const table = Flow.Master.select("ALL")
-					.setTable("apply_clients")
+					.setTable("system_apply_clients as apply_clients")
 					.addField("apply_clients.*")
 					.leftJoin("clients on apply_clients.client=clients.code")
 					.addField("clients.name as client_name")
