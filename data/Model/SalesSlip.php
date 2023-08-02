@@ -41,14 +41,14 @@ class SalesSlip{
 		登録・更新共通の検証
 	*/
 	public static function validate($check, $masterData, $db){
-		$check["division"]->required("部門を入力してください。")
-			->range("部門を正しく入力してください。", "in", ($db->select("COL")->setTable("divisions")->setField("code"))());
-		$check["team"] //->required("チームを入力してください。")
-			->range("チームを正しく入力してください。", "in", ($db->select("COL")->setTable("teams")->setField("code"))());
-		$check["manager"]->required("当社担当者を入力してください。")
-			->range("当社担当者を正しく入力してください。", "in", ($db->select("COL")->setTable("managers")->setField("code"))());
-		$check["billing_destination"]->required("請求先を入力してください。")
-			->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
+		$check["division"]->required("部門を入力してください。");
+			//->range("部門を正しく入力してください。", "in", ($db->select("COL")->setTable("divisions")->setField("code"))());
+		//$check["team"]->required("チームを入力してください。")
+			//->range("チームを正しく入力してください。", "in", ($db->select("COL")->setTable("teams")->setField("code"))());
+		$check["manager"]->required("当社担当者を入力してください。");
+			//->range("当社担当者を正しく入力してください。", "in", ($db->select("COL")->setTable("managers")->setField("code"))());
+		$check["billing_destination"]->required("請求先を入力してください。");
+			//->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
 		$check["delivery_destination"]->required("納品先を入力してください。")
 			->length("納品先は80文字以下で入力してください。", null, 255);
 		//$check["sales_tax_calculation"]->required("税処理を入力してください。")
@@ -419,8 +419,8 @@ class SalesSlip{
 	public static function checkInsert3($db, $q, $masterData, $context){
 		$check = new Validator();
 		self::validate2($check, $masterData, $db);
-		$check["billing_destination"]->required("請求先を入力してください。")
-			->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
+		$check["billing_destination"]->required("請求先を入力してください。");
+			//->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
 		$result = $check($q);
 		return $result;
 	}
@@ -429,8 +429,8 @@ class SalesSlip{
 		$id = $context->id;
 		$check = new Validator();
 		self::validate2($check, $masterData, $db);
-		$check["billing_destination"]->required("請求先を入力してください。")
-			->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
+		$check["billing_destination"]->required("請求先を入力してください。");
+			//->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
 		$result = $check($q);
 		return $result;
 	}
