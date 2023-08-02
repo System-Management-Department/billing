@@ -323,7 +323,7 @@ class RowFormElement extends HTMLElement{
 customElements.define("row-form", RowFormElement);
 
 class ModalSelectElement extends HTMLElement{
-	#value; #root; #elements; #fragment; #callback; #view; #observer;
+	#value; #root; #elements; #fragment; #callback; #observer;
 	constructor(){
 		super();
 		this.#value = "";
@@ -335,12 +335,11 @@ class ModalSelectElement extends HTMLElement{
 			r: document.createElement("button")
 		};
 		this.#fragment = document.createDocumentFragment();
-		this.#fragment.appendChild(this.#elements.d);
-		this.#fragment.appendChild(this.#elements.r);
 		this.#elements.i.setAttribute("id", "i");
 		this.#elements.s.setAttribute("id", "s");
 		this.#elements.d.setAttribute("id", "d");
 		this.#elements.r.setAttribute("id", "r");
+		this.#elements.d.setAttribute("class", "empty");
 		this.#elements.s.setAttribute("type", "button");
 		this.#elements.s.textContent = "検索";
 		this.#elements.r.setAttribute("type", "button");
@@ -351,7 +350,6 @@ class ModalSelectElement extends HTMLElement{
 			getTitle: null,
 			resetValue: null
 		};
-		this.#view = null;
 		this.#observer = new MutationObserver((mutationsList, observer) => {
 			for(let record of mutationsList){
 				if(record.type == "attributes"){
@@ -373,11 +371,9 @@ class ModalSelectElement extends HTMLElement{
 			}
 		}else if(name == "invalid"){
 			if(newValue == null){
-				this.#elements.i.removeAttribute("class");
-				this.#elements.d.removeAttribute("class");
+				this.#elements.d.classList.add("invalid");
 			}else{
-				this.#elements.i.setAttribute("class", "invalid");
-				this.#elements.d.setAttribute("class", "invalid");
+				this.#elements.d.classList.add("invalid");
 			}
 		}
 	}
@@ -389,10 +385,21 @@ class ModalSelectElement extends HTMLElement{
 		this.#elements.i.addEventListener("change", this);
 		this.#elements.s.addEventListener("click", this);
 		this.#elements.r.addEventListener("click", this);
+		const sourceArea = Object.assign(document.createElement("div"), {className: "a"});
+		const resultArea = Object.assign(document.createElement("div"), {className: "a"});
+		const sourceContainer = Object.assign(document.createElement("div"), {className: "c"});
+		const resultContainer = Object.assign(document.createElement("div"), {className: "c"});
+		sourceContainer.appendChild(this.#elements.i);
+		sourceContainer.appendChild(this.#elements.s);
+		sourceArea.appendChild(Object.assign(document.createElement("div"), {textContent: "検索"}));
+		sourceArea.appendChild(sourceContainer);
+		resultContainer.appendChild(this.#elements.d);
+		resultContainer.appendChild(this.#elements.r);
+		sourceArea.appendChild(Object.assign(document.createElement("div"), {textContent: "結果"}));
+		resultArea.appendChild(resultContainer);
 		this.#root.appendChild(link);
-		this.#root.appendChild(this.#elements.i);
-		this.#root.appendChild(this.#elements.s);
-		this.#view = 1;
+		this.#root.appendChild(sourceArea);
+		this.#root.appendChild(resultArea);
 	}
 	handleEvent(e){
 		if(e.type == "change"){
@@ -405,16 +412,7 @@ class ModalSelectElement extends HTMLElement{
 					this.#callback.showModal();
 				}
 			}else if(e.currentTarget == this.#elements.r){
-				if(this.#view == 2){
-					this.#view = 1;
-					this.#elements.d.textContent = "";
-					const range = document.createRange();
-					range.selectNodeContents(this.#root);
-					range.setStart(this.#root, 1);
-					const flagment = range.extractContents();
-					range.insertNode(this.#fragment);
-					this.#fragment = flagment;
-				}
+				this.#elements.d.textContent = "";
 				if(this.#callback.resetValue != null){
 					this.#callback.resetValue();
 				}
@@ -423,26 +421,18 @@ class ModalSelectElement extends HTMLElement{
 	}
 	showTitle(title){
 		if(title == null){
-			if(this.#view == 2){
-				this.#view = 1;
-				this.#elements.d.textContent = "";
-				const range = document.createRange();
-				range.selectNodeContents(this.#root);
-				range.setStart(this.#root, 1);
-				const flagment = range.extractContents();
-				range.insertNode(this.#fragment);
-				this.#fragment = flagment;
+			this.#elements.d.textContent = "";
+			if(this.#value == ""){
+				this.#elements.d.classList.add("empty");
+			}else{
+				this.#elements.d.classList.remove("empty");
 			}
 		}else{
 			this.#elements.d.textContent = title;
-			if(this.#view == 1){
-				this.#view = 2;
-				const range = document.createRange();
-				range.selectNodeContents(this.#root);
-				range.setStart(this.#root, 1);
-				const flagment = range.extractContents();
-				range.insertNode(this.#fragment);
-				this.#fragment = flagment;
+			if(title == "" && this.#value == ""){
+				this.#elements.d.classList.add("empty");
+			}else{
+				this.#elements.d.classList.remove("empty");
 			}
 		}
 	}
@@ -494,6 +484,15 @@ class ModalSelectElement extends HTMLElement{
 	}
 	static observedAttributes = ["placeholder", "invalid"];
 	static styleSheet = URL.createObjectURL(new Blob([`
+		.a{
+			display: contents;
+		}
+		.c{
+			display: flex;
+		}
+		.c:has(#i){
+			margin-bottom: 0.5rem;
+		}
 		#i, #d{
 			display: block;
 			flex-grow: 1;
@@ -513,7 +512,11 @@ class ModalSelectElement extends HTMLElement{
 			margin: 0;
 			font-family: inherit;
 		}
-		.invalid#i, .invalid#d{
+		#d.empty::before{
+			content: "選択";
+			color: #777777;
+		}
+		.invalid#d{
 			border-color: #dc3545;
 			padding-right: calc(1.5em + 0.75rem);
 			background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
@@ -527,10 +530,6 @@ class ModalSelectElement extends HTMLElement{
 			border-color: #86b7fe;
 			outline: 0;
 			box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
-		}
-		.invalid#i:focus{
-			border-color: #dc3545;
-			box-shadow: 0 0 0 0.25rem rgba(220,53,69,.25);
 		}
 		#s,#r{
 			display: block;
