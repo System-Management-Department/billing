@@ -400,6 +400,7 @@ Flow.start({{/literal}
 		<table class="table bg-white table_sticky_list" data-scroll-y="list">
 			<thead>
 				<tr>
+					<th>売上追加修正</th>
 					<th class="w-10">仕入明細</th>
 					<th class="w-10">売上明細</th>
 					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}<th class="w-10">確認承認</th>{/if}
@@ -410,11 +411,11 @@ Flow.start({{/literal}
 					<th class="w-20">請求先名</th>
 					{if $smarty.session["User.role"] ne "manager"}<th class="w-10">担当者名</th>{/if}
 					<th class="w-20">備考</th>
-					<th>売上追加修正</th>
 				</tr>
 			</thead>
 			<tbody id="list">{predefine name="listItem" constructor="sales" assign="obj"}
 				<tr data-range="{$obj.id}">
+					<td><a href="{url action="edit"}" class="btn btn-sm btn-info bx bxs-edit">追加修正</a></td>
 					<td data-purchases="{$obj.import_purchases}"><button type="button" data-detail="1" class="btn btn-sm btn-success bx">仕入明細</button></td>
 					<td><button type="button" data-detail="2" class="btn btn-sm btn-success bx">売上明細</button></td>
 					{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}
@@ -427,7 +428,6 @@ Flow.start({{/literal}
 					<td>{$obj.apply_client_name}</td>
 					{if $smarty.session["User.role"] ne "manager"}<td>{$obj.manager_name}</td>{/if}
 					<td>{$obj.note}</td>
-					<td><a href="{url action="edit"}" class="btn btn-sm btn-info bx bxs-edit">追加修正</a></td>
 				</tr>
 			{/predefine}</tbody>
 		</table>
