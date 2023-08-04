@@ -609,13 +609,17 @@ Flow.start({{/literal}
 <datalist id="division"><option value="">選択</option></datalist>
 <form method="POST" action="{url}" class="card position-sticky mx-5">
 	<label id="search-header" class="card-header"><input type="checkbox" class="d-contents" />請求一覧検索</label>
-	<fieldset class="card-body row" disabled>
-		<div class="d-table table w-50">
+	<fieldset class="card-body d-flex p-0 overflow-auto gap-3" style="max-height: calc(50vh - 10rem);" disabled>
+		<div class="d-table table">
 			<row-form label="伝票番号" col="5" name="slip_number" type="text"></row-form>
 			<row-form label="売上日付（開始日）" col="8" name="accounting_date[from]" type="date">{"first day of this month"|strtotime|date_format:"%Y-%m-%d"}</row-form>
 			<row-form label="売上日付（終了日）" col="8" name="accounting_date[to]" type="date">{"last day of this month"|strtotime|date_format:"%Y-%m-%d"}</row-form>
 			{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}
 			<row-form label="部門" col="10" name="division" type="select" list="division"></row-form>
+			{/if}
+		</div>
+		<div class="d-table table">
+			{if ($smarty.session["User.role"] eq "leader") or ($smarty.session["User.role"] eq "admin")}
 			<row-form label="当社担当者" col="10" name="manager" placeholder="担当者名・担当者CDで検索"></row-form>
 			{/if}
 			<row-form label="請求先" col="10" name="billing_destination" placeholder="請求先名・請求先CDで検索"></row-form>
