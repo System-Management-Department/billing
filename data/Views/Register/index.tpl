@@ -52,7 +52,6 @@
 		<td>{$obj.code}</td>
 		<td>{$obj.client_name}</td>
 		<td>{$obj.name}</td>
-		<td>{$obj.kana}</td>
 		<td><button class="btn btn-success btn-sm" data-bs-dismiss="modal" data-search-modal-value="{$obj.code}">選択</button></td>
 	</tr>
 {/predefine}
@@ -151,7 +150,7 @@ Flow.start({{/literal}
 			document.getElementById("subject").value = reportMap["件名"];
 			document.getElementById("client").value = reportMap["クライアント名"];
 			document.getElementById("note").value = reportMap["備考"];
-			document.querySelector('#apply_client modal-select').keyword = reportMap["クライアント名"];
+			//document.querySelector('#apply_client modal-select').keyword = reportMap["クライアント名"];
 			document.getElementById("header1").textContent = reportMap["摘要ヘッダ１"];
 			document.getElementById("header2").textContent = reportMap["摘要ヘッダ２"];
 			document.getElementById("header3").textContent = reportMap["摘要ヘッダ３"];
@@ -370,24 +369,25 @@ Flow.start({{/literal}
 
 {block name="dialogs" append}
 <div class="modal fade" id="applyClientModal" tabindex="-1">
-	<div class="modal-dialog modal-dialog-centered modal-lg">
-		<div class="modal-content">
+	<div class="modal-dialog modal-dialog-centered modal-lg flex-column">
+		<div class="modal-content flex-grow-1">
 			<div class="modal-header flex-row">
 				<div class="text-center">請求先選択</div><i class="bi bi-x" data-bs-dismiss="modal"></i>
 			</div>
-			<div class="modal-body">
-				<table class="table table_sticky_list">
-					<thead>
-						<tr>
-							<th>コード</th>
-							<th>得意先名</th>
-							<th>請求先名</th>
-							<th>カナ</th>
-							<th></th>
-						</tr>
-					</thead>
-					<tbody></tbody>
-				</table>
+			<div class="modal-body position-relative me-4 mb-4">
+				<div class="position-absolute h-100 w-100 overflow-auto">
+					<table class="table table_sticky_list">
+						<thead>
+							<tr>
+								<th>コード</th>
+								<th>得意先名</th>
+								<th>請求先名</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
 			</div>
 		</div>
 	</div>
