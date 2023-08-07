@@ -291,7 +291,7 @@ class SalesClose{{/literal}
 					headers: apiHeader,
 					body: apiBody
 				}).catch(res => {
-					alert("通信に失敗しました");
+					alert("通信に失敗しました\n拡張機能「CORS Unblock」が有効になっているか確認してください");
 				}).then(res => {
 					return res.json();
 				}));
