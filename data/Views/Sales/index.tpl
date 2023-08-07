@@ -290,6 +290,8 @@ class SalesClose{{/literal}
 					mode: 'cors',
 					headers: apiHeader,
 					body: apiBody
+				}).catch(res => {
+					alert("通信に失敗しました");
 				}).then(res => {
 					return res.json();
 				}));
