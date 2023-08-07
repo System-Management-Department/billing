@@ -12,6 +12,22 @@ class RegisterController extends ControllerBase{
 		$v = new View();
 		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}
+	public function check(){
+		$v = new View();
+		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
+	}
+	public function check2(){
+		$db = $this->auth();
+		if($db != null){
+			$result = new Result();
+			$result->addMessage("認証に成功しました。", "INFO", "");
+			return new JsonView($result);
+		}else{
+			$result = new Result();
+			$result->addMessage("認証に失敗しました。", "ERROR", "");
+			return new JsonView($result);
+		}
+	}
 	public function regist(){
 		$db = $this->auth();
 		if($db != null){
