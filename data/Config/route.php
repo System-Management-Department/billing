@@ -36,15 +36,9 @@ if(!$controllerExists){
 	$controllerClassName = "\\Controller\\EmptyController";
 }
 $controllerInstance = new $controllerClassName($requestContext);
-if(isset($_COOKIE["session"])){
-	session_name("PHPSESSID2");
-	session_cache_expire(525600);
-	session_set_cookie_params(31536000, "/");
-}else{
-	session_name("PHPSESSID");
-	session_cache_expire(1440);
-	session_set_cookie_params(0, "/");
-}
+session_name("PHPSESSID2");
+session_cache_expire(525600);
+session_set_cookie_params(31536000, "/");
 session_start();
 $accept = null;
 $ref = new \ReflectionClass($controllerInstance);
