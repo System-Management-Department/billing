@@ -1,7 +1,13 @@
 {literal}
 	new VirtualPage("/Purchase", class{
+		#lastFormData;
 		constructor(vp){
-			vp.addEventListener("search", e => { console.log(e); });
+			this.#lastFormData = null;
+			vp.addEventListener("search", e => {
+				this.#lastFormData = e.formData;
+				this.reload();
+			});
+			vp.addEventListener("reload", e => { this.reload(); });
 			vp.addEventListener("modal-close", e => { console.log(e); });
 			
 			const table1 = document.querySelector('table-sticky');
@@ -41,14 +47,13 @@
 				table1.insertRow(...elements);
 			}
 			
-			const searchTable = [
-				{column: 1, label:"伝票番号", width: 5, name: "slip_number", type: "text", list: "", require: false, placeholder: ""},
-				{column: 1, label:"確定日付", width: 12, name: "accounting_date", type: "daterange", list: "", require: false, placeholder: ""},
-				{column: 1, label:"部門", width: 10, name: "division", type: "select", list: "division", require: false, placeholder: ""},
-				{column: 2, label:"当社担当者", width: 10, name: "manager", type: "keyword", list: "manager", require: false, placeholder: "担当者名・担当者CDで検索"},
-				{column: 2, label:"請求先", width: 10, name: "billing_destination", type: "keyword", list: "apply_client", require: false, placeholder: "請求先名・請求先CDで検索"}
-			];
-			formTableInit(document.querySelector('search-form'), searchTable);
+			formTableInit(document.querySelector('search-form'), formTableQuery("/Purchase#search").apply()).then(form => { form.submit(); });
+		}
+		reload(){
+			fetch("/", {
+				method: "POST",
+				body: this.#lastFormData
+			});
 		}
 	});
 {/literal}

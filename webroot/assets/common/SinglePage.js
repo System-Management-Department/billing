@@ -161,7 +161,7 @@ class TableStickyElement extends HTMLElement{
 							}
 						}
 						for(let i = mutation.removedNodes.length - 1; i >= 0; i--){
-							const node = mutation.addedNodes[i];
+							const node = mutation.removedNodes[i];
 							if((node.nodeType == Node.ELEMENT_NODE) && (node.tagName == "TABLE-ROW")){
 								node.slotInit(null);
 							}

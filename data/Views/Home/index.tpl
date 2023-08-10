@@ -9,11 +9,61 @@
 <script type="text/javascript" src="assets/common/SinglePage.js"></script>
 <script type="text/javascript">
 (function(){
+	let master = new SQLite();
 {/literal}{foreach from=$includeDir item="path"}{if file_exists("`$path``$smarty.const.DIRECTORY_SEPARATOR`script.tpl")}
 {include file="`$path``$smarty.const.DIRECTORY_SEPARATOR`script.tpl"}
 {/if}{/foreach}{literal}
 	new Promise((resolve, reject) => {
-		document.addEventListener("DOMContentLoaded", e => { setTimeout(() => { resolve() }, 1000); });
+		document.addEventListener("DOMContentLoaded", e => {
+			master.use("master").then(master => {
+				master.createTable("form_datas", ["location", "column", "label", "width", "name", "type", "list", "require", "placeholder", "no"], [
+					["/Committed#search", "1", "伝票番号", "10", "slip_number", "text", "", "", "", "1"],
+					["/Committed#search", "1", "確定日付", "10", "accounting_date", "daterange", "", "", "", "2"],
+					["/Committed#search", "1", "部門", "10", "division", "select", "division", "", "", "3"],
+					["/Committed#search", "2", "当社担当者", "10", "manager", "keyword", "manager", "", "担当者名・担当者CDで検索", "4"],
+					["/Committed#search", "2", "請求先", "10", "billing_destination", "keyword", "apply_client", "", "請求先名・請求先CDで検索", "5"],
+					["/Sales#search", "1", "伝票番号", "10", "slip_number", "text", "", "", "", "1"],
+					["/Sales#search", "1", "売上日付", "10", "accounting_date", "daterange", "", "", "", "2"],
+					["/Sales#search", "1", "部門", "10", "division", "select", "division", "", "", "3"],
+					["/Sales#search", "2", "当社担当者", "10", "manager", "keyword", "manager", "", "担当者名・担当者CDで検索", "4"],
+					["/Sales#search", "2", "請求先", "10", "billing_destination", "keyword", "apply_client", "", "請求先名・請求先CDで検索", "5"],
+					["/Billing#search", "1", "伝票番号", "10", "slip_number", "text", "", "", "", "1"],
+					["/Billing#search", "1", "売上日付", "10", "accounting_date", "daterange", "", "", "", "2"],
+					["/Billing#search", "1", "部門", "10", "division", "select", "division", "", "", "3"],
+					["/Billing#search", "2", "当社担当者", "10", "manager", "keyword", "manager", "", "担当者名・担当者CDで検索", "4"],
+					["/Billing#search", "2", "請求先", "10", "billing_destination", "keyword", "apply_client", "", "請求先名・請求先CDで検索", "5"],
+					["/Purchase#search", "1", "伝票番号", "10", "slip_number", "text", "", "", "", "1"],
+					["/Purchase#search", "1", "確定日付", "10", "accounting_date", "daterange", "", "", "", "2"],
+					["/Purchase#search", "1", "クライアント名", "10", "delivery_destination", "text", "", "", "", "3"],
+					["/Purchase#search", "1", "部門", "10", "division", "select", "division", "", "", "4"],
+					["/Purchase#search", "2", "当社担当者", "10", "manager", "keyword", "manager", "", "担当者名・担当者CDで検索", "5"],
+					["/Purchase#search", "2", "仕入先", "10", "supplier", "keyword", "supplier", "", "仕入先名・仕入先CDで検索", "6"],
+					["#sales_slip", "1", "伝票番号", "10", "", "label", "", "", "", "1"],
+					["#sales_slip", "1", "確定日時", "10", "", "label", "", "", "", "2"],
+					["#sales_slip", "1", "売上日付", "10", "", "label", "", "", "", "3"],
+					["#sales_slip", "1", "当社担当者", "10", "", "label", "manager", "", "", "4"],
+					["#sales_slip", "1", "請求書件名", "10", "", "label", "", "", "", "5"],
+					["#sales_slip", "1", "入金予定日", "10", "", "label", "", "", "", "6"],
+					["#sales_slip", "2", "請求書パターン", "10", "", "label", "", "", "", "1"],
+					["#sales_slip", "2", "請求先", "10", "", "label", "apply_client", "", "", "2"],
+					["#sales_slip", "2", "納品先", "10", "", "label", "", "", "", "3"],
+					["#sales_slip", "2", "備考", "10", "", "label", "", "", "", "4"]
+				]);
+				master.createTable("table_datas", ["location", "label", "width", "slot", "tag_name", "class_list", "property", "attributes", "no"], [
+					["/Committed#list", "仕入明細", "5rem", "purchases_detail", "show-dialog", "btn btn-sm btn-success bx", "ss", "label=\"仕入明細\" target=\"purchases_detail\"", "1"],
+					["/Committed#list", "売上明細", "5rem", "salses_detail", "show-dialog", "btn btn-sm btn-success bx", "ss", "label=\"売上明細\" target=\"salses_detail\"", "2"],
+					["/Committed#list", "確認承認", "5rem", "a1_details", "show-dialog", "btn btn-sm btn-primary bx", "ss", "label=\"確認承認\" target=\"a1_details\"", "3"],
+					["/Committed#list", "伝票番号", "5rem", "slip_number", "span", "", "slip_number", "", "4"],
+					["/Committed#list", "確定日時", "5rem", "regist_datetime", "span", "", "regist_datetime", "", "5"],
+					["/Committed#list", "件名", "5rem", "subject", "span", "", "subject", "", "6"],
+					["/Committed#list", "クライアント名", "5rem", "client_name", "span", "", "client_name", "", "7"],
+					["/Committed#list", "請求先名", "5rem", "apply_client", "span", "", "apply_client", "", "8"],
+					["/Committed#list", "担当者名", "5rem", "manager", "span", "", "manager", "", "9"],
+					["/Committed#list", "備考", "5rem", "note", "span", "", "note", "", "10"]
+				]);
+			});
+			resolve();
+		});
 	}).then(() => {
 		SinglePage.modal.manager.setQuery(v => `${v}: manager`).querySelector('table-sticky').columns = [
 			{label: "コード", width: "6rem", slot: "code"},
@@ -31,6 +81,12 @@
 		SinglePage.modal.client.setQuery(v => `${v}: client`).querySelector('table-sticky').columns = [
 			{label: "コード", width: "6rem", slot: "code"},
 			{label: "得意先名", width: "calc(50vw - 6rem)", slot: "name"},
+			{label: "カナ", width: "calc(50vw - 6rem)", slot: "kana"},
+			{label: "選択", width: "3rem", slot: "select"}
+		];
+		SinglePage.modal.supplier.setQuery(v => `${v}: supplier`).querySelector('table-sticky').columns = [
+			{label: "コード", width: "6rem", slot: "code"},
+			{label: "仕入先名", width: "calc(50vw - 6rem)", slot: "name"},
 			{label: "カナ", width: "calc(50vw - 6rem)", slot: "kana"},
 			{label: "選択", width: "3rem", slot: "select"}
 		];
@@ -106,6 +162,48 @@
 					tableList[tableNo].table.setAttribute("slot", "body");
 				}
 				parent.appendChild(tableList[tableNo].table);
+			}
+			setTimeout(() => { resolve(parent); }, 0);
+		});
+	}
+	function formTableQuery(location){
+		return master.select("ALL").setTable("form_datas").andWhere("location=?", location).setOrderBy("CAST(no AS INTEGER)");
+	}
+	function dataTableQuery(location){
+		return master.select("ALL").setTable("table_datas").andWhere("location=?", location).setOrderBy("CAST(no AS INTEGER)");
+	}
+	function setDataTable(parent, columns, data){
+		return new Promise((resolve, reject) => {
+			parent.innerHTML = "";
+			const text = document.createElement("span");
+			for(let row of data){
+				const elements = [];
+				for(let col of columns){
+					const div = document.createElement("div");
+					const dataElement = document.createElement(col.tag_name);
+					const classList = col.class_list.split(/\s/).filter(v => v != "");
+					let attrStr = col.attributes;
+					do{
+						const nextStr = attrStr.replace(/^\s*([a-zA-Z0-9\-]+)="([^"]*?)"/, (str, name, value) => {
+							if(name != ""){
+								dataElement.setAttribute(name, Object.assign(text, {innerHTML: value}).textContent);
+							}
+							return "";
+						});
+						if(attrStr == nextStr){
+							break;
+						}
+						attrStr = nextStr;
+					}while(true);
+					div.setAttribute("slot", col.slot);
+					dataElement.textContent = row[col.property];
+					if(classList.length > 0){
+						dataElement.classList.add(...classList);
+					}
+					div.appendChild(dataElement);
+					elements.push(div);
+				}
+				parent.insertRow(...elements);
 			}
 			setTimeout(() => { resolve(parent); }, 0);
 		});
@@ -245,6 +343,9 @@ Flow.start({
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
 	<modal-dialog name="client" label="得意先選択">
+		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
+	</modal-dialog>
+	<modal-dialog name="supplier" label="仕入先選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
 	<modal-dialog name="salses_detail" label="売上明細">
