@@ -19,23 +19,33 @@
 			}).then(res => res.arrayBuffer()).then(buffer => {
 				this.transaction = new SQLite();
 				this.transaction.import(buffer, "transaction");
-				console.log(this.transaction.select("ALL").setTable("purchases").apply());
+				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
+				console.log(this.transaction.tables);
 				console.log(this.transaction.select("ALL").setTable("sales_slips").apply());
-				console.log(this.transaction.select("ALL").setTable("_info").apply());
+				console.log(this.transaction.select("ALL").setTable("sales_attributes").apply());
+				console.log(this.transaction.select("ALL").setTable("sales_workflow").apply());
+				console.log(this.transaction.select("ALL").setTable("sales_details").apply());
+				console.log(this.transaction.select("ALL").setTable("sales_detail_attributes").apply());
+				console.log(this.transaction.select("ALL").setTable("purchases").apply());
+				console.log(info);
+				
+				setDataTable(
+					document.querySelector('table-sticky'),
+					dataTableQuery("/Committed#list").apply(),
+					this.transaction.select("ALL")
+						.setTable("sales_slips")
+						.addField("sales_slips.*")
+						.leftJoin("sales_workflow using(ss)")
+						.addField("sales_workflow.regist_datetime")
+						.apply(),
+					row => {
+						const apply_client = row.querySelector('[slot="apply_client"]');
+						const manager = row.querySelector('[slot="manager"]');
+						apply_client.textContent = `apply_client${apply_client.textContent}`;
+						manager.textContent = `manager${manager.textContent}`;
+					}
+				);
 			});
-			
-			const data = new Array(5).fill({
-				ss: 1,
-				slip_number: "230700007",
-				regist_datetime: "2023-07-11 09:38:29",
-				subject: "プレミア 折込印刷・媒体費（ 6/27 関西エリア ）クリエイティブ８種",
-				client_name: "コスメディ製薬株式会社",
-				apply_client: "anynext株式会社",
-				manager: "細川智子",
-				note: "お取引条件：月末〆翌月末お支払い",
-				edit: '<a href="/Committed/edit" class="btn btn-sm btn-info bx bxs-edit">追加修正</a>'
-			});
-			setDataTable(document.querySelector('table-sticky'), dataTableQuery("/Committed#list").apply(), data);
 		}
 	});
 {/literal}

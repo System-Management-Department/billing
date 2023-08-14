@@ -83,7 +83,7 @@ customElements.define("show-dialog", ShowDialogElement);
 					["/Committed#list",         "仕入明細",           "5rem",                   "purchases_detail", "show-dialog", "btn btn-sm btn-success bx", "ss",              "label=\"仕入明細\" target=\"purchases_detail\"", "1"],
 					["/Committed#list",         "売上明細",           "5rem",                   "salses_detail",    "show-dialog", "btn btn-sm btn-success bx", "ss",              "label=\"売上明細\" target=\"salses_detail\"",    "2"],
 					["/Committed#list",         "確認承認",           "5rem",                   "a1_details",       "show-dialog", "btn btn-sm btn-primary bx", "ss",              "label=\"確認承認\" target=\"a1_details\"",       "3"],
-					["/Committed#list",         "編集",               "5rem",                   "edit",             "span",        "btn btn-sm btn-primary bx", "ss",              "",                                               "4"],
+					["/Committed#list",         "追加修正",           "5rem",                   "edit",             "span",        "btn btn-sm btn-primary bx", "ss",              "",                                               "4"],
 					["/Committed#list",         "伝票番号",           "5rem",                   "slip_number",      "span",        "",                          "slip_number",     "",                                               "5"],
 					["/Committed#list",         "確定日時",           "5rem",                   "regist_datetime",  "span",        "",                          "regist_datetime", "",                                               "6"],
 					["/Committed#list",         "件名",               "5rem",                   "subject",          "span",        "",                          "subject",         "",                                               "7"],
@@ -116,8 +116,8 @@ customElements.define("show-dialog", ShowDialogElement);
 					["/Purchase#list",          "クライアント名",     "auto",                   "client_name",      "span",        "",                          "client_name",     "",                                               "5"],
 					["/Purchase#list",          "件名",               "auto",                   "subject",          "span",        "",                          "subject",         "",                                               "6"],
 					["/Purchase#list",          "仕入先",             "auto",                   "supplier",         "span",        "",                          "supplier",        "",                                               "7"],
-					["/Purchase#list",          "仕入金額（税抜き）", "auto",                   "amount_exc",       "span",        "d-block text-end",                          "amount_exc",      "",                                               "8"],
-					["/Purchase#list",          "仕入金額（税込み）", "auto",                   "amount_inc",       "span",        "d-block text-end",                          "amount_inc",      "",                                               "9"],
+					["/Purchase#list",          "仕入金額（税抜き）", "auto",                   "amount_exc",       "span",        "d-block text-end",          "amount_exc",      "",                                               "8"],
+					["/Purchase#list",          "仕入金額（税込み）", "auto",                   "amount_inc",       "span",        "d-block text-end",          "amount_inc",      "",                                               "9"],
 					["/Purchase#list",          "請求書受領",         "auto",                   "payment",          "show-dialog", "btn btn-sm btn-primary bx", "pu",              "label=\"請求書受領\" target=\"\"",              "10"],
 					["/Modal/Manager#list",     "コード",             "6rem",                   "code",             "span",        "",                          "code",            "",                                               "1"],
 					["/Modal/Manager#list",     "担当者名",           "calc(50vw - 6rem)",      "name",             "span",        "",                          "name",            "",                                               "2"],
@@ -271,73 +271,6 @@ customElements.define("show-dialog", ShowDialogElement);
 })();
 </script>
 {/literal}{/block}
-
-{*
-Flow.DbName = "admin";
-Flow.DbLocked = true;
-Flow.start({
-	db: Flow.DB,
-	dbName: "admin",
-	dbDownloadURL: "/Storage/sqlite",
-	masterDownloadURL: "/Default/master",
-	location: "/Home",
-	*[Symbol.iterator](){
-		if(Object.keys(this.db.tables).length < 1){ yield* this.dbUpdate(); }
-		if(Object.keys(Flow.Master.tables).length < 1){ yield* this.masterUpdate(); }
-		Flow.DbLocked = false;
-		yield* this.toast();
-		let prev = localStorage.getItem("session");
-		let pObj = {resolve: null, reject: null};
-		setInterval(() => { pObj.resolve(null); }, 60000);
-		do{
-			let now = Date.now();
-			if((prev == null) || (now - prev) >= 60000){
-				localStorage.setItem("session", prev = now);
-				fetch("/Online/update").then(response => response.json()).then(json =>{
-					
-				});
-			}
-			this.db
-				.delete("search_histories")
-				.andWhere("time<?", now - 86400000)
-				.apply();
-			yield new Promise((resolve, reject) => {
-				pObj.resolve = resolve;
-				pObj.reject = reject;
-			});
-		}while(true);
-	},
-	*dbUpdate(){
-		yield new Promise((resolve, reject) => {
-			fetch(this.dbDownloadURL).then(response => response.arrayBuffer()).then(buffer => {
-				this.db.import(buffer, this.dbName);
-				this.db.commit().then(res => {resolve(res);});
-			});
-		});
-	},
-	*masterUpdate(){
-		yield new Promise((resolve, reject) => {
-			fetch(this.masterDownloadURL).then(response => response.arrayBuffer()).then(buffer => {
-				Flow.Master.import(buffer, "master");
-				Flow.Master.commit().then(res => {resolve(res);});
-			});
-		});
-	},
-	*toast(){
-		let messages = this.db
-			.select("ALL")
-			.addTable("messages")
-			.leftJoin("toast_classes using(type)")
-			.apply();
-		if(messages.length > 0){
-			Toaster.show(messages);
-			this.db.delete("messages").apply();
-			this.db.commit();
-		}
-	}
-});
-*}
-
 {block name="body"}
 	<div id="spmain">
 	<template shadowroot="closed">

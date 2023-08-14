@@ -15,11 +15,6 @@ use Model\SQLite;
 
 class CommittedController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
-	public function index(){
-		return new View();
-	}
-	
-	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function edit(){
 		$v = new View();
 		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
@@ -30,20 +25,21 @@ class CommittedController extends ControllerBase{
 		$db = Session::getDB();
 		$query = $db->select("COL")
 			->setTable("sales_slips")
-			->setField("id")
+			->setField("sales_slips.ss")
 			->setLimit(100)
-			->andWhere("close_processed=0")
-			->andWhere("approval=0");
+			->leftJoin("sales_workflow using(ss)")
+			->andWhere("approval=0")
+			->andWhere("close=0");
 		if(!empty($_POST)){
 			if(!empty($_POST["slip_number"])){
 				$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
 			}
 			if(!empty($_POST["accounting_date"])){
 				if(!empty($_POST["accounting_date"]["from"])){
-					$query->andWhere("DATEDIFF(created,?) >= 0", $_POST["accounting_date"]["from"]);
+					$query->andWhere("DATEDIFF(regist_datetime,?) >= 0", $_POST["accounting_date"]["from"]);
 				}
 				if(!empty($_POST["accounting_date"]["to"])){
-					$query->andWhere("DATEDIFF(created,?) <= 0", $_POST["accounting_date"]["to"]);
+					$query->andWhere("DATEDIFF(regist_datetime,?) <= 0", $_POST["accounting_date"]["to"]);
 				}
 			}
 			if(!empty($_POST["division"])){
@@ -52,8 +48,8 @@ class CommittedController extends ControllerBase{
 			if(!empty($_POST["manager"])){
 				$query->andWhere("manager=?", $_POST["manager"]);
 			}
-			if(!empty($_POST["billing_destination"])){
-				$query->andWhere("billing_destination=?", $_POST["billing_destination"]);
+			if(!empty($_POST["apply_client"])){
+				$query->andWhere("apply_client=?", $_POST["apply_client"]);
 			}
 		}
 		$searchIds = json_encode($query($cnt));
@@ -61,12 +57,31 @@ class CommittedController extends ControllerBase{
 		
 		$query1 = $db->select("EXPORT")
 			->setTable("sales_slips")
-			->andWhere("id MEMBER OF(?)", $searchIds);
+			->andWhere("ss MEMBER OF(?)", $searchIds);
 		$query2 = $db->select("EXPORT")
+			->setTable("sales_attributes")
+			->andWhere("ss MEMBER OF(?)", $searchIds);
+		$query3 = $db->select("EXPORT")
+			->setTable("sales_workflow")
+			->andWhere("ss MEMBER OF(?)", $searchIds);
+		$query4 = $db->select("EXPORT")
+			->setTable("sales_details")
+			->setField("sales_details.*")
+			->leftJoin("purchase_relations using(sd)")
+			->addField("purchase_relations.ss")
+			->andWhere("purchase_relations.ss MEMBER OF(?)", $searchIds);
+		$query5 = $db->select("EXPORT")
+			->setTable("sales_detail_attributes")
+			->setField("sales_detail_attributes.*")
+			->leftJoin("purchase_relations using(sd)")
+			->andWhere("purchase_relations.ss MEMBER OF(?)", $searchIds);
+		$query6 = $db->select("EXPORT")
 			->setTable("purchases")
-			->addField("purchases.*")
-			->leftJoin("sales_slips on purchases.spreadsheet=sales_slips.spreadsheet")
-			->andWhere("sales_slips.id MEMBER OF(?)", $searchIds);
+			->setField("purchases.*")
+			->leftJoin("purchase_relations using(pu)")
+			->addField("purchase_relations.ss")
+			->andWhere("purchase_relations.ss MEMBER OF(?)", $searchIds);
+			/*
 		if(($_SESSION["User.role"] == "admin") || ($_SESSION["User.role"] == "entry")){
 		}else if($_SESSION["User.role"] == "leader"){
 			$divisionQuery = $db->select("ONE")
@@ -80,10 +95,15 @@ class CommittedController extends ControllerBase{
 			$query1->andWhere("manager=@manager");
 			$query2->andWhere("sales_slips.manager=@manager");
 		}
+		*/
 		
 		return new FileView(SQLite::memoryData([
 			"sales_slips" => $query1(),
-			"purchases" => $query2(),
+			"sales_attributes" => $query2(),
+			"sales_workflow" => $query3(),
+			"sales_details" => $query4(),
+			"sales_detail_attributes" => $query5(),
+			"purchases" => $query6(),
 			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt]]]
 		]), "application/vnd.sqlite3");
 	}
