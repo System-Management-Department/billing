@@ -181,6 +181,7 @@ class TableStickyElement extends HTMLElement{
 			tableRow.appendChild(node);
 		}
 		this.appendChild(tableRow);
+		return tableRow;
 	}
 	tryInit(row){
 		if(this.#content == null){

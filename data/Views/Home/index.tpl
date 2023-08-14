@@ -47,37 +47,37 @@ customElements.define("show-dialog", ShowDialogElement);
 		document.addEventListener("DOMContentLoaded", e => {
 			master.use("master").then(master => {
 				master.createTable("form_datas", ["location", "column", "label", "width", "name", "type", "list", "require", "placeholder", "no"], [
-					["/Committed#search", "1", "伝票番号",       "10", "slip_number",          "text",      "",             "", "",                         "1"],
-					["/Committed#search", "1", "確定日付",       "10", "accounting_date",      "daterange", "",             "", "",                         "2"],
-					["/Committed#search", "1", "部門",           "10", "division",             "select",    "division",     "", "",                         "3"],
-					["/Committed#search", "2", "当社担当者",     "10", "manager",              "keyword",   "manager",      "", "担当者名・担当者CDで検索", "4"],
-					["/Committed#search", "2", "請求先",         "10", "billing_destination",  "keyword",   "apply_client", "", "請求先名・請求先CDで検索", "5"],
-					["/Sales#search",     "1", "伝票番号",       "10", "slip_number",          "text",      "",             "", "",                         "1"],
-					["/Sales#search",     "1", "売上日付",       "10", "accounting_date",      "daterange", "",             "", "",                         "2"],
-					["/Sales#search",     "1", "部門",           "10", "division",             "select",    "division",     "", "",                         "3"],
-					["/Sales#search",     "2", "当社担当者",     "10", "manager",              "keyword",   "manager",      "", "担当者名・担当者CDで検索", "4"],
-					["/Sales#search",     "2", "請求先",         "10", "billing_destination",  "keyword",   "apply_client", "", "請求先名・請求先CDで検索", "5"],
-					["/Billing#search",   "1", "伝票番号",       "10", "slip_number",          "text",      "",             "", "",                         "1"],
-					["/Billing#search",   "1", "売上日付",       "10", "accounting_date",      "daterange", "",             "", "",                         "2"],
-					["/Billing#search",   "1", "部門",           "10", "division",             "select",    "division",     "", "",                         "3"],
-					["/Billing#search",   "2", "当社担当者",     "10", "manager",              "keyword",   "manager",      "", "担当者名・担当者CDで検索", "4"],
-					["/Billing#search",   "2", "請求先",         "10", "billing_destination",  "keyword",   "apply_client", "", "請求先名・請求先CDで検索", "5"],
-					["/Purchase#search",  "1", "伝票番号",       "10", "slip_number",          "text",      "",             "", "",                         "1"],
-					["/Purchase#search",  "1", "確定日付",       "10", "accounting_date",      "daterange", "",             "", "",                         "2"],
-					["/Purchase#search",  "1", "クライアント名", "10", "delivery_destination", "text",      "",             "", "",                         "3"],
-					["/Purchase#search",  "1", "部門",           "10", "division",             "select",    "division",     "", "",                         "4"],
-					["/Purchase#search",  "2", "当社担当者",     "10", "manager",              "keyword",   "manager",      "", "担当者名・担当者CDで検索", "5"],
-					["/Purchase#search",  "2", "仕入先",         "10", "supplier",             "keyword",   "supplier",     "", "仕入先名・仕入先CDで検索", "6"],
-					["#sales_slip",       "1", "伝票番号",       "10", "",                     "label",     "",             "", "",                         "1"],
-					["#sales_slip",       "1", "確定日時",       "10", "",                     "label",     "",             "", "",                         "2"],
-					["#sales_slip",       "1", "売上日付",       "10", "",                     "label",     "",             "", "",                         "3"],
-					["#sales_slip",       "1", "当社担当者",     "10", "",                     "label",     "manager",      "", "",                         "4"],
-					["#sales_slip",       "1", "請求書件名",     "10", "",                     "label",     "",             "", "",                         "5"],
-					["#sales_slip",       "1", "入金予定日",     "10", "",                     "label",     "",             "", "",                         "6"],
-					["#sales_slip",       "2", "請求書パターン", "10", "",                     "label",     "",             "", "",                         "1"],
-					["#sales_slip",       "2", "請求先",         "10", "",                     "label",     "apply_client", "", "",                         "2"],
-					["#sales_slip",       "2", "納品先",         "10", "",                     "label",     "",             "", "",                         "3"],
-					["#sales_slip",       "2", "備考",           "10", "",                     "label",     "",             "", "",                         "4"]
+					["/Committed#search", "1", "伝票番号",       "10", "slip_number",          "text",      "",               "", "",                         "1"],
+					["/Committed#search", "1", "確定日付",       "10", "accounting_date",      "daterange", "",               "", "",                         "2"],
+					["/Committed#search", "1", "部門",           "10", "division",             "select",    "division",       "", "",                         "3"],
+					["/Committed#search", "2", "当社担当者",     "10", "manager",              "keyword",   "manager",        "", "担当者名・担当者CDで検索", "4"],
+					["/Committed#search", "2", "請求先",         "10", "billing_destination",  "keyword",   "apply_client",   "", "請求先名・請求先CDで検索", "5"],
+					["/Sales#search",     "1", "伝票番号",       "10", "slip_number",          "text",      "",               "", "",                         "1"],
+					["/Sales#search",     "1", "売上日付",       "10", "accounting_date",      "daterange", "",               "", "",                         "2"],
+					["/Sales#search",     "1", "部門",           "10", "division",             "select",    "division",       "", "",                         "3"],
+					["/Sales#search",     "2", "当社担当者",     "10", "manager",              "keyword",   "manager",        "", "担当者名・担当者CDで検索", "4"],
+					["/Sales#search",     "2", "請求先",         "10", "billing_destination",  "keyword",   "apply_client",   "", "請求先名・請求先CDで検索", "5"],
+					["/Billing#search",   "1", "伝票番号",       "10", "slip_number",          "text",      "",               "", "",                         "1"],
+					["/Billing#search",   "1", "売上日付",       "10", "accounting_date",      "daterange", "",               "", "",                         "2"],
+					["/Billing#search",   "1", "部門",           "10", "division",             "select",    "division",       "", "",                         "3"],
+					["/Billing#search",   "2", "当社担当者",     "10", "manager",              "keyword",   "manager",        "", "担当者名・担当者CDで検索", "4"],
+					["/Billing#search",   "2", "請求先",         "10", "billing_destination",  "keyword",   "apply_client",   "", "請求先名・請求先CDで検索", "5"],
+					["/Purchase#search",  "1", "伝票番号",       "10", "slip_number",          "text",      "",               "", "",                         "1"],
+					["/Purchase#search",  "1", "確定日付",       "10", "accounting_date",      "daterange", "",               "", "",                         "2"],
+					["/Purchase#search",  "1", "クライアント名", "10", "delivery_destination", "text",      "",               "", "",                         "3"],
+					["/Purchase#search",  "1", "部門",           "10", "division",             "select",    "division",       "", "",                         "4"],
+					["/Purchase#search",  "2", "当社担当者",     "10", "manager",              "keyword",   "manager",        "", "担当者名・担当者CDで検索", "5"],
+					["/Purchase#search",  "2", "仕入先",         "10", "supplier",             "keyword",   "supplier",       "", "仕入先名・仕入先CDで検索", "6"],
+					["#sales_slip",       "1", "伝票番号",       "10", "",                     "label",     "",               "", "",                         "1"],
+					["#sales_slip",       "1", "確定日時",       "10", "",                     "label",     "",               "", "",                         "2"],
+					["#sales_slip",       "1", "売上日付",       "10", "",                     "label",     "",               "", "",                         "3"],
+					["#sales_slip",       "1", "当社担当者",     "10", "",                     "label",     "manager",        "", "",                         "4"],
+					["#sales_slip",       "1", "請求書件名",     "10", "",                     "label",     "",               "", "",                         "5"],
+					["#sales_slip",       "1", "入金予定日",     "10", "",                     "label",     "",               "", "",                         "6"],
+					["#sales_slip",       "2", "請求書パターン", "10", "",                     "label",     "invoice_format", "", "",                         "1"],
+					["#sales_slip",       "2", "請求先",         "10", "",                     "label",     "apply_client",   "", "",                         "2"],
+					["#sales_slip",       "2", "納品先",         "10", "",                     "label",     "",               "", "",                         "3"],
+					["#sales_slip",       "2", "備考",           "10", "",                     "label",     "",               "", "",                         "4"]
 				]);
 				master.createTable("table_datas", ["location", "label", "width", "slot", "tag_name", "class_list", "property", "attributes", "no"], [
 					["/Committed#list",         "仕入明細",           "5rem",                   "purchases_detail", "show-dialog", "btn btn-sm btn-success bx", "ss",              "label=\"仕入明細\" target=\"purchases_detail\"", "1"],
@@ -116,8 +116,8 @@ customElements.define("show-dialog", ShowDialogElement);
 					["/Purchase#list",          "クライアント名",     "auto",                   "client_name",      "span",        "",                          "client_name",     "",                                               "5"],
 					["/Purchase#list",          "件名",               "auto",                   "subject",          "span",        "",                          "subject",         "",                                               "6"],
 					["/Purchase#list",          "仕入先",             "auto",                   "supplier",         "span",        "",                          "supplier",        "",                                               "7"],
-					["/Purchase#list",          "仕入金額（税抜き）", "auto",                   "amount_exc",       "span",        "",                          "amount_exc",      "",                                               "8"],
-					["/Purchase#list",          "仕入金額（税込み）", "auto",                   "amount_inc",       "span",        "",                          "amount_inc",      "",                                               "9"],
+					["/Purchase#list",          "仕入金額（税抜き）", "auto",                   "amount_exc",       "span",        "d-block text-end",                          "amount_exc",      "",                                               "8"],
+					["/Purchase#list",          "仕入金額（税込み）", "auto",                   "amount_inc",       "span",        "d-block text-end",                          "amount_inc",      "",                                               "9"],
 					["/Purchase#list",          "請求書受領",         "auto",                   "payment",          "show-dialog", "btn btn-sm btn-primary bx", "pu",              "label=\"請求書受領\" target=\"\"",              "10"],
 					["/Modal/Manager#list",     "コード",             "6rem",                   "code",             "span",        "",                          "code",            "",                                               "1"],
 					["/Modal/Manager#list",     "担当者名",           "calc(50vw - 6rem)",      "name",             "span",        "",                          "name",            "",                                               "2"],
@@ -229,7 +229,7 @@ customElements.define("show-dialog", ShowDialogElement);
 	function dataTableQuery(location){
 		return master.select("ALL").setTable("table_datas").andWhere("location=?", location).setOrderBy("CAST(no AS INTEGER)");
 	}
-	function setDataTable(parent, columns, data){
+	function setDataTable(parent, columns, data, callback = null){
 		return new Promise((resolve, reject) => {
 			parent.innerHTML = "";
 			const text = document.createElement("span");
@@ -260,7 +260,10 @@ customElements.define("show-dialog", ShowDialogElement);
 					div.appendChild(dataElement);
 					elements.push(div);
 				}
-				parent.insertRow(...elements);
+				const dataRow = parent.insertRow(...elements);
+				if(callback != null){
+					callback(dataRow);
+				}
 			}
 			setTimeout(() => { resolve(parent); }, 0);
 		});
@@ -420,13 +423,17 @@ Flow.start({
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="a1_details" label="承認">
+		<div slot="body" class="p-4" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success" data-result="1">承認</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="a2_details" label="承認解除">
+		<div slot="body" class="p-4" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success" data-result="1">承認解除</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="a3_details" label="締め解除">
+	</modal-dialog>
+	<modal-dialog name="a4_details" label="請求書受領">
 	</modal-dialog>
 {/block}

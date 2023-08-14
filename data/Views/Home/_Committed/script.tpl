@@ -13,9 +13,15 @@
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Committed#search").apply()).then(form => { form.submit(); });
 		}
 		reload(){
-			fetch("/", {
+			fetch("/Committed/search", {
 				method: "POST",
 				body: this.#lastFormData
+			}).then(res => res.arrayBuffer()).then(buffer => {
+				this.transaction = new SQLite();
+				this.transaction.import(buffer, "transaction");
+				console.log(this.transaction.select("ALL").setTable("purchases").apply());
+				console.log(this.transaction.select("ALL").setTable("sales_slips").apply());
+				console.log(this.transaction.select("ALL").setTable("_info").apply());
 			});
 			
 			const data = new Array(5).fill({
