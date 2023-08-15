@@ -56,31 +56,33 @@ class CommittedController extends ControllerBase{
 		
 		
 		$query1 = $db->select("EXPORT")
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
 			->setTable("sales_slips")
-			->andWhere("ss MEMBER OF(?)", $searchIds);
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_slips.ss)");
 		$query2 = $db->select("EXPORT")
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
 			->setTable("sales_attributes")
-			->andWhere("ss MEMBER OF(?)", $searchIds);
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_attributes.ss)");
 		$query3 = $db->select("EXPORT")
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
 			->setTable("sales_workflow")
-			->andWhere("ss MEMBER OF(?)", $searchIds);
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_workflow.ss)");
 		$query4 = $db->select("EXPORT")
-			->setTable("sales_details")
-			->setField("sales_details.*")
-			->leftJoin("purchase_relations using(sd)")
-			->addField("purchase_relations.ss")
-			->andWhere("purchase_relations.ss MEMBER OF(?)", $searchIds);
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
+			->setTable("purchase_relations")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=purchase_relations.ss)");
 		$query5 = $db->select("EXPORT")
-			->setTable("sales_detail_attributes")
-			->setField("sales_detail_attributes.*")
-			->leftJoin("purchase_relations using(sd)")
-			->andWhere("purchase_relations.ss MEMBER OF(?)", $searchIds);
+			->addWith("find AS (SELECT DISTINCT purchase_relations.sd FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t LEFT JOIN purchase_relations using(ss))", $searchIds)
+			->setTable("sales_details")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.sd=sales_details.sd)");
 		$query6 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT purchase_relations.sd FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t LEFT JOIN purchase_relations using(ss))", $searchIds)
+			->setTable("sales_detail_attributes")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.sd=sales_detail_attributes.sd)");
+		$query7 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT purchase_relations.pu FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t LEFT JOIN purchase_relations using(ss))", $searchIds)
 			->setTable("purchases")
-			->setField("purchases.*")
-			->leftJoin("purchase_relations using(pu)")
-			->addField("purchase_relations.ss")
-			->andWhere("purchase_relations.ss MEMBER OF(?)", $searchIds);
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchases.pu)");
 			/*
 		if(($_SESSION["User.role"] == "admin") || ($_SESSION["User.role"] == "entry")){
 		}else if($_SESSION["User.role"] == "leader"){
@@ -101,9 +103,10 @@ class CommittedController extends ControllerBase{
 			"sales_slips" => $query1(),
 			"sales_attributes" => $query2(),
 			"sales_workflow" => $query3(),
-			"sales_details" => $query4(),
-			"sales_detail_attributes" => $query5(),
-			"purchases" => $query6(),
+			"purchase_relations" => $query4(),
+			"sales_details" => $query5(),
+			"sales_detail_attributes" => $query6(),
+			"purchases" => $query7(),
 			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt]]]
 		]), "application/vnd.sqlite3");
 	}

@@ -8,7 +8,12 @@
 				this.reload();
 			});
 			vp.addEventListener("reload", e => { this.reload(); });
-			vp.addEventListener("modal-close", e => { console.log(e); });
+			vp.addEventListener("modal-close", e => {
+				if((e.dialog == "approval") && (e.trigger == "submit")){
+					console.log(e.result);
+				}
+				console.log(e);
+			});
 			document.querySelector('table-sticky').columns = dataTableQuery("/Committed#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot}; });
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Committed#search").apply()).then(form => { form.submit(); });
 		}
@@ -37,7 +42,12 @@
 						.addField("sales_slips.*")
 						.leftJoin("sales_workflow using(ss)")
 						.addField("sales_workflow.regist_datetime")
-						.apply(),
+						.apply().map(r => Object.assign(
+							r,
+							master.select("ROW")
+								.setField("'ar' AS apply_client,'ue' AS manager")
+								.apply()
+						)),
 					row => {
 						const apply_client = row.querySelector('[slot="apply_client"]');
 						const manager = row.querySelector('[slot="manager"]');
