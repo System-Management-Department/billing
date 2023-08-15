@@ -652,6 +652,9 @@ class FCLabelElement extends HTMLElement{
 						tempVal = option.textContent;
 					}
 				}
+			}else if(this.#props.list.id in SinglePage.modal){
+				tempVal = SinglePage.modal[this.#props.list.id].query(this.#value);
+				found = (tempVal != null);
 			}
 			if(!found){
 				this.#value = null;

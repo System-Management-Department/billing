@@ -10,6 +10,7 @@
 			vp.addEventListener("reload", e => { this.reload(); });
 			vp.addEventListener("modal-close", e => {
 				if((e.dialog == "approval") && (e.trigger == "submit")){
+					// 承認
 					console.log(e.result);
 				}
 				console.log(e);

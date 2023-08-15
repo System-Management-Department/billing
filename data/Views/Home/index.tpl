@@ -107,6 +107,14 @@ customElements.define("create-window", CreateWindowElement);
 	new Promise((resolve, reject) => {
 		document.addEventListener("DOMContentLoaded", e => {
 			master.use("master").then(master => {
+				fetch("/Default/master").then(res => res.arrayBuffer()).then(buffer => {
+					master.import(buffer, "master");
+					console.log(master.tables);
+					resolve();
+				});
+			});
+			/*
+			master.use("master").then(master => {
 				master.createTable("form_datas", ["location", "column", "label", "width", "name", "type", "list", "require", "placeholder", "no"], [
 					["/Committed#search", "1", "伝票番号",       "10", "slip_number",          "text",      "",               "", "",                         "1"],
 					["/Committed#search", "1", "確定日付",       "10", "accounting_date",      "daterange", "",               "", "",                         "2"],
@@ -170,7 +178,7 @@ customElements.define("create-window", CreateWindowElement);
 					["/Billing#list",           "請求先名",           "auto",                   "apply_client",     "span",        "",                          "apply_client",    "",                                               "6"],
 					["/Billing#list",           "担当者名",           "auto",                   "manager",          "span",        "",                          "manager",         "",                                               "7"],
 					["/Billing#list",           "備考",               "auto",                   "note",             "span",        "",                          "note",            "",                                               "8"],
-					["/Purchase#list",          "仕入登録",           "5rem",                   "edit",             "span",        "btn btn-sm btn-primary bx", "sd",              "",                                               "1"],
+					["/Purchase#list",          "仕入登録",           "5rem",                   "edit",             "create-window","btn btn-sm btn-primary bx", "sd",              "label=\"仕入登録\" base=\"/Purchase/edit/\" top=\"0\" left=\"0\" width=\"1200\" height=\"600\"", "1"],
 					["/Purchase#list",          "担当者名",           "auto",                   "manager",          "span",        "",                          "manager",         "",                                               "2"],
 					["/Purchase#list",          "伝票番号",           "8rem",                   "slip_number",      "span",        "",                          "slip_number",     "",                                               "3"],
 					["/Purchase#list",          "確定日時",           "8rem",                   "regist_datetime",  "span",        "",                          "regist_datetime", "",                                               "4"],
@@ -217,6 +225,7 @@ customElements.define("create-window", CreateWindowElement);
 				]);
 				resolve();
 			});
+			*/
 		});
 	}).then(() => {
 		SinglePage.modal.manager     .querySelector('table-sticky').columns = dataTableQuery("/Modal/Manager#list").setField("label,width,slot").apply();
@@ -232,50 +241,53 @@ customElements.define("create-window", CreateWindowElement);
 		formTableInit(SinglePage.modal.purchases_detail.querySelector('div'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.approval        .querySelector('div'), formTableQuery("#sales_slip").apply());
 		
-		SinglePage.modal.manager.setQuery(v => `${v}: manager`).addEventListener("modal-open", e => {
+		SinglePage.modal.manager.setQuery(v => master.select("ONE").setTable("managers").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 			const keyword = e.detail;
 			console.log(keyword);
 			setDataTable(
 				SinglePage.modal.manager.querySelector('table-sticky'),
 				dataTableQuery("/Modal/Manager#list").apply(),
 				master.select("ALL")
-					.setField("'DATA' AS code,'DATA' AS name,'DATA' AS kana")
+					.setTable("managers")
 					.apply(),
 				row => {}
 			);
 		});
-		SinglePage.modal.apply_client.setQuery(v => `${v}: apply_client`).addEventListener("modal-open", e => {
+		SinglePage.modal.apply_client.setQuery(v => master.select("ONE").setTable("system_apply_clients").setField("unique_name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 			const keyword = e.detail;
 			console.log(keyword);
 			setDataTable(
 				SinglePage.modal.apply_client.querySelector('table-sticky'),
 				dataTableQuery("/Modal/ApplyClient#list").apply(),
 				master.select("ALL")
-					.setField("'DATA' AS code,'DATA' AS name,'DATA' AS kana,'DATA' AS client")
+					.setTable("system_apply_clients")
+					.setField("system_apply_clients.code,system_apply_clients.unique_name as name,system_apply_clients.kana")
+					.leftJoin("clients on system_apply_clients.client=clients.code")
+					.addField("clients.name as client")
 					.apply(),
 				row => {}
 			);
 		});
-		SinglePage.modal.client.setQuery(v => `${v}: client`).addEventListener("modal-open", e => {
+		SinglePage.modal.client.setQuery(v => master.select("ONE").setTable("clients").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 			const keyword = e.detail;
 			console.log(keyword);
 			setDataTable(
 				SinglePage.modal.client.querySelector('table-sticky'),
 				dataTableQuery("/Modal/Client#list").apply(),
 				master.select("ALL")
-					.setField("'DATA' AS code,'DATA' AS name,'DATA' AS kana")
+					.setTable("clients")
 					.apply(),
 				row => {}
 			);
 		});
-		SinglePage.modal.supplier.setQuery(v => `${v}: supplier`).addEventListener("modal-open", e => {
+		SinglePage.modal.supplier.setQuery(v => master.select("ONE").setTable("suppliers").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 			const keyword = e.detail;
 			console.log(keyword);
 			setDataTable(
 				SinglePage.modal.supplier.querySelector('table-sticky'),
 				dataTableQuery("/Modal/Supplier#list").apply(),
 				master.select("ALL")
-					.setField("'DATA' AS code,'DATA' AS name,'DATA' AS kana")
+					.setTable("suppliers")
 					.apply(),
 				row => {}
 			);
@@ -359,6 +371,16 @@ customElements.define("create-window", CreateWindowElement);
 			SinglePage.modal.approval.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
 		});
 		
+		master.select("ALL")
+			.setTable("categories")
+			.apply()
+			.forEach(function(row){
+				const option = document.createElement("option");
+				option.setAttribute("value", row.code);
+				option.textContent = row.name;
+				this.appendChild(option);
+			}, document.getElementById("category"));
+		
 		SinglePage.location = "/";
 		document.getElementById("reload").addEventListener("click", e => { SinglePage.currentPage.dispatchEvent(new CustomEvent("reload")); });
 	});
@@ -387,10 +409,10 @@ customElements.define("create-window", CreateWindowElement);
 				formControl.setAttribute("fc-class", `col-${row.width}`);
 				formControl.setAttribute("name", row.name);
 				formControl.setAttribute("type", row.type);
-				if(row.list != ""){
+				if((row.list != null) && (row.list != "")){
 					formControl.setAttribute("list", row.list);
 				}
-				if(row.placeholder != ""){
+				if((row.placeholder != null) && (row.placeholder != "")){
 					formControl.setAttribute("placeholder", row.placeholder);
 				}
 				
@@ -424,8 +446,8 @@ customElements.define("create-window", CreateWindowElement);
 				for(let col of columns){
 					const div = document.createElement("div");
 					const dataElement = document.createElement(col.tag_name);
-					const classList = col.class_list.split(/\s/).filter(v => v != "");
-					let attrStr = col.attributes;
+					const classList = (col.class_list == null) ? [] : col.class_list.split(/\s/).filter(v => v != "");
+					let attrStr = (col.attributes == null) ? "" : col.attributes;
 					do{
 						const nextStr = attrStr.replace(/^\s*([a-zA-Z0-9\-]+)="([^"]*?)"/, (str, name, value) => {
 							if(name != ""){

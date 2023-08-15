@@ -25,7 +25,19 @@ class DefaultController extends ControllerBase{
 	}
 	
 	public function login(){
-		$result = User::login();
+		//$result = User::login();
+		//return new JsonView($result);
+		
+		
+		session_regenerate_id();
+		$_SESSION["User.id"] = 1;
+		$_SESSION["User.username"] = "氏名";
+		$_SESSION["User.email"] = "info@example.org";
+		$_SESSION["User.role"] = "admin";
+		$_SESSION["User.department"] = "部署";
+		$_SESSION["User.manager"] = "1";
+		$result = new \Model\Result();
+		$result->addMessage("ログインに成功しました。", "INFO", "");
 		return new JsonView($result);
 	}
 	
@@ -45,7 +57,6 @@ class DefaultController extends ControllerBase{
 	
 	public function master(){
 		$fileName = SQLite::getCachedMasterFileName();
-		$_SESSION["SQLite.masterUpdate"] = filemtime($fileName);
 		return new FileView($fileName, "application/vnd.sqlite3");
 	}
 }

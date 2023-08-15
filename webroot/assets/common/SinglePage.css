@@ -465,6 +465,7 @@ modal-dialog:has([slot="footer"])::part(footer){
 	flex-direction: row;
 	flex-shrink: 0;
 	flex-wrap: wrap;
+	gap: 0.5rem;
 	align-items: center;
 	justify-content: flex-end;
 	padding: 0.75rem;
