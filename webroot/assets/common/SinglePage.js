@@ -209,12 +209,17 @@ class TableStickyElement extends HTMLElement{
 			const headerFragment = document.createDocumentFragment();
 			const columns = JSON.parse(columnData);
 			for(let column of columns){
-				widths.push(column.width);
+				let partList = (column.part == null) ? [] : column.part.split(/\s/).filter(v => v != "");
+				widths.push({value: column.width, part: partList.concat()});
 				let slot = Object.assign(document.createElement("slot"), {innerHTML: '<div part="empty"></div>'});
 				slot.setAttribute("name", column.slot);
+				if(partList.length > 0){
+					slot.setAttribute("part", partList.join(" "));
+				}
 				slotFragment.appendChild(slot);
 				let header = Object.assign(document.createElement("div"), {innerHTML: column.label});
-				header.setAttribute("part", "cell");
+				partList.push("cell");
+				header.setAttribute("part", partList.join(" "));
 				headerFragment.appendChild(header);
 			}
 			let i = 0;
@@ -223,11 +228,12 @@ class TableStickyElement extends HTMLElement{
 				sheet.deleteRule(0);
 			}
 			for(let width of widths){
+				width.part.push("col");
 				let col = document.createElement("span");
 				col.setAttribute("class", `col${i}`);
-				col.setAttribute("part", "col");
+				col.setAttribute("part", width.part.join(" "));
 				colFragment.appendChild(col);
-				sheet.insertRule(`.col${i}{width: ${width};}`, i);
+				sheet.insertRule(`.col${i}{width: ${width.value};}`, i);
 				i++;
 			}
 			const range = document.createRange();

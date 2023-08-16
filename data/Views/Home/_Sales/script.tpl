@@ -9,26 +9,36 @@
 			});
 			vp.addEventListener("reload", e => { this.reload(); });
 			vp.addEventListener("modal-close", e => { console.log(e); });
-			document.querySelector('table-sticky').columns = dataTableQuery("/Sales#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot}; });
+			document.querySelector('table-sticky').columns = dataTableQuery("/Sales#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Sales#search").apply()).then(form => { form.submit(); });
 		}
 		reload(){
-			fetch("/", {
+			fetch("/Sales/search", {
 				method: "POST",
 				body: this.#lastFormData
+			}).then(res => res.arrayBuffer()).then(buffer => {
+				this.transaction = new SQLite();
+				this.transaction.import(buffer, "transaction");
+				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
+				console.log(info);
+				
+				setDataTable(
+					document.querySelector('table-sticky'),
+					dataTableQuery("/Committed#list").apply(),
+					this.transaction.select("ALL")
+						.setTable("sales_slips")
+						.addField("sales_slips.*")
+						.leftJoin("sales_workflow using(ss)")
+						.addField("sales_workflow.regist_datetime")
+						.apply(),
+					row => {
+						const apply_client = row.querySelector('[slot="apply_client"]');
+						const manager = row.querySelector('[slot="manager"]');
+						apply_client.textContent = SinglePage.modal.apply_client.query(apply_client.textContent);
+						manager.textContent = SinglePage.modal.manager.query(apply_client.textContent);
+					}
+				);
 			});
-			
-			const data = new Array(5).fill({
-				ss: 1,
-				slip_number: "230700007",
-				regist_datetime: "2023-07-11 09:38:29",
-				subject: "プレミア 折込印刷・媒体費（ 6/27 関西エリア ）クリエイティブ８種",
-				client_name: "コスメディ製薬株式会社",
-				apply_client: "anynext株式会社",
-				manager: "細川智子",
-				note: "お取引条件：月末〆翌月末お支払い"
-			});
-			setDataTable(document.querySelector('table-sticky'), dataTableQuery("/Sales#list").apply(), data);
 		}
 	});
 {/literal}

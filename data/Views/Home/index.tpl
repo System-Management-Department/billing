@@ -2,7 +2,13 @@
 <link rel="stylesheet" type="text/css" href="assets/common/layout.css" />
 <link rel="stylesheet" type="text/css" href="assets/common/SinglePage.css" />
 <style type="text/css">
-show-dialog{ display: contents; }
+table-sticky.h-summary-data::part(d-summary-data),table-sticky.h-summary-data table-row::part(d-summary-data){
+	display: none;
+}
+table-sticky[columns]::part(d-circulation),table-row::part(d-circulation){
+	display: none;
+}
+
 </style>
 {/literal}{/block}
 {block name="scripts"}{literal}
@@ -109,137 +115,26 @@ customElements.define("create-window", CreateWindowElement);
 			master.use("master").then(master => {
 				fetch("/Default/master").then(res => res.arrayBuffer()).then(buffer => {
 					master.import(buffer, "master");
-					console.log(master.tables);
 					resolve();
 				});
 			});
-			/*
-			master.use("master").then(master => {
-				master.createTable("form_datas", ["location", "column", "label", "width", "name", "type", "list", "require", "placeholder", "no"], [
-					["/Committed#search", "1", "伝票番号",       "10", "slip_number",          "text",      "",               "", "",                         "1"],
-					["/Committed#search", "1", "確定日付",       "10", "accounting_date",      "daterange", "",               "", "",                         "2"],
-					["/Committed#search", "1", "部門",           "10", "division",             "select",    "division",       "", "",                         "3"],
-					["/Committed#search", "2", "当社担当者",     "10", "manager",              "keyword",   "manager",        "", "担当者名・担当者CDで検索", "4"],
-					["/Committed#search", "2", "請求先",         "10", "billing_destination",  "keyword",   "apply_client",   "", "請求先名・請求先CDで検索", "5"],
-					["/Sales#search",     "1", "伝票番号",       "10", "slip_number",          "text",      "",               "", "",                         "1"],
-					["/Sales#search",     "1", "売上日付",       "10", "accounting_date",      "daterange", "",               "", "",                         "2"],
-					["/Sales#search",     "1", "部門",           "10", "division",             "select",    "division",       "", "",                         "3"],
-					["/Sales#search",     "2", "当社担当者",     "10", "manager",              "keyword",   "manager",        "", "担当者名・担当者CDで検索", "4"],
-					["/Sales#search",     "2", "請求先",         "10", "billing_destination",  "keyword",   "apply_client",   "", "請求先名・請求先CDで検索", "5"],
-					["/Billing#search",   "1", "伝票番号",       "10", "slip_number",          "text",      "",               "", "",                         "1"],
-					["/Billing#search",   "1", "売上日付",       "10", "accounting_date",      "daterange", "",               "", "",                         "2"],
-					["/Billing#search",   "1", "部門",           "10", "division",             "select",    "division",       "", "",                         "3"],
-					["/Billing#search",   "2", "当社担当者",     "10", "manager",              "keyword",   "manager",        "", "担当者名・担当者CDで検索", "4"],
-					["/Billing#search",   "2", "請求先",         "10", "billing_destination",  "keyword",   "apply_client",   "", "請求先名・請求先CDで検索", "5"],
-					["/Purchase#search",  "1", "伝票番号",       "10", "slip_number",          "text",      "",               "", "",                         "1"],
-					["/Purchase#search",  "1", "確定日付",       "10", "accounting_date",      "daterange", "",               "", "",                         "2"],
-					["/Purchase#search",  "1", "クライアント名", "10", "delivery_destination", "text",      "",               "", "",                         "3"],
-					["/Purchase#search",  "1", "部門",           "10", "division",             "select",    "division",       "", "",                         "4"],
-					["/Purchase#search",  "2", "当社担当者",     "10", "manager",              "keyword",   "manager",        "", "担当者名・担当者CDで検索", "5"],
-					["/Purchase#search",  "2", "仕入先",         "10", "supplier",             "keyword",   "supplier",       "", "仕入先名・仕入先CDで検索", "6"],
-					["#sales_slip",       "1", "伝票番号",       "10", "slip_number",          "label",     "",               "", "",                         "1"],
-					["#sales_slip",       "1", "確定日時",       "10", "regist_datetime",      "label",     "",               "", "",                         "2"],
-					["#sales_slip",       "1", "売上日付",       "10", "approval_datetime",    "label",     "",               "", "",                         "3"],
-					["#sales_slip",       "1", "当社担当者",     "10", "manager",              "label",     "manager",        "", "",                         "4"],
-					["#sales_slip",       "1", "請求書件名",     "10", "subject",              "label",     "",               "", "",                         "5"],
-					["#sales_slip",       "1", "入金予定日",     "10", "payment_date",         "label",     "",               "", "",                         "6"],
-					["#sales_slip",       "2", "請求書パターン", "10", "invoice_format",       "label",     "invoice_format", "", "",                         "1"],
-					["#sales_slip",       "2", "請求先",         "10", "apply_client",         "label",     "apply_client",   "", "",                         "2"],
-					["#sales_slip",       "2", "納品先",         "10", "client_name",          "label",     "",               "", "",                         "3"],
-					["#sales_slip",       "2", "備考",           "10", "note",                 "label",     "",               "", "",                         "4"]
-				]);
-				master.createTable("table_datas", ["location", "label", "width", "slot", "tag_name", "class_list", "property", "attributes", "no"], [
-					["/Committed#list",         "仕入明細",           "5rem",                   "purchases_detail", "show-dialog", "btn btn-sm btn-success bx", "ss",              "label=\"仕入明細\" target=\"purchases_detail\"", "1"],
-					["/Committed#list",         "売上明細",           "5rem",                   "salses_detail",    "show-dialog", "btn btn-sm btn-success bx", "ss",              "label=\"売上明細\" target=\"salses_detail\"",    "2"],
-					["/Committed#list",         "確認承認",           "5rem",                   "approval",         "show-dialog", "btn btn-sm btn-primary bx", "ss",              "label=\"確認承認\" target=\"approval\"",         "3"],
-					["/Committed#list",         "追加修正",           "5rem",                   "edit",             "create-window","btn btn-sm btn-primary bx", "ss",              "label=\"追加修正\" base=\"/Committed/edit/\" top=\"0\" left=\"0\" width=\"1200\" height=\"600\"", "4"],
-					["/Committed#list",         "伝票番号",           "5rem",                   "slip_number",      "span",        "",                          "slip_number",     "",                                               "5"],
-					["/Committed#list",         "確定日時",           "5rem",                   "regist_datetime",  "span",        "",                          "regist_datetime", "",                                               "6"],
-					["/Committed#list",         "件名",               "5rem",                   "subject",          "span",        "",                          "subject",         "",                                               "7"],
-					["/Committed#list",         "クライアント名",     "5rem",                   "client_name",      "span",        "",                          "client_name",     "",                                               "8"],
-					["/Committed#list",         "請求先名",           "5rem",                   "apply_client",     "span",        "",                          "apply_client",    "",                                               "9"],
-					["/Committed#list",         "担当者名",           "5rem",                   "manager",          "span",        "",                          "manager",         "",                                               "10"],
-					["/Committed#list",         "備考",               "5rem",                   "note",             "span",        "",                          "note",            "",                                               "11"],
-					["/Sales#list",             "仕入明細",           "5rem",                   "purchases_detail", "show-dialog", "btn btn-sm btn-success bx", "ss",              "label=\"仕入明細\" target=\"purchases_detail\"", "1"],
-					["/Sales#list",             "売上明細",           "5rem",                   "salses_detail",    "show-dialog", "btn btn-sm btn-success bx", "ss",              "label=\"売上明細\" target=\"salses_detail\"",    "2"],
-					["/Sales#list",             "承認解除",           "5rem",                   "approval",         "show-dialog", "btn btn-sm btn-primary bx", "ss",              "label=\"承認解除\" target=\"a2_details\"",       "3"],
-					["/Sales#list",             "伝票番号",           "8rem",                   "slip_number",      "span",        "",                          "slip_number",     "",                                               "4"],
-					["/Sales#list",             "確定日時",           "8rem",                   "regist_datetime",  "span",        "",                          "regist_datetime", "",                                               "5"],
-					["/Sales#list",             "件名",               "auto",                   "subject",          "span",        "",                          "subject",         "",                                               "6"],
-					["/Sales#list",             "クライアント名",     "auto",                   "client_name",      "span",        "",                          "client_name",     "",                                               "7"],
-					["/Sales#list",             "請求先名",           "auto",                   "apply_client",     "span",        "",                          "apply_client",    "",                                               "8"],
-					["/Sales#list",             "担当者名",           "auto",                   "manager",          "span",        "",                          "manager",         "",                                               "9"],
-					["/Sales#list",             "備考",               "auto",                   "note",             "span",        "",                          "note",            "",                                               "10"],
-					["/Billing#list",           "売上明細",           "5rem",                   "salses_detail",    "show-dialog", "btn btn-sm btn-success bx", "ss",              "label=\"売上明細\" target=\"salses_detail\"",    "1"],
-					["/Billing#list",           "伝票番号",           "8rem",                   "slip_number",      "span",        "",                          "slip_number",     "",                                               "2"],
-					["/Billing#list",           "確定日時",           "8rem",                   "regist_datetime",  "span",        "",                          "regist_datetime", "",                                               "3"],
-					["/Billing#list",           "件名",               "auto",                   "subject",          "span",        "",                          "subject",         "",                                               "4"],
-					["/Billing#list",           "クライアント名",     "auto",                   "client_name",      "span",        "",                          "client_name",     "",                                               "5"],
-					["/Billing#list",           "請求先名",           "auto",                   "apply_client",     "span",        "",                          "apply_client",    "",                                               "6"],
-					["/Billing#list",           "担当者名",           "auto",                   "manager",          "span",        "",                          "manager",         "",                                               "7"],
-					["/Billing#list",           "備考",               "auto",                   "note",             "span",        "",                          "note",            "",                                               "8"],
-					["/Purchase#list",          "仕入登録",           "5rem",                   "edit",             "create-window","btn btn-sm btn-primary bx", "sd",              "label=\"仕入登録\" base=\"/Purchase/edit/\" top=\"0\" left=\"0\" width=\"1200\" height=\"600\"", "1"],
-					["/Purchase#list",          "担当者名",           "auto",                   "manager",          "span",        "",                          "manager",         "",                                               "2"],
-					["/Purchase#list",          "伝票番号",           "8rem",                   "slip_number",      "span",        "",                          "slip_number",     "",                                               "3"],
-					["/Purchase#list",          "確定日時",           "8rem",                   "regist_datetime",  "span",        "",                          "regist_datetime", "",                                               "4"],
-					["/Purchase#list",          "クライアント名",     "auto",                   "client_name",      "span",        "",                          "client_name",     "",                                               "5"],
-					["/Purchase#list",          "件名",               "auto",                   "subject",          "span",        "",                          "subject",         "",                                               "6"],
-					["/Purchase#list",          "仕入先",             "auto",                   "supplier",         "span",        "",                          "supplier",        "",                                               "7"],
-					["/Purchase#list",          "仕入金額（税抜き）", "auto",                   "amount_exc",       "span",        "d-block text-end",          "amount_exc",      "",                                               "8"],
-					["/Purchase#list",          "仕入金額（税込み）", "auto",                   "amount_inc",       "span",        "d-block text-end",          "amount_inc",      "",                                               "9"],
-					["/Purchase#list",          "請求書受領",         "auto",                   "payment",          "show-dialog", "btn btn-sm btn-primary bx", "pu",              "label=\"請求書受領\" target=\"\"",              "10"],
-					["/Modal/Manager#list",     "コード",             "6rem",                   "code",             "span",        "",                          "code",            "",                                               "1"],
-					["/Modal/Manager#list",     "担当者名",           "calc(50vw - 6rem)",      "name",             "span",        "",                          "name",            "",                                               "2"],
-					["/Modal/Manager#list",     "カナ",               "calc(50vw - 6rem)",      "kana",             "span",        "",                          "kana",            "",                                               "3"],
-					["/Modal/Manager#list",     "選択",               "3rem",                   "select",           "list-button", "btn btn-sm btn-success",    "code",            "label=\"選択\" data-trigger=\"list\"",           "4"],
-					["/Modal/ApplyClient#list", "コード",             "6rem",                   "code",             "span",        "",                          "code",            "",                                               "1"],
-					["/Modal/ApplyClient#list", "得意先名",           "calc(100vw / 3 - 4rem)", "client",           "span",        "",                          "client",          "",                                               "2"],
-					["/Modal/ApplyClient#list", "請求先名",           "calc(100vw / 3 - 4rem)", "name",             "span",        "",                          "name",            "",                                               "3"],
-					["/Modal/ApplyClient#list", "カナ",               "calc(100vw / 3 - 4rem)", "kana",             "span",        "",                          "kana",            "",                                               "4"],
-					["/Modal/ApplyClient#list", "選択",               "3rem",                   "select",           "list-button", "btn btn-sm btn-success",    "code",            "label=\"選択\" data-trigger=\"list\"",           "5"],
-					["/Modal/Client#list",      "コード",             "6rem",                   "code",             "span",        "",                          "code",            "",                                               "1"],
-					["/Modal/Client#list",      "得意先名",           "calc(50vw - 6rem)",      "name",             "span",        "",                          "name",            "",                                               "2"],
-					["/Modal/Client#list",      "カナ",               "calc(50vw - 6rem)",      "kana",             "span",        "",                          "kana",            "",                                               "3"],
-					["/Modal/Client#list",      "選択",               "3rem",                   "select",           "list-button", "btn btn-sm btn-success",    "code",            "label=\"選択\" data-trigger=\"list\"",           "4"],
-					["/Modal/Supplier#list",    "コード",             "6rem",                   "code",             "span",        "",                          "code",            "",                                               "1"],
-					["/Modal/Supplier#list",    "仕入先名",           "calc(50vw - 6rem)",      "name",             "span",        "",                          "name",            "",                                               "2"],
-					["/Modal/Supplier#list",    "カナ",               "calc(50vw - 6rem)",      "kana",             "span",        "",                          "kana",            "",                                               "3"],
-					["/Modal/Supplier#list",    "選択",               "3rem",                   "select",           "list-button", "btn btn-sm btn-success",    "code",            "label=\"選択\" data-trigger=\"list\"",           "4"],
-					["/Detail/Sales#list",      "内容",               "auto",                   "detail",           "span",        "",                          "detail",          "",                                               "1"],
-					["/Detail/Sales#list",      "数量",               "auto",                   "quantity",         "span",        "",                          "quantity",        "",                                               "2"],
-					["/Detail/Sales#list",      "単位",               "auto",                   "unit",             "span",        "",                          "unit",            "",                                               "3"],
-					["/Detail/Sales#list",      "単価",               "auto",                   "unit_price",       "span",        "",                          "unit_price",      "",                                               "4"],
-					["/Detail/Sales#list",      "税抜金額",           "auto",                   "amount_exc",       "span",        "",                          "amount_exc",      "",                                               "5"],
-					["/Detail/Sales#list",      "消費税金額",         "auto",                   "amount_tax",       "span",        "",                          "amount_tax",      "",                                               "6"],
-					["/Detail/Sales#list",      "税込金額",           "auto",                   "amount_inc",       "span",        "",                          "amount_inc",      "",                                               "7"],
-					["/Detail/Sales#list",      "カテゴリー",         "auto",                   "category",         "span",        "",                          "category",        "",                                               "8"],
-					["/Detail/Purchase#list",   "内容",               "auto",                   "detail",           "span",        "",                          "detail",          "",                                               "1"],
-					["/Detail/Purchase#list",   "数量",               "auto",                   "quantity",         "span",        "",                          "quantity",        "",                                               "2"],
-					["/Detail/Purchase#list",   "単位",               "auto",                   "unit",             "span",        "",                          "unit",            "",                                               "3"],
-					["/Detail/Purchase#list",   "単価",               "auto",                   "unit_price",       "span",        "",                          "unit_price",      "",                                               "4"],
-					["/Detail/Purchase#list",   "税抜金額",           "auto",                   "amount_exc",       "span",        "",                          "amount_exc",      "",                                               "5"],
-					["/Detail/Purchase#list",   "消費税金額",         "auto",                   "amount_tax",       "span",        "",                          "amount_tax",      "",                                               "6"],
-					["/Detail/Purchase#list",   "税込金額",           "auto",                   "amount_inc",       "span",        "",                          "amount_inc",      "",                                               "7"],
-					["/Detail/Purchase#list",   "仕入先",             "auto",                   "supplier",         "span",        "",                          "supplier",        "",                                               "8"],
-					["/Detail/Purchase#list",   "支払日",             "auto",                   "payment_date",     "span",        "",                          "payment_date",    "",                                               "9"]
-				]);
-				resolve();
-			});
-			*/
 		});
 	}).then(() => {
-		SinglePage.modal.manager     .querySelector('table-sticky').columns = dataTableQuery("/Modal/Manager#list").setField("label,width,slot").apply();
-		SinglePage.modal.apply_client.querySelector('table-sticky').columns = dataTableQuery("/Modal/ApplyClient#list").setField("label,width,slot").apply();
-		SinglePage.modal.client      .querySelector('table-sticky').columns = dataTableQuery("/Modal/Client#list").setField("label,width,slot").apply();
-		SinglePage.modal.supplier    .querySelector('table-sticky').columns = dataTableQuery("/Modal/Supplier#list").setField("label,width,slot").apply();
+		SinglePage.modal.manager     .querySelector('table-sticky').columns = dataTableQuery("/Modal/Manager#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.apply_client.querySelector('table-sticky').columns = dataTableQuery("/Modal/ApplyClient#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.client      .querySelector('table-sticky').columns = dataTableQuery("/Modal/Client#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.supplier    .querySelector('table-sticky').columns = dataTableQuery("/Modal/Supplier#list").setField("label,width,slot,part").apply();
 		
-		SinglePage.modal.salses_detail   .querySelector('table-sticky').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot").apply();
-		SinglePage.modal.purchases_detail.querySelector('table-sticky').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot").apply();
-		SinglePage.modal.approval        .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot").apply();
-		SinglePage.modal.approval        .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot").apply();
+		SinglePage.modal.salses_detail   .querySelector('table-sticky').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.purchases_detail.querySelector('table-sticky').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.approval        .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.approval        .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.disapproval     .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.disapproval     .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
 		formTableInit(SinglePage.modal.salses_detail   .querySelector('div'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.purchases_detail.querySelector('div'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.approval        .querySelector('div'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.disapproval     .querySelector('div'), formTableQuery("#sales_slip").apply());
 		
 		SinglePage.modal.manager.setQuery(v => master.select("ONE").setTable("managers").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 			const keyword = e.detail;
@@ -302,8 +197,11 @@ customElements.define("create-window", CreateWindowElement);
 				formControls[i].value = res[name];
 			}
 			
+			const stable = SinglePage.modal.salses_detail.querySelector('table-sticky');
+			const attrs = db.select("ROW").setTable("sales_attributes").andWhere("ss=?", Number(e.detail)).apply();
+			const attrData = (attrs == null) ? {} : JSON.parse(attrs.data);
 			setDataTable(
-				SinglePage.modal.salses_detail.querySelector('table-sticky'),
+				stable,
 				dataTableQuery("/Detail/Sales#list").apply(),
 				db.select("ALL")
 					.setTable("purchase_relations")
@@ -313,6 +211,19 @@ customElements.define("create-window", CreateWindowElement);
 					.apply(),
 				row => {}
 			);
+			if("summary_header" in attrData){
+				let a = 1;
+				for(let header of attrData.summary_header){
+					const span = document.createElement("span");
+					span.textContent = header;
+					span.setAttribute("slot", `summary_data${a}`);
+					a++;
+					stable.appendChild(span);
+				}
+				stable.classList.remove("h-summary-data");
+			}else{
+				stable.classList.add("h-summary-data");
+			}
 		});
 		SinglePage.modal.purchases_detail.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
@@ -330,7 +241,8 @@ customElements.define("create-window", CreateWindowElement);
 				db.select("ALL")
 					.setTable("purchase_relations")
 					.leftJoin("purchases using(pu)")
-					.setField("DISTINCT purchases.*")
+					.setField("purchases.*")
+					.andWhere("pu IS NOT NULL")
 					.andWhere("purchase_relations.ss=?", Number(e.detail))
 					.apply(),
 				row => {}
@@ -346,8 +258,11 @@ customElements.define("create-window", CreateWindowElement);
 				formControls[i].value = res[name];
 			}
 			
+			const stable = SinglePage.modal.approval.querySelector('table-sticky[data-table="1"]');
+			const attrs = db.select("ROW").setTable("sales_attributes").andWhere("ss=?", Number(e.detail)).apply();
+			const attrData = (attrs == null) ? {} : JSON.parse(attrs.data);
 			setDataTable(
-				SinglePage.modal.approval.querySelector('table-sticky[data-table="1"]'),
+				stable,
 				dataTableQuery("/Detail/Sales#list").apply(),
 				db.select("ALL")
 					.setTable("purchase_relations")
@@ -357,18 +272,83 @@ customElements.define("create-window", CreateWindowElement);
 					.apply(),
 				row => {}
 			);
+			if("summary_header" in attrData){
+				let a = 1;
+				for(let header of attrData.summary_header){
+					const span = document.createElement("span");
+					span.textContent = header;
+					span.setAttribute("slot", `summary_data${a}`);
+					a++;
+					stable.appendChild(span);
+				}
+				stable.classList.remove("h-summary-data");
+			}else{
+				stable.classList.add("h-summary-data");
+			}
 			setDataTable(
 				SinglePage.modal.approval.querySelector('table-sticky[data-table="2"]'),
 				dataTableQuery("/Detail/Purchase#list").apply(),
 				db.select("ALL")
 					.setTable("purchase_relations")
 					.leftJoin("purchases using(pu)")
-					.setField("DISTINCT purchases.*")
+					.setField("purchases.*")
+					.andWhere("pu IS NOT NULL")
 					.andWhere("purchase_relations.ss=?", Number(e.detail))
 					.apply(),
 				row => {}
 			);
 			SinglePage.modal.approval.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
+		});
+		SinglePage.modal.disapproval.addEventListener("modal-open", e => {
+			const db = SinglePage.currentPage.instance.transaction;
+			const res = db.select("ROW").setTable("sales_slips").andWhere("ss=?", Number(e.detail)).apply();
+			const formControls = SinglePage.modal.disapproval.querySelectorAll('form-control[name]');
+			const n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("name");
+				formControls[i].value = res[name];
+			}
+			
+			const stable = SinglePage.modal.disapproval.querySelector('table-sticky[data-table="1"]');
+			const attrs = db.select("ROW").setTable("sales_attributes").andWhere("ss=?", Number(e.detail)).apply();
+			const attrData = (attrs == null) ? {} : JSON.parse(attrs.data);
+			setDataTable(
+				stable,
+				dataTableQuery("/Detail/Sales#list").apply(),
+				db.select("ALL")
+					.setTable("purchase_relations")
+					.leftJoin("sales_details using(sd)")
+					.setField("DISTINCT sales_details.*")
+					.andWhere("purchase_relations.ss=?", Number(e.detail))
+					.apply(),
+				row => {}
+			);
+			if("summary_header" in attrData){
+				let a = 1;
+				for(let header of attrData.summary_header){
+					const span = document.createElement("span");
+					span.textContent = header;
+					span.setAttribute("slot", `summary_data${a}`);
+					a++;
+					stable.appendChild(span);
+				}
+				stable.classList.remove("h-summary-data");
+			}else{
+				stable.classList.add("h-summary-data");
+			}
+			setDataTable(
+				SinglePage.modal.disapproval.querySelector('table-sticky[data-table="2"]'),
+				dataTableQuery("/Detail/Purchase#list").apply(),
+				db.select("ALL")
+					.setTable("purchase_relations")
+					.leftJoin("purchases using(pu)")
+					.setField("purchases.*")
+					.andWhere("pu IS NOT NULL")
+					.andWhere("purchase_relations.ss=?", Number(e.detail))
+					.apply(),
+				row => {}
+			);
+			SinglePage.modal.disapproval.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
 		});
 		
 		master.select("ALL")
@@ -578,7 +558,7 @@ customElements.define("create-window", CreateWindowElement);
 		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">承認</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
-	<modal-dialog name="a2_details" label="承認解除">
+	<modal-dialog name="disapproval" label="承認解除">
 		<div slot="body" class="p-4" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
 		<div slot="body">
 			売上明細
@@ -588,11 +568,15 @@ customElements.define("create-window", CreateWindowElement);
 			仕入明細
 		</div>
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);" data-table="2"></table-sticky>
-		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success" data-result="1">承認解除</button>
+		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">承認解除</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
-	<modal-dialog name="a3_details" label="締め解除">
+	<modal-dialog name="release" label="締め解除">
+		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">締め解除</button>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
-	<modal-dialog name="a4_details" label="請求書受領">
+	<modal-dialog name="payment" label="請求書受領">
+		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">請求書受領</button>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 {/block}

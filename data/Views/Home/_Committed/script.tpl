@@ -15,7 +15,7 @@
 				}
 				console.log(e);
 			});
-			document.querySelector('table-sticky').columns = dataTableQuery("/Committed#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot}; });
+			document.querySelector('table-sticky').columns = dataTableQuery("/Committed#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Committed#search").apply()).then(form => { form.submit(); });
 		}
 		reload(){
@@ -26,13 +26,6 @@
 				this.transaction = new SQLite();
 				this.transaction.import(buffer, "transaction");
 				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
-				console.log(this.transaction.tables);
-				console.log(this.transaction.select("ALL").setTable("sales_slips").apply());
-				console.log(this.transaction.select("ALL").setTable("sales_attributes").apply());
-				console.log(this.transaction.select("ALL").setTable("sales_workflow").apply());
-				console.log(this.transaction.select("ALL").setTable("sales_details").apply());
-				console.log(this.transaction.select("ALL").setTable("sales_detail_attributes").apply());
-				console.log(this.transaction.select("ALL").setTable("purchases").apply());
 				console.log(info);
 				
 				setDataTable(
@@ -43,17 +36,12 @@
 						.addField("sales_slips.*")
 						.leftJoin("sales_workflow using(ss)")
 						.addField("sales_workflow.regist_datetime")
-						.apply().map(r => Object.assign(
-							r,
-							master.select("ROW")
-								.setField("'ar' AS apply_client,'ue' AS manager")
-								.apply()
-						)),
+						.apply(),
 					row => {
 						const apply_client = row.querySelector('[slot="apply_client"]');
 						const manager = row.querySelector('[slot="manager"]');
-						apply_client.textContent = `apply_client${apply_client.textContent}`;
-						manager.textContent = `manager${manager.textContent}`;
+						apply_client.textContent = SinglePage.modal.apply_client.query(apply_client.textContent);
+						manager.textContent = SinglePage.modal.manager.query(apply_client.textContent);
 					}
 				);
 			});

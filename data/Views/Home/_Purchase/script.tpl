@@ -9,7 +9,7 @@
 			});
 			vp.addEventListener("reload", e => { this.reload(); });
 			vp.addEventListener("modal-close", e => { console.log(e); });
-			document.querySelector('table-sticky').columns = dataTableQuery("/Purchase#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot}; });
+			document.querySelector('table-sticky').columns = dataTableQuery("/Purchase#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Purchase#search").apply()).then(form => { form.submit(); });
 		}
 		reload(){
