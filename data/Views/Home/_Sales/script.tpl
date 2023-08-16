@@ -24,7 +24,7 @@
 				
 				setDataTable(
 					document.querySelector('table-sticky'),
-					dataTableQuery("/Committed#list").apply(),
+					dataTableQuery("/Sales#list").apply(),
 					this.transaction.select("ALL")
 						.setTable("sales_slips")
 						.addField("sales_slips.*")
@@ -35,7 +35,7 @@
 						const apply_client = row.querySelector('[slot="apply_client"]');
 						const manager = row.querySelector('[slot="manager"]');
 						apply_client.textContent = SinglePage.modal.apply_client.query(apply_client.textContent);
-						manager.textContent = SinglePage.modal.manager.query(apply_client.textContent);
+						manager.textContent = SinglePage.modal.manager.query(manager.textContent);
 					}
 				);
 			});

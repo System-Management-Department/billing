@@ -41,7 +41,7 @@
 						const apply_client = row.querySelector('[slot="apply_client"]');
 						const manager = row.querySelector('[slot="manager"]');
 						apply_client.textContent = SinglePage.modal.apply_client.query(apply_client.textContent);
-						manager.textContent = SinglePage.modal.manager.query(apply_client.textContent);
+						manager.textContent = SinglePage.modal.manager.query(manager.textContent);
 					}
 				);
 			});

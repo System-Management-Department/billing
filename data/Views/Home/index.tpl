@@ -5,14 +5,13 @@
 table-sticky.h-summary-data::part(d-summary-data),table-sticky.h-summary-data table-row::part(d-summary-data){
 	display: none;
 }
-table-sticky[columns]::part(d-circulation),table-row::part(d-circulation){
+table-sticky.h-circulation::part(d-circulation),table-sticky.h-circulation table-row::part(d-circulation){
 	display: none;
 }
 
 </style>
 {/literal}{/block}
 {block name="scripts"}{literal}
-<script type="text/javascript" src="assets/node_modules/co.min.js"></script>
 <script type="text/javascript" src="assets/common/SQLite.js"></script>
 <script type="text/javascript" src="assets/common/Toaster.js"></script>
 <script type="text/javascript" src="assets/common/SinglePage.js"></script>
@@ -189,7 +188,14 @@ customElements.define("create-window", CreateWindowElement);
 		});
 		SinglePage.modal.salses_detail.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
-			const res = db.select("ROW").setTable("sales_slips").andWhere("ss=?", Number(e.detail)).apply();
+			const res = db.select("ROW")
+				.setTable("sales_slips")
+				.addField("sales_slips.*")
+				.andWhere("ss=?", Number(e.detail))
+				.leftJoin("sales_workflow using(ss)")
+				.addField("sales_workflow.regist_datetime")
+				.addField("sales_workflow.approval_datetime")
+				.apply();
 			const formControls = SinglePage.modal.salses_detail.querySelectorAll('form-control[name]');
 			const n = formControls.length;
 			for(let i = 0; i < n; i++){
@@ -205,11 +211,34 @@ customElements.define("create-window", CreateWindowElement);
 				dataTableQuery("/Detail/Sales#list").apply(),
 				db.select("ALL")
 					.setTable("purchase_relations")
+					.andWhere("purchase_relations.ss=?", Number(e.detail))
 					.leftJoin("sales_details using(sd)")
 					.setField("DISTINCT sales_details.*")
-					.andWhere("purchase_relations.ss=?", Number(e.detail))
+					.leftJoin("sales_detail_attributes using(sd)")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[0]') AS summary_data1")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[1]') AS summary_data2")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[2]') AS summary_data3")
+					.addField("json_extract(sales_detail_attributes.data, '$.circulation') AS circulation")
 					.apply(),
-				row => {}
+				(row, data) => {
+					const category = row.querySelector('[slot="category"]');
+					const categoryOptions = document.querySelectorAll('#category option[value]');
+					const categoryCnt = categoryOptions.length;
+					let found = false;
+					for(let i = 0; i < categoryCnt; i++){
+						if(categoryOptions[i].getAttribute("value") == category.textContent){
+							category.textContent = categoryOptions[i].textContent;
+							found = true;
+							break;
+						}
+					}
+					if(!found){
+						category.textContent = "";
+					}
+					if(data.record == 0){
+						row.classList.add("table-secondary");
+					}
+				}
 			);
 			if("summary_header" in attrData){
 				let a = 1;
@@ -224,10 +253,22 @@ customElements.define("create-window", CreateWindowElement);
 			}else{
 				stable.classList.add("h-summary-data");
 			}
+			if(db.select("ONE").setTable("sales_slips").setField("invoice_format").andWhere("ss=?", Number(e.detail)).apply() == 2){
+				stable.classList.remove("h-circulation");
+			}else{
+				stable.classList.add("h-circulation");
+			}
 		});
 		SinglePage.modal.purchases_detail.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
-			const res = db.select("ROW").setTable("sales_slips").andWhere("ss=?", Number(e.detail)).apply();
+			const res = db.select("ROW")
+				.setTable("sales_slips")
+				.addField("sales_slips.*")
+				.andWhere("ss=?", Number(e.detail))
+				.leftJoin("sales_workflow using(ss)")
+				.addField("sales_workflow.regist_datetime")
+				.addField("sales_workflow.approval_datetime")
+				.apply();
 			const formControls = SinglePage.modal.purchases_detail.querySelectorAll('form-control[name]');
 			const n = formControls.length;
 			for(let i = 0; i < n; i++){
@@ -245,12 +286,22 @@ customElements.define("create-window", CreateWindowElement);
 					.andWhere("pu IS NOT NULL")
 					.andWhere("purchase_relations.ss=?", Number(e.detail))
 					.apply(),
-				row => {}
+				row => {
+					const supplier = row.querySelector('[slot="supplier"]');
+					supplier.textContent = SinglePage.modal.supplier.query(supplier.textContent);
+				}
 			);
 		});
 		SinglePage.modal.approval.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
-			const res = db.select("ROW").setTable("sales_slips").andWhere("ss=?", Number(e.detail)).apply();
+			const res = db.select("ROW")
+				.setTable("sales_slips")
+				.addField("sales_slips.*")
+				.andWhere("ss=?", Number(e.detail))
+				.leftJoin("sales_workflow using(ss)")
+				.addField("sales_workflow.regist_datetime")
+				.addField("sales_workflow.approval_datetime")
+				.apply();
 			const formControls = SinglePage.modal.approval.querySelectorAll('form-control[name]');
 			const n = formControls.length;
 			for(let i = 0; i < n; i++){
@@ -266,11 +317,34 @@ customElements.define("create-window", CreateWindowElement);
 				dataTableQuery("/Detail/Sales#list").apply(),
 				db.select("ALL")
 					.setTable("purchase_relations")
+					.andWhere("purchase_relations.ss=?", Number(e.detail))
 					.leftJoin("sales_details using(sd)")
 					.setField("DISTINCT sales_details.*")
-					.andWhere("purchase_relations.ss=?", Number(e.detail))
+					.leftJoin("sales_detail_attributes using(sd)")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[0]') AS summary_data1")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[1]') AS summary_data2")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[2]') AS summary_data3")
+					.addField("json_extract(sales_detail_attributes.data, '$.circulation') AS circulation")
 					.apply(),
-				row => {}
+				(row, data) => {
+					const category = row.querySelector('[slot="category"]');
+					const categoryOptions = document.querySelectorAll('#category option[value]');
+					const categoryCnt = categoryOptions.length;
+					let found = false;
+					for(let i = 0; i < categoryCnt; i++){
+						if(categoryOptions[i].getAttribute("value") == category.textContent){
+							category.textContent = categoryOptions[i].textContent;
+							found = true;
+							break;
+						}
+					}
+					if(!found){
+						category.textContent = "";
+					}
+					if(data.record == 0){
+						row.classList.add("table-secondary");
+					}
+				}
 			);
 			if("summary_header" in attrData){
 				let a = 1;
@@ -285,6 +359,11 @@ customElements.define("create-window", CreateWindowElement);
 			}else{
 				stable.classList.add("h-summary-data");
 			}
+			if(db.select("ONE").setTable("sales_slips").setField("invoice_format").andWhere("ss=?", Number(e.detail)).apply() == 2){
+				stable.classList.remove("h-circulation");
+			}else{
+				stable.classList.add("h-circulation");
+			}
 			setDataTable(
 				SinglePage.modal.approval.querySelector('table-sticky[data-table="2"]'),
 				dataTableQuery("/Detail/Purchase#list").apply(),
@@ -295,13 +374,23 @@ customElements.define("create-window", CreateWindowElement);
 					.andWhere("pu IS NOT NULL")
 					.andWhere("purchase_relations.ss=?", Number(e.detail))
 					.apply(),
-				row => {}
+				row => {
+					const supplier = row.querySelector('[slot="supplier"]');
+					supplier.textContent = SinglePage.modal.supplier.query(supplier.textContent);
+				}
 			);
 			SinglePage.modal.approval.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
 		});
 		SinglePage.modal.disapproval.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
-			const res = db.select("ROW").setTable("sales_slips").andWhere("ss=?", Number(e.detail)).apply();
+			const res = db.select("ROW")
+				.setTable("sales_slips")
+				.addField("sales_slips.*")
+				.andWhere("ss=?", Number(e.detail))
+				.leftJoin("sales_workflow using(ss)")
+				.addField("sales_workflow.regist_datetime")
+				.addField("sales_workflow.approval_datetime")
+				.apply();
 			const formControls = SinglePage.modal.disapproval.querySelectorAll('form-control[name]');
 			const n = formControls.length;
 			for(let i = 0; i < n; i++){
@@ -317,11 +406,34 @@ customElements.define("create-window", CreateWindowElement);
 				dataTableQuery("/Detail/Sales#list").apply(),
 				db.select("ALL")
 					.setTable("purchase_relations")
+					.andWhere("purchase_relations.ss=?", Number(e.detail))
 					.leftJoin("sales_details using(sd)")
 					.setField("DISTINCT sales_details.*")
-					.andWhere("purchase_relations.ss=?", Number(e.detail))
+					.leftJoin("sales_detail_attributes using(sd)")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[0]') AS summary_data1")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[1]') AS summary_data2")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[2]') AS summary_data3")
+					.addField("json_extract(sales_detail_attributes.data, '$.circulation') AS circulation")
 					.apply(),
-				row => {}
+				(row, data) => {
+					const category = row.querySelector('[slot="category"]');
+					const categoryOptions = document.querySelectorAll('#category option[value]');
+					const categoryCnt = categoryOptions.length;
+					let found = false;
+					for(let i = 0; i < categoryCnt; i++){
+						if(categoryOptions[i].getAttribute("value") == category.textContent){
+							category.textContent = categoryOptions[i].textContent;
+							found = true;
+							break;
+						}
+					}
+					if(!found){
+						category.textContent = "";
+					}
+					if(data.record == 0){
+						row.classList.add("table-secondary");
+					}
+				}
 			);
 			if("summary_header" in attrData){
 				let a = 1;
@@ -336,6 +448,11 @@ customElements.define("create-window", CreateWindowElement);
 			}else{
 				stable.classList.add("h-summary-data");
 			}
+			if(db.select("ONE").setTable("sales_slips").setField("invoice_format").andWhere("ss=?", Number(e.detail)).apply() == 2){
+				stable.classList.remove("h-circulation");
+			}else{
+				stable.classList.add("h-circulation");
+			}
 			setDataTable(
 				SinglePage.modal.disapproval.querySelector('table-sticky[data-table="2"]'),
 				dataTableQuery("/Detail/Purchase#list").apply(),
@@ -346,7 +463,10 @@ customElements.define("create-window", CreateWindowElement);
 					.andWhere("pu IS NOT NULL")
 					.andWhere("purchase_relations.ss=?", Number(e.detail))
 					.apply(),
-				row => {}
+				row => {
+					const supplier = row.querySelector('[slot="supplier"]');
+					supplier.textContent = SinglePage.modal.supplier.query(supplier.textContent);
+				}
 			);
 			SinglePage.modal.disapproval.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
 		});
@@ -360,6 +480,15 @@ customElements.define("create-window", CreateWindowElement);
 				option.textContent = row.name;
 				this.appendChild(option);
 			}, document.getElementById("category"));
+		master.select("ALL")
+			.setTable("divisions")
+			.apply()
+			.forEach(function(row){
+				const option = document.createElement("option");
+				option.setAttribute("value", row.code);
+				option.textContent = row.name;
+				this.appendChild(option);
+			}, document.getElementById("division"));
 		
 		SinglePage.location = "/";
 		document.getElementById("reload").addEventListener("click", e => { SinglePage.currentPage.dispatchEvent(new CustomEvent("reload")); });
@@ -450,7 +579,7 @@ customElements.define("create-window", CreateWindowElement);
 				}
 				const dataRow = parent.insertRow(...elements);
 				if(callback != null){
-					callback(dataRow);
+					callback(dataRow, row);
 				}
 			}
 			setTimeout(() => { resolve(parent); }, 0);
@@ -514,6 +643,7 @@ customElements.define("create-window", CreateWindowElement);
 	</div>
 	
 	<datalist id="category"></datalist>
+	<datalist id="division"></datalist>
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>
 	<modal-dialog name="manager" label="当社担当者選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);">
@@ -530,52 +660,42 @@ customElements.define("create-window", CreateWindowElement);
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
 	<modal-dialog name="salses_detail" label="売上明細">
-		<div slot="body" class="p-4" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
-		<div slot="body">
-			売上明細
-		</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
+		<div slot="body" class="mt-3">売上明細</div>
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="purchases_detail" label="仕入明細">
-		<div slot="body" class="p-4" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
-		<div slot="body">
-			仕入明細
-		</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
+		<div slot="body" class="mt-3">仕入明細</div>
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="approval" label="承認">
-		<div slot="body" class="p-4" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
-		<div slot="body">
-			売上明細
-		</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
+		<div slot="body" class="mt-3">売上明細</div>
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);" data-table="1"></table-sticky>
-		<div slot="body">
-			仕入明細
-		</div>
+		<div slot="body" class="mt-3">仕入明細</div>
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);" data-table="2"></table-sticky>
 		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">承認</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="disapproval" label="承認解除">
-		<div slot="body" class="p-4" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
-		<div slot="body">
-			売上明細
-		</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
+		<div slot="body" class="mt-3">売上明細</div>
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);" data-table="1"></table-sticky>
-		<div slot="body">
-			仕入明細
-		</div>
+		<div slot="body" class="mt-3">仕入明細</div>
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);" data-table="2"></table-sticky>
 		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">承認解除</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="release" label="締め解除">
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
 		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">締め解除</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="payment" label="請求書受領">
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
 		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">請求書受領</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>

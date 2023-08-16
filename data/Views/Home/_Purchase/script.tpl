@@ -13,25 +13,40 @@
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Purchase#search").apply()).then(form => { form.submit(); });
 		}
 		reload(){
-			fetch("/", {
+			fetch("/Purchase/search", {
 				method: "POST",
 				body: this.#lastFormData
+			}).then(res => res.arrayBuffer()).then(buffer => {
+				this.transaction = new SQLite();
+				this.transaction.import(buffer, "transaction");
+				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
+				console.log(info);
+				
+				setDataTable(
+					document.querySelector('table-sticky'),
+					dataTableQuery("/Purchase#list").apply(),
+					this.transaction.select("ALL")
+						.setTable("purchase_relations")
+						.leftJoin("purchases using(pu)")
+						.addField("purchases.*")
+						.leftJoin("sales_slips using(ss)")
+						.addField("sales_slips.apply_client")
+						.addField("sales_slips.client_name")
+						.addField("sales_slips.leader")
+						.addField("sales_slips.manager")
+						.addField("sales_slips.project")
+						.addField("sales_slips.slip_number")
+						.addField("sales_slips.subject")
+						.apply(),
+					(row, data) => {
+						if(data.pu == null){
+							row.querySelector('[slot="payment"]').innerHTML = "";
+						}
+						const manager = row.querySelector('[slot="manager"]');
+						manager.textContent = SinglePage.modal.manager.query(manager.textContent);
+					}
+				);
 			});
-			
-			const data = new Array(5).fill({
-				slip_number: "230700007",
-				regist_datetime: "2023-07-11 09:38:29",
-				subject: "プレミア 折込印刷・媒体費（ 6/27 関西エリア ）クリエイティブ８種",
-				client_name: "コスメディ製薬株式会社",
-				apply_client: "anynext株式会社",
-				manager: "細川智子",
-				sd: "1",
-				supplier: "*****",
-				amount_exc: "1,000,000",
-				amount_inc: "1,100,000",
-				payment: '<button type="button" class="btn btn-sm btn-success bx" onclick="SinglePage.modal.salses_detail.show();">請求書受領</button>'
-			});
-			setDataTable(document.querySelector('table-sticky'), dataTableQuery("/Purchase#list").apply(), data);
 		}
 	});
 {/literal}
