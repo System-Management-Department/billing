@@ -20,7 +20,7 @@ class PurchaseController extends ControllerBase{
 		$query = $db->select("ALL")
 			->setTable("purchase_relations")
 			->setField("purchase_relations.*")
-			->setLimit(100)
+			->setLimit(1000)
 			->leftJoin("sales_slips using(ss)")
 			->leftJoin("sales_details using(sd)")
 			->andWhere("sales_details.record=1");

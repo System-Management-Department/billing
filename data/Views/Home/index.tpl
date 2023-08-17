@@ -119,6 +119,7 @@ customElements.define("create-window", CreateWindowElement);
 			});
 		});
 	}).then(() => {
+		SinglePage.modal.leader      .querySelector('table-sticky').columns = dataTableQuery("/Modal/Leader#list").setField("label,width,slot,part").apply();
 		SinglePage.modal.manager     .querySelector('table-sticky').columns = dataTableQuery("/Modal/Manager#list").setField("label,width,slot,part").apply();
 		SinglePage.modal.apply_client.querySelector('table-sticky').columns = dataTableQuery("/Modal/ApplyClient#list").setField("label,width,slot,part").apply();
 		SinglePage.modal.client      .querySelector('table-sticky').columns = dataTableQuery("/Modal/Client#list").setField("label,width,slot,part").apply();
@@ -135,6 +136,18 @@ customElements.define("create-window", CreateWindowElement);
 		formTableInit(SinglePage.modal.approval        .querySelector('div'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.disapproval     .querySelector('div'), formTableQuery("#sales_slip").apply());
 		
+		SinglePage.modal.leader.setQuery(v => master.select("ONE").setTable("leaders").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
+			const keyword = e.detail;
+			console.log(keyword);
+			setDataTable(
+				SinglePage.modal.leader.querySelector('table-sticky'),
+				dataTableQuery("/Modal/Leader#list").apply(),
+				master.select("ALL")
+					.setTable("leaders")
+					.apply(),
+				row => {}
+			);
+		});
 		SinglePage.modal.manager.setQuery(v => master.select("ONE").setTable("managers").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 			const keyword = e.detail;
 			console.log(keyword);
@@ -645,10 +658,11 @@ customElements.define("create-window", CreateWindowElement);
 	<datalist id="category"></datalist>
 	<datalist id="division"></datalist>
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>
+	<modal-dialog name="leader" label="部門長選択">
+		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
+	</modal-dialog>
 	<modal-dialog name="manager" label="当社担当者選択">
-		<table-sticky slot="body" style="height: calc(100vh - 20rem);">
-			<table-row><div slot="code">DATA</div><div slot="name">DATA</div><div slot="kana">DATA</div><div slot="select"><button type="button" class="btn btn-sm btn-success" data-trigger="list" data-result="data">選択</button></div></table-row>
-		</table-sticky>
+		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
 	<modal-dialog name="apply_client" label="請求先選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>

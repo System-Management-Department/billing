@@ -20,7 +20,7 @@ class SalesController extends ControllerBase{
 		$query = $db->select("COL")
 			->setTable("sales_slips")
 			->setField("sales_slips.ss")
-			->setLimit(100)
+			->setLimit(1000)
 			->leftJoin("sales_workflow using(ss)")
 			->andWhere("approval=1")
 			->andWhere("close=0");
