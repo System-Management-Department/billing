@@ -8,6 +8,6 @@ function smarty_block_jsiife($params, $content, &$smarty, &$repeat){
 			$parameters[] = $params[$k];
 		}
 		$json = str_replace('"', '\\u0022', json_encode($parameters));
-		return "<script type=\"text/javascript\">(function({$argsStr}){{$content}}).apply(null, JSON.parse(\"{$json}\"));</script>";
+		return "<script type=\"text/javascript\">(function({$argsStr}){{$content}})(...(JSON.parse(\"{$json}\")));</script>";
 	}
 }

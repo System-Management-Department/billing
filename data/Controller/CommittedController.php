@@ -14,9 +14,10 @@ use Model\SalesSlip;
 use Model\SQLite;
 
 class CommittedController extends ControllerBase{
-	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	#[\Attribute\AcceptRole("admin", "manager", "leader")]
 	public function edit(){
 		$v = new View();
+		$v["id"] = $this->requestContext->id;
 		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}
 	
@@ -111,15 +112,58 @@ class CommittedController extends ControllerBase{
 		]), "application/vnd.sqlite3");
 	}
 	
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function detail(){
+		$db = Session::getDB();
+		$id = $this->requestContext->id;
+		
+		$query1 = $db->select("EXPORT")
+			->setTable("sales_slips")
+			->andWhere("ss=?", $id);
+		$query2 = $db->select("EXPORT")
+			->setTable("sales_attributes")
+			->andWhere("ss=?", $id);
+		$query3 = $db->select("EXPORT")
+			->setTable("sales_workflow")
+			->andWhere("ss=?", $id);
+		$query4 = $db->select("EXPORT")
+			->setTable("purchase_relations")
+			->andWhere("ss=?", $id);
+		$query5 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT sd FROM purchase_relations WHERE ss=?)", $id)
+			->setTable("sales_details")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.sd=sales_details.sd)");
+		$query6 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT sd FROM purchase_relations WHERE ss=?)", $id)
+			->setTable("sales_detail_attributes")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.sd=sales_detail_attributes.sd)");
+		$query7 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT pu FROM purchase_relations WHERE ss=?)", $id)
+			->setTable("purchases")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchases.pu)");
+		
+		return new FileView(SQLite::memoryData([
+			"sales_slips" => $query1(),
+			"sales_attributes" => $query2(),
+			"sales_workflow" => $query3(),
+			"purchase_relations" => $query4(),
+			"sales_details" => $query5(),
+			"sales_detail_attributes" => $query6(),
+			"purchases" => $query7(),
+			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt]]]
+		]), "application/vnd.sqlite3");
+	}
+	
 	#[\Attribute\AcceptRole("admin", "manager", "leader")]
 	public function update(){
 		$db = Session::getDB();
 		
 		// 検証
-		$result = SalesSlip::checkUpdate3($db, $_POST, [], $this->requestContext);
+		$result = SalesSlip::checkUpdate($db, $_POST, [], $this->requestContext);
 		
 		if(!$result->hasError()){
-			SalesSlip::execUpdate3($db, $_POST, $this->requestContext, $result);
+			SalesSlip::execUpdate($db, $_POST, $this->requestContext, $result);
 		}
 		
 		return new JsonView($result);

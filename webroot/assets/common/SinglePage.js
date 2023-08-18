@@ -543,6 +543,7 @@ class FormControlElement extends HTMLElement{
 	}
 	set invalid(value){
 		this.#props.invalid = value;
+		this.#input.props = this.#props;
 	}
 	get invalid(){
 		return this.#props.invalid;
@@ -574,6 +575,10 @@ class FormControlElement extends HTMLElement{
 			const next = [...name, ""];
 			for(let val of value){
 				this.#genValue(val, next, fragment);
+			}
+		}else if(value instanceof Date){
+			if(!Number.isNaN(value)){
+				this.#genValue(`${value.getFullYear()}-${`0${value.getMonth() + 1}`.slice(-2)}-${`0${value.getDay()}`.slice(-2)}`, name, fragment);
 			}
 		}else if(typeof value == "object"){
 			for(let key in value){

@@ -4,26 +4,8 @@ use App\Validator;
 use App\Smarty\SelectionModifiers;
 
 class SalesSlip{
-	public static function getJsonQuery($db){
-		list($jsonField, $keys) = $db->getTable2JsonField(["sales_slips", null], null, [
-			"id" => null,
-			"output_processed" => null,
-			"close_processed" => null,
-			"closing_date" => null,
-			"created" => null,
-			"modified" => null
-		]);
-		$query = $db->select("ONE")
-			->addTable("sales_slips")
-			->addField("JSON_OBJECTAGG(id,{$jsonField})", ...$keys);
-		return $query;
-	}
-	
-	
 	public static function checkInsert($db, $q, $masterData){
 		$check = new Validator();
-		$check["slip_number"]->required("伝票番号を入力してください。")
-			->length("伝票番号は10文字以下で入力してください。", null, 10);
 		self::validate($check, $masterData, $db);
 		$result = $check($q);
 		return $result;
@@ -33,7 +15,23 @@ class SalesSlip{
 		$id = $context->id;
 		$check = new Validator();
 		self::validate($check, $masterData, $db);
+		$check["slip_number"]->required("伝票番号を入力してください。");
 		$result = $check($q);
+		
+		try{
+			$detail = json_decode($q["detail"], true);
+			$len = count($detail);
+			for($i = 0; $i < $len; $i++){
+				$result2 = new Result();
+				$result2->onAddMessage(function(&$message, &$status, &$name, $i){
+					$name = "detail/{$i}/{$name}";
+				}, $i);
+				$check = new Validator();
+				self::validateDetail($check, $masterData, $db, $detail[$i]);
+				$result->mergeMessage($check($result2, $detail[$i]));
+			}
+		}catch(\Exception $ex){
+		}
 		return $result;
 	}
 	
@@ -41,67 +39,40 @@ class SalesSlip{
 		登録・更新共通の検証
 	*/
 	public static function validate($check, $masterData, $db){
-		$check["division"]->required("部門を入力してください。");
-			//->range("部門を正しく入力してください。", "in", ($db->select("COL")->setTable("divisions")->setField("code"))());
-		//$check["team"]->required("チームを入力してください。")
-			//->range("チームを正しく入力してください。", "in", ($db->select("COL")->setTable("teams")->setField("code"))());
-		$check["manager"]->required("当社担当者を入力してください。");
-			//->range("当社担当者を正しく入力してください。", "in", ($db->select("COL")->setTable("managers")->setField("code"))());
-		$check["billing_destination"]->required("請求先を入力してください。");
-			//->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
-		$check["delivery_destination"]->required("納品先を入力してください。")
-			->length("納品先は80文字以下で入力してください。", null, 255);
-		//$check["sales_tax_calculation"]->required("税処理を入力してください。")
-		//	->range("税処理を正しく入力してください。", "in", [1, 2, 3, 4, 5, 6]);
 		$check["subject"]->required("件名を入力してください。");
+		$check["invoice_format"]->required("請求パターンを入力してください。");
+		$check["division"]->required("部門を入力してください。");
+		$check["leader"]->required("部門長を入力してください。");
+		$check["manager"]->required("当社担当者を入力してください。");
+		$check["client_name"]->required("納品先を入力してください。")
+			->length("納品先は80文字以下で入力してください。", null, 255);
+		$check["apply_client"]->required("請求先を入力してください。");
 		$check["payment_date"]->required("入金予定日を入力してください。")
 			->date("入金予定日を正しく入力してください。");
-		$check["invoice_format"]->required("請求書パターンを入力してください。")
-			->range("請求書パターンを正しく入力してください。", "in", array_keys(SelectionModifiers::invoiceFormat([])));
+		$check["amount_exc"]->required("税抜合計金額を入力してください。");
+		$check["amount_tax"]->required("消費税合計金額を入力してください。");
+		$check["amount_inc"]->required("税込合計金額を入力してください。");
 	}
 	
-	public static function execImport($db, $q, $context, $result){
-		$invoiceFormats = [];
-		foreach(SelectionModifiers::invoiceFormat([]) as $ak => $av){
-			$invoiceFormats[] = [$ak, $av];
-		}
-		$db->beginTransaction();
-		try{
-			$tempTable = $db->getJsonArray2Tabel([
-				"sales_slips" => [
-					"slip_number"          => "$.slip_number",
-					"accounting_date"      => "$.accounting_date",
-					"division"             => "$.division",
-					"team"                 => "$.team",
-					"manager"              => "$.manager",
-					"billing_destination"  => "$.billing_destination",
-					"delivery_destination" => "$.delivery_destination",
-					"subject"              => "$.subject",
-					"note"                 => "$.note",
-					"header1"              => "$.header1",
-					"header2"              => "$.header2",
-					"header3"              => "$.header3",
-					"payment_date"         => "$.payment_date",
-					"invoice_format"       => "$.invoice_format",
-					"sales_tax"            => "$.sales_tax",
-				],
-				"dual" => [
-					"detail text" => "$.detail"
-				]
-			], "t");
-			$query = $db->insertSelect("sales_slips", "`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`invoice_format`,`sales_tax`,`detail`,`created`,`modified`")
-				->addTable($tempTable, $q["json"])
-				->addField("`slip_number`,`accounting_date`,`division`,`team`,`manager`,`billing_destination`,`delivery_destination`,`subject`,`note`,`header1`,`header2`,`header3`,`payment_date`,`invoice_format`,`sales_tax`,CAST(`detail` AS JSON),now(),now()");
-			$query();
-			$db->commit();
-		}catch(Exception $ex){
-			$result->addMessage("読込に失敗しました。", "ERROR", "");
-			$result->setData($ex);
-			$db->rollback();
-		}
-		if(!$result->hasError()){
-			$result->addMessage("読込が完了しました。", "INFO", "");
-			@Logger::record($db, "売上取込", ["spreadsheet" => $q["spreadsheets"]]);
+	/**
+		登録・更新共通の検証（明細）
+	*/
+	public static function validateDetail($check, $masterData, $db, $q){
+		$check["record"]->required("計上を入力してください。")
+			->range("計上を正しく入力してください。", "in", [0, 1]);
+		if($q["record"] == 1){
+			$check["sd"]->required("行を選択してください。");
+			$check["detail"]->required("内容を入力してください。");
+			$check["quantity"]->required("数量を入力してください。");
+			$check["unit"]->required("単位を入力してください。");
+			$check["unit_price"]->required("単価を入力してください。");
+			$check["amount_exc"]->required("税抜金額を入力してください。");
+			$check["amount_tax"]->required("消費税金額を入力してください。");
+			$check["amount_inc"]->required("税込金額を入力してください。");
+			$check["taxable"]->required("課税を入力してください。")
+				->range("課税を正しく入力してください。", "in", [0, 1]);
+			$check["tax_rate"]->required("税率を入力してください。");
+			$check["category"]->required("カテゴリーを入力してください。");
 		}
 	}
 	
@@ -147,27 +118,35 @@ class SalesSlip{
 		$db->beginTransaction();
 		try{
 			$updateQuery = $db->updateSet("sales_slips", [
-				"division" => $q["division"],
-				"team" => $q["team"],
-				"manager" => $q["manager"],
-				"billing_destination" => $q["billing_destination"],
-				"delivery_destination" => $q["delivery_destination"],
-				//"sales_tax_calculation" => $q["sales_tax_calculation"],
+				"project" => $q["project"],
 				"subject" => $q["subject"],
-				"note" => $q["note"],
-				"header1" => $q["header1"],
-				"header2" => $q["header2"],
-				"header3" => $q["header3"],
+				"division" => $q["division"],
+				"leader" => $q["leader"],
+				"manager" => $q["manager"],
+				"client_name" => $q["client_name"],
+				"apply_client" => $q["apply_client"],
 				"payment_date" => $q["payment_date"],
-				"detail" => $q["detail"],
-				"invoice_format" => $q["invoice_format"],
-			],[
-				"output_processed" => 0,
-				"modified" => "now()",
-			]);
-			$updateQuery->andWhere("id=?", $id)
-				->andWhere("close_processed=0");
+				"note" => $q["note"],
+				"amount_exc" => $q["amount_exc"],
+				"amount_tax" => $q["amount_tax"],
+				"amount_inc" => $q["amount_inc"],
+			],[]);
+			$updateQuery->andWhere("ss=?", $id);
 			$updateQuery();
+			
+			$detail = json_decode($q["detail"], true);
+			$len = count($detail);
+			for($i = 0; $i < $len; $i++){
+				$updateQuery = $db->updateSet("sales_details", [
+					"detail" => $detail[$i]["detail"],
+					"quantity" => $detail[$i]["quantity"],
+					"unit" => $detail[$i]["unit"],
+					"unit_price" => $detail[$i]["unit_price"],
+				],[]);
+				$updateQuery->andWhere("sd=?", $detail[$i]["sd"]);
+				$updateQuery();
+			}
+			
 			$db->commit();
 		}catch(Exception $ex){
 			$result->addMessage("編集保存に失敗しました。", "ERROR", "");
@@ -176,7 +155,6 @@ class SalesSlip{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
-			@Logger::record($db, "編集", ["sales_slips" => intval($id)]);
 		}
 	}
 	
