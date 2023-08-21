@@ -1,0 +1,97 @@
+<?php
+namespace Config;
+
+class OAuth{
+	static $GoogleClientId = "";
+	static $GoogleClientSecret = "";
+	static $GoogleRedirectUri = "";
+	public static function setOAuth($v){
+		$v["token"] = [
+			"url" => "https://accounts.google.com/o/oauth2/token",
+			"body" => [
+				"client_id" => self::$GoogleClientId,
+				"client_secret" => self::$GoogleClientSecret,
+				"redirect_uri" => self::$GoogleRedirectUri,
+				"grant_type" => "authorization_code",
+			]
+		];
+		$v["oauth"] = "https://accounts.google.com/o/oauth2/auth?client_id=" . self::$GoogleClientId . "&redirect_uri=" . self::$GoogleRedirectUri . "&scope=https://www.googleapis.com/auth/userinfo.email&access_type=offline&response_type=code";
+	}
+	
+	public static function login($email){
+		try{
+			$access = json_decode(file_get_contents("http://{$_SERVER["SERVER_NAME"]}/exment/admin/oauth/token", false, stream_context_create([
+				"http" => [
+					"method"  => "POST",
+					"header"  => implode("\r\n", [
+						"Content-Type: application/json",
+					]),
+					'content' => json_encode([
+						"grant_type"    => "api_key",
+						"client_id"     => "",
+						"client_secret" => "",
+						"api_key"       => "",
+						"scope"         => "value_read",
+					]),
+				]
+			])), true);
+
+			$response1 = json_decode(file_get_contents("http://{$_SERVER["SERVER_NAME"]}/exment/admin/api/data/user/query-column?" . http_build_query(["q" => "email eq {$email}"]), false, stream_context_create([
+				"http" => [
+					"method"  => "GET",
+					"header"  => implode("\r\n", [
+						"Content-Type: application/json",
+						"Authorization: Bearer {$access["access_token"]}",
+					]),
+				]
+			])), true);
+			$text = "";
+			if(count($response1["data"]) > 0){
+				$data = reset($response1["data"]);
+				$manager = $data["value"]["manager"];
+				$response2 = json_decode(file_get_contents("http://{$_SERVER["SERVER_NAME"]}/exment/admin/api/data/managers/query-column?" . http_build_query(["q" => "id eq {$manager}"]), false, stream_context_create([
+					"http" => [
+						"method"  => "GET",
+						"header"  => implode("\r\n", [
+							"Content-Type: application/json",
+							"Authorization: Bearer {$access["access_token"]}",
+						]),
+					]
+				])), true);
+				$managerData = null;
+				if(count($response2["data"]) > 0){
+					$managerData = reset($response2["data"]);
+				}
+				$text .= json_encode($response2["data"]);
+				
+				$department = $data["value"]["department"];
+				$response3 = json_decode(file_get_contents("http://{$_SERVER["SERVER_NAME"]}/exment/admin/api/data/divisions/query-column?" . http_build_query(["q" => "id eq {$department}"]), false, stream_context_create([
+					"http" => [
+						"method"  => "GET",
+						"header"  => implode("\r\n", [
+							"Content-Type: application/json",
+							"Authorization: Bearer {$access["access_token"]}",
+						]),
+					]
+				])), true);
+				$departmentData = null;
+				if(count($response3["data"]) > 0){
+					$departmentData = reset($response3["data"]);
+				}
+				$text .= json_encode($response3["data"]);
+				
+				session_regenerate_id();
+				$_SESSION["User.id"] = $data["id"];
+				$_SESSION["User.username"] = $data["value"]["user_name"];
+				$_SESSION["User.email"] = $data["value"]["email"];
+				$_SESSION["User.role"] = "admin";
+				$_SESSION["User.manager"] = is_null($managerData) ? "" : $managerData["value"]["name"];
+				$_SESSION["User.department"] = is_null($departmentData) ? "" : $departmentData["value"]["name"];
+			}
+			define("OAUTH", json_encode($response1["data"]) . $text);
+		}catch(Exception $ex){
+			define("OAUTH", $ex->getMessage());
+		}
+	}
+}
+

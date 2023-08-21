@@ -629,7 +629,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 						<div part="icon"></div>
 						<div>
 							<div part="account">
-								<div>部署</div>
+								<div>{$smarty.session["User.department"]}</div>
 								<div part="name">{$smarty.session["User.username"]}</div>
 							</div>
 							<div>{$smarty.session["User.email"]}</div>
