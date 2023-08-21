@@ -98,7 +98,7 @@ console.log(search);
 {block name="body"}
 <main class="form-signin">
 	<form class="text-center">
-		<img class="mb-4" src="img/signin_logo.png" alt="" width="72" height="57">
+		<img class="mb-4" src="/assets/common/image/signin_logo.png" alt="" width="72" height="57">
 		<h1 class="h3 mb-3 fw-normal">販売管理システム</h1>
 		<a href="{$oauth}" class="btn btn-success">ログイン</a>
 		<p class="mt-5 mb-3 text-muted">&copy; Direct-holdings 2023</p>

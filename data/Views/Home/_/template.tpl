@@ -76,8 +76,8 @@
 							</div></td>
 							<td><a class="btn btn-info" href="/x-reports/purchase/">仕入一覧表フォルダ</a></td>
 						</tr>
-						<tr class="table-dark">
-							<td><page-link href="/Purchase" class="btn btn-info">買掛減損一覧表</page-link></td>
+						<tr class="table-secondary">
+							<td><page-link href="/Purchase" class="btn btn-info">赤伝一覧表</page-link></td>
 							<td><div class="flex-grow-1 text-center">
 							</div></td>
 							<td></td>
