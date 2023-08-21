@@ -84,7 +84,7 @@ class OAuth{
 				$_SESSION["User.id"] = $data["id"];
 				$_SESSION["User.username"] = $data["value"]["user_name"];
 				$_SESSION["User.email"] = $data["value"]["email"];
-				$_SESSION["User.role"] = "admin";
+				$_SESSION["User.role"] = $data["value"]["role"];
 				$_SESSION["User.manager"] = is_null($managerData) ? "" : $managerData["value"]["name"];
 				$_SESSION["User.department"] = is_null($departmentData) ? "" : $departmentData["value"]["name"];
 			}
