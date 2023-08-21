@@ -578,7 +578,7 @@ class FormControlElement extends HTMLElement{
 			}
 		}else if(value instanceof Date){
 			if(!Number.isNaN(value)){
-				this.#genValue(`${value.getFullYear()}-${`0${value.getMonth() + 1}`.slice(-2)}-${`0${value.getDay()}`.slice(-2)}`, name, fragment);
+				this.#genValue(`${value.getFullYear()}-${`0${value.getMonth() + 1}`.slice(-2)}-${`0${value.getDate()}`.slice(-2)}`, name, fragment);
 			}
 		}else if(typeof value == "object"){
 			for(let key in value){
@@ -985,7 +985,7 @@ class FCDateRangeElement extends HTMLElement{
 		if(Number.isNaN(ins.getTime())){
 			return null;
 		}
-		return `${ins.getFullYear()}-${`0${ins.getMonth() + 1}`.slice(-2)}-${`0${ins.getDay()}`.slice(-2)}`;
+		return `${ins.getFullYear()}-${`0${ins.getMonth() + 1}`.slice(-2)}-${`0${ins.getDate()}`.slice(-2)}`;
 	}
 	#setList(){
 		let found = false;

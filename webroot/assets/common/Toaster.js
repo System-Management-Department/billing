@@ -1,6 +1,6 @@
 class Toaster{
 	static show(messages){
-		let container = document.querySelector('.toast-container');
+		let container = document.getElementById('spmain');
 		let option = {
 			animation: true,
 			autohide: false,
@@ -11,6 +11,7 @@ class Toaster{
 			let header = document.createElement("div");
 			let body = document.createElement("div");
 			let title = document.createElement("strong");
+			toast.setAttribute("slot", "toast");
 			toast.setAttribute("class", message["class"]);
 			header.setAttribute("class", "toast-header");
 			body.setAttribute("class", "toast-body text-white");

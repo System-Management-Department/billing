@@ -11,7 +11,7 @@ table-sticky.h-circulation::part(d-circulation),table-sticky.h-circulation table
 
 </style>
 {/literal}{/block}
-{block name="scripts"}{literal}
+{block name="scripts" append}{literal}
 <script type="text/javascript" src="assets/common/SQLite.js"></script>
 <script type="text/javascript" src="assets/common/Toaster.js"></script>
 <script type="text/javascript" src="assets/common/SinglePage.js"></script>
@@ -85,7 +85,7 @@ class CreateWindowElement extends HTMLElement{
 			if(this.hasAttribute("top")){
 				windowFeatures.push(`top=${this.getAttribute("top")}`);
 			}
-			open(`${this.getAttribute("base")}${this.textContent}`, "_blank", windowFeatures.join(","));
+			open(`${this.getAttribute("base")}${this.textContent}?channel=${CreateWindowElement.channel}`, "_blank", windowFeatures.join(","));
 		});
 	}
 	connectedCallback(){}
@@ -101,8 +101,23 @@ class CreateWindowElement extends HTMLElement{
 		}
 	}
 	static get observedAttributes(){ return ["label"]; }
+	static channel = null;
 }
 customElements.define("create-window", CreateWindowElement);
+
+CreateWindowElement.channel = "";
+new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e => {
+	const message = JSON.parse(e.data);
+	const classes = ["toast show bg-success", "toast show bg-warning", "toast show bg-danger"];
+	console.log(message);
+	Toaster.show(message.messages.map(m => {
+		return {
+			"class": classes[m[1]],
+			message: m[0],
+			title: message.title
+		};
+	}));
+});
 
 (function(){
 	let master = new SQLite();
@@ -631,7 +646,7 @@ customElements.define("create-window", CreateWindowElement);
 			<slot name="main"></slot>
 		</div>
 		<div part="toast-grid">
-			<div part="toast"></div>
+			<div part="toast"><slot name="toast"></slot></div>
 		</div>
 		<slot name="dialog"></slot>
 	</template>

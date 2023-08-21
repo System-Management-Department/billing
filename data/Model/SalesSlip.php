@@ -28,6 +28,7 @@ class SalesSlip{
 				}, $i);
 				$check = new Validator();
 				self::validateDetail($check, $masterData, $db, $detail[$i]);
+				$check["sd"]->required("行を選択してください。");
 				$result->mergeMessage($check($result2, $detail[$i]));
 			}
 		}catch(\Exception $ex){
@@ -61,7 +62,6 @@ class SalesSlip{
 		$check["record"]->required("計上を入力してください。")
 			->range("計上を正しく入力してください。", "in", [0, 1]);
 		if($q["record"] == 1){
-			$check["sd"]->required("行を選択してください。");
 			$check["detail"]->required("内容を入力してください。");
 			$check["quantity"]->required("数量を入力してください。");
 			$check["unit"]->required("単位を入力してください。");
@@ -145,6 +145,18 @@ class SalesSlip{
 				],[]);
 				$updateQuery->andWhere("sd=?", $detail[$i]["sd"]);
 				$updateQuery();
+			}
+			
+			$detail = json_decode($q["detail_attribute"], true);
+			if(!empty($detail)){
+				$len = count($detail);
+				for($i = 0; $i < $len; $i++){
+					$updateQuery = $db->updateSet("sales_attributes", [
+						"data" => $detail[$i]["data"],
+					],[]);
+					$updateQuery->andWhere("sd=?", $detail[$i]["sd"]);
+					$updateQuery();
+				}
 			}
 			
 			$db->commit();

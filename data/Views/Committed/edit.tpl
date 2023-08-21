@@ -43,7 +43,8 @@ class Detail{
 				amount_exc: "税抜金額",
 				amount_tax: "消費税金額",
 				amount_inc: "税込金額",
-				category: "カテゴリー"
+				category: "カテゴリー",
+				circulation: "発行部数"
 			};
 		}else if((arg != null) && (typeof arg == "object")){
 			this.#values = {
@@ -59,7 +60,7 @@ class Detail{
 				record: ("record" in arg) ? (arg.record == 1) : false,
 				taxable: ("taxable" in arg) ? (arg.taxable == 1) : false,
 				tax_rate: ("tax_rate" in arg) ? arg.tax_rate : null,
-				[Detail.attributes]: ("attributes" in arg) ? arg.attributes : null
+				[Detail.attributes]: ("attributes" in arg) ? JSON.parse(arg.attributes) : null
 			};
 		}else{
 			this.#values = {
@@ -104,6 +105,14 @@ class Detail{
 				if(!found){
 					this.#values[key] = null;
 				}
+			}else if(key == "circulation"){
+				this.#values[Detail.attributes].circulation = value;
+			}else if(key == "summary_data1"){
+				this.#values[Detail.attributes].summary_data[0] = value;
+			}else if(key == "summary_data2"){
+				this.#values[Detail.attributes].summary_data[1] = value;
+			}else if(key == "summary_data3"){
+				this.#values[Detail.attributes].summary_data[2] = value;
 			}else{
 				this.#values[key] = value;
 			}
@@ -119,13 +128,33 @@ class Detail{
 					}
 				}
 				return null;
+			}else if(key == "circulation"){
+				if(this.#values[Detail.attributes] == null){
+					this.#values[Detail.attributes] = {};
+				}
+				return this.#values[Detail.attributes].circulation;
+			}else if(key == "summary_data1"){
+				if(this.#values[Detail.attributes] == null){
+					this.#values[Detail.attributes] = {summary_data: ["", "", ""]};
+				}
+				return this.#values[Detail.attributes].summary_data[0];
+			}else if(key == "summary_data2"){
+				if(this.#values[Detail.attributes] == null){
+					this.#values[Detail.attributes] = {summary_data: ["", "", ""]};
+				}
+				return this.#values[Detail.attributes].summary_data[1];
+			}else if(key == "summary_data3"){
+				if(this.#values[Detail.attributes] == null){
+					this.#values[Detail.attributes] = {summary_data: ["", "", ""]};
+				}
+				return this.#values[Detail.attributes].summary_data[2];
 			}else{
 				return this.#values[key];
 			}
 		}
 	}
 	isReadOnly(col){
-		if(Detail.tableKeys[col] == "detail"){
+		if((Detail.tableKeys[col] == "detail") || (Detail.tableKeys[col] == "circulation") || (Detail.tableKeys[col] == "summary_data1") || (Detail.tableKeys[col] == "summary_data2") || (Detail.tableKeys[col] == "summary_data3")){
 			return false;
 		}
 		if((Detail.tableKeys[col] != "quantity") && (Detail.tableKeys[col] != "unit") && (Detail.tableKeys[col] != "unit_price")){
@@ -160,7 +189,7 @@ class Detail{
 					pattern: '0,0',
 				},
 			};
-		}else if((key == "quantity") || (key == "unit_price")){
+		}else if((key == "quantity") || (key == "unit_price") || (key == "circulation")){
 			return {
 				data: (...args) => {
 					const obj = args.shift();
@@ -171,7 +200,7 @@ class Detail{
 					pattern: '0,0',
 				}
 			};
-		}else if((key == "detail") || (key == "unit")){
+		}else if((key == "detail") || (key == "unit") || (key == "summary_data1") || (key == "summary_data2") || (key == "summary_data3")){
 			return {
 				data: (...args) => {
 					const obj = args.shift();
@@ -254,6 +283,7 @@ class EditTableElement extends HTMLElement{
 				loadData.push(new Detail(row));
 			}
 		}
+		this.#hot.updateSettings({columns: Detail.tableKeys.map(key => Detail.tableColumn(key))});
 		this.#hot.loadData(loadData);
 		this.#hot.render();
 	}
@@ -297,6 +327,14 @@ new VirtualPage("/edit", class{
 				body: formData
 			}).then(res => res.json()).then(result => {
 				if(result.success){
+					const search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
+						const found = t.match(/^(.*?)=(.*)$/);
+						if(found){
+							a[found[1]] = decodeURIComponent(found[2]);
+						}
+						return a;
+					},{});
+					new BroadcastChannel(search.channel).postMessage(JSON.stringify(result));
 					close();
 				}else{
 					const messages = {};
@@ -325,10 +363,11 @@ new VirtualPage("/edit", class{
 				}
 			});
 		});
+		
+		const salesSlip = transaction.select("ROW")
+			.setTable("sales_slips")
+			.apply();
 		formTableInit(document.querySelector('.sales-form'), formTableQuery("/Sales#edit").apply()).then(form => {
-			const salesSlip = transaction.select("ROW")
-				.setTable("sales_slips")
-				.apply();
 			const inputElements = form.querySelectorAll('form-control[name]');
 			const n = inputElements.length;
 			for(let i = 0; i < n; i++){
@@ -338,11 +377,17 @@ new VirtualPage("/edit", class{
 				}
 			}
 		});
+		
+		if(salesSlip.invoice_format == 2){
+			Detail.tableKeys.push("circulation");
+		}else if(salesSlip.invoice_format == 3){
+			Detail.tableKeys.push("summary_data1", "summary_data2", "summary_data3");
+		}
 		const detail = transaction.select("All")
 			.setTable("sales_details")
 			.addField("sales_details.*")
 			.leftJoin("sales_detail_attributes using(sd)")
-			.addField("sales_detail_attributes.data AS attribute")
+			.addField("sales_detail_attributes.data AS attributes")
 			.apply();
 		document.querySelector('edit-table').value = detail;
 	}
