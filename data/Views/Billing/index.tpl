@@ -641,7 +641,7 @@ Flow.start({{/literal}
 
 <div class="flex-grow-1 mx-5 position-relative">
 	<div class="position-absolute h-100 w-100 overflow-auto">
-		<table class="table bg-white table_sticky_list" data-scroll-y="list">
+		<table class="table table-bordered bg-white table_sticky_list" data-scroll-y="list">
 			<thead>
 				<tr>
 					<th></th>
@@ -766,7 +766,7 @@ Flow.start({{/literal}
 				</div>
 				<div class="container border border-secondary rounded p-4 mb-5 bg-white table-responsive" data-detail-modal="1">
 					<div>売上明細</div>
-					<table class="table table-md table_sticky_list">
+					<table class="table table-bordered table-md table_sticky_list">
 						<thead>
 							<tr>
 								<th>No</th>

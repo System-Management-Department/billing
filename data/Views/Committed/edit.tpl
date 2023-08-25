@@ -241,8 +241,8 @@ class DetailTable{
 				detail.length++;
 				detail.categoryCode.push((row[0] in categories) ? categories[row[0]].code : null);
 				detail.itemName.push(row[1]);
-				detail.unit.push(row[2]);
-				detail.quantity.push(row[3]);
+				detail.quantity.push(row[2]);
+				detail.unit.push(row[3]);
 				detail.unitPrice.push(row[4]);
 				detail.amount.push(row[5]);
 				detail.data1.push(row[6]);
@@ -255,8 +255,8 @@ class DetailTable{
 			for(let row of purchasesTable){
 				purchases.push({
 					subject: row[0],
-					unit: row[1],
-					quantity: row[2],
+					quantity: row[1],
+					unit: row[2],
 					unit_price: row[3],
 					amount: row[4],
 					payment_date: row[6],
