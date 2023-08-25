@@ -93,8 +93,8 @@ Flow.start({{/literal}
 			}else{
 				editValues.detail[i].category = "";
 			}
-			if(("ingest" in editValues.detail[i]) && ("supplier" in editValues.detail[i].ingest)){
-				editValues.detail[i].supplier = editValues.detail[i].ingest.supplier;
+			if(("ingest" in editValues.detail2[i]) && ("supplier" in editValues.detail2[i].ingest)){
+				editValues.detail2[i].supplier = editValues.detail2[i].ingest.supplier;
 			}
 		}
 		
