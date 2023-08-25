@@ -93,8 +93,13 @@ Flow.start({{/literal}
 			}else{
 				editValues.detail[i].category = "";
 			}
-			if(("ingest" in editValues.detail2[i]) && ("supplier" in editValues.detail2[i].ingest)){
-				editValues.detail2[i].supplier = editValues.detail2[i].ingest.supplier;
+			if("ingest" in editValues.detail2[i]){
+				try{
+					const ingest = JSON.parse(editValues.detail2[i].ingest);
+					if("supplier" in ingest){
+						editValues.detail2[i].supplier = ingest.supplier;
+					}
+				}catch(ex){}
 			}
 		}
 		
