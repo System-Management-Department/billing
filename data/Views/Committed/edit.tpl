@@ -88,9 +88,9 @@ class Detail{
 				this.#values.record = true;
 				this.#values.taxable = true;
 				this.#values.tax_rate = 0.1;
-				this.#values.amount_exc = this.#values.quantity * this.#values.unit_price;
-				this.#values.amount_tax = this.#values.amount_exc * this.#values.tax_rate;
-				this.#values.amount_inc = this.#values.amount_exc + this.#values.amount_tax;
+				this.#values.amount_exc = Math.floor(this.#values.quantity * this.#values.unit_price);
+				this.#values.amount_tax = Math.floor(this.#values.amount_exc * this.#values.tax_rate);
+				this.#values.amount_inc = Math.floor(this.#values.amount_exc + this.#values.amount_tax);
 			}else if(key == "category"){
 				const optionElements = document.querySelectorAll('#category [value]');
 				const n = optionElements.length;
@@ -246,6 +246,7 @@ class EditTableElement extends HTMLElement{
 			this.#hot = new Handsontable(this.#root.querySelector('div'), this.detailOption);
 			this.#hot.addHook("afterChange", () => {
 				const sd = this.#hot.getSourceData().slice(1);
+				this.dispatchEvent(new CustomEvent("change", {detail: sd.map(r => r.detail)}));
 				this.#input1.value = JSON.stringify(sd.map(r => r.detail));
 				this.#input2.value = JSON.stringify(sd.map((r, i) => Object.assign({row: i}, r.attribute)).filter(r => r.data != null));
 			});
@@ -389,7 +390,23 @@ new VirtualPage("/edit", class{
 			.leftJoin("sales_detail_attributes using(sd)")
 			.addField("sales_detail_attributes.data AS attributes")
 			.apply();
-		document.querySelector('edit-table').value = detail;
+		const table = document.querySelector('edit-table');
+		table.value = detail;
+		table.addEventListener("change", e => {
+			const total = e.detail.reduce((a, r) => {
+				if(r.record == 1){
+					a.amount_exc += r.amount_exc;
+					a.amount_tax += r.amount_tax;
+					a.amount_inc += r.amount_inc;
+				}
+				return a;
+			}, {amount_exc: 0, amount_tax: 0, amount_inc: 0});
+			document.querySelector('form form-control[name="amount_exc"]').value = total.amount_exc;
+			document.querySelector('form form-control[name="amount_tax"]').value = total.amount_tax;
+			document.querySelector('form form-control[name="amount_inc"]').value = total.amount_inc;
+			console.log(total);
+			
+		});
 	}
 });
 
