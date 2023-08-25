@@ -296,6 +296,14 @@ Flow.start({{/literal}
 					.addTable("purchases")
 					.andWhere("spreadsheet=?", data.spreadsheet)
 					.apply();
+				for(let i = detail2.length - 1; i >= 0; i--){
+					if("ingest" in detail2[i]){
+						try{
+							const ingest = JSON.parse(detail2[i].ingest);
+							detail2[i].ingest = ingest;
+						}catch(ex){}
+					}
+				}
 				for(let i = 0; i < values.length; i++){
 					let obj = {};
 					for(let k of keys){
@@ -581,7 +589,7 @@ Flow.start({{/literal}
 								<td class="table-group-row-no align-middle"></td>
 								<td>{$detail2[$i].subject}</td>
 								<td class="text-end">{$sales.numberFormat|predef_invoke:$detail2[$i].amount}</td>
-								<td>{$detail2[$i].supplier}</td>
+								<td>{$detail2[$i].ingest.supplier}</td>
 								<td>{$detail2[$i].payment_date}</td>
 							</tr>
 							{/predef_repeat}

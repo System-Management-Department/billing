@@ -93,6 +93,14 @@ Flow.start({{/literal}
 			}else{
 				editValues.detail[i].category = "";
 			}
+			if("ingest" in editValues.detail[i]){
+				try{
+					const ingest = JSON.parse(editValues.detail[i].ingest);
+					if("supplier" in ingest){
+						editValues.detail[i].supplier = ingest.supplier;
+					}
+				}catch(ex){}
+			}
 		}
 		
 class DetailTable{
