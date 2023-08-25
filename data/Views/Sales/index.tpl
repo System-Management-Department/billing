@@ -830,7 +830,7 @@ Flow.start({{/literal}
 							<row-form label="入金予定日" col="5">{$obj.payment_date}</row-form>
 						</div>
 						<div class="d-table col table">
-							<row-form label="請求書パターン" type="hidden" col="6">{$obj.invoice_format}<div slot="content">{foreach from=[]|invoiceFormat item="text" key="value"}{predef_repeat loop=$sales.equals|predef_invoke:$value:$obj.invoice_format}{$text}{/predef_repeat}{/foreach}</div></row-form>
+							<row-form label="請求書パターン" name="invoice_format" type="hidden" col="6">{$obj.invoice_format}<div slot="content">{foreach from=[]|invoiceFormat item="text" key="value"}{predef_repeat loop=$sales.equals|predef_invoke:$value:$obj.invoice_format}{$text}{/predef_repeat}{/foreach}</div></row-form>
 							<row-form label="請求先" col="10">{$obj.apply_client_name}</row-form>
 							<row-form label="納品先" col="10">{$obj.delivery_destination}</row-form>
 							<row-form label="備考" col="10">{$obj.note}</row-form>
