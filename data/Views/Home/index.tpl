@@ -70,7 +70,7 @@ class CreateWindowElement extends HTMLElement{
 	#root;
 	constructor(){
 		super();
-		this.#root = Object.assign(this.attachShadow({mode: "closed"}), {innerHTML: '<span></span>'});
+		this.#root = Object.assign(this.attachShadow({mode: "closed"}), {innerHTML: '<slot name="label"><span></span></slot>'});
 		this.addEventListener("click", e => {
 			let windowFeatures = [];
 			if(this.hasAttribute("width")){
@@ -85,7 +85,8 @@ class CreateWindowElement extends HTMLElement{
 			if(this.hasAttribute("top")){
 				windowFeatures.push(`top=${this.getAttribute("top")}`);
 			}
-			open(`${this.getAttribute("base")}${this.textContent}?channel=${CreateWindowElement.channel}`, "_blank", windowFeatures.join(","));
+			const href = this.hasAttribute("href") ? this.getAttribute("href") : `${this.getAttribute("base")}${this.textContent}`;
+			open(`${href}?channel=${CreateWindowElement.channel}`, "_blank", windowFeatures.join(","));
 		});
 	}
 	connectedCallback(){}

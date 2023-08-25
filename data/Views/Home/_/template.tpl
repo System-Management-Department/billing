@@ -7,22 +7,22 @@
 				<div class="card mb-4">
 					<div class="card-header">見積書フォーム選択</div>
 					<div class="card-body d-flex flex-column gap-3">
-						<a href="/form.html" class="d-flex gap-3">
-							<div style="width:120px;height:40px;line-height:40px;text-align:center;color:white;background:#008db5;">見積書1</div>
-							<div class="flex-grow-1 text-center"><form-control type="label" list="invoice_format">1</form-control></div>
-						</a>
-						<a href="/form.html" class="d-flex gap-3">
-							<div style="width:120px;height:40px;line-height:40px;text-align:center;color:white;background:#008db5;">見積書2</div>
-							<div class="flex-grow-1 text-center"><form-control type="label" list="invoice_format">2</form-control></div>
-						</a>
-						<a href="/form.html" class="d-flex gap-3">
-							<div style="width:120px;height:40px;line-height:40px;text-align:center;color:white;background:#008db5;">見積書3</div>
-							<div class="flex-grow-1 text-center"><form-control type="label" list="invoice_format">3</form-control></div>
-						</a>
-						<a href="/form.html" class="d-flex gap-3">
-							<div style="width:120px;height:40px;line-height:40px;text-align:center;color:white;background:#008db5;">見積書4</div>
-							<div class="flex-grow-1 text-center"><form-control type="label" list="invoice_format">4</form-control></div>
-						</a>
+						<create-window href="/Estimate//1" top="0" left="0" width="1200" height="600" class="d-flex gap-3">
+							<div slot="label" style="width:120px;height:40px;line-height:40px;text-align:center;color:white;background:#008db5;">見積書1</div>
+							<div slot="label" class="flex-grow-1 text-center"><form-control type="label" list="invoice_format">1</form-control></div>
+						</create-window>
+						<create-window href="/Estimate//2" top="0" left="0" width="1200" height="600" class="d-flex gap-3">
+							<div slot="label" style="width:120px;height:40px;line-height:40px;text-align:center;color:white;background:#008db5;">見積書2</div>
+							<div slot="label" class="flex-grow-1 text-center"><form-control type="label" list="invoice_format">2</form-control></div>
+						</create-window>
+						<create-window href="/Estimate//3" top="0" left="0" width="1200" height="600" class="d-flex gap-3">
+							<div slot="label" style="width:120px;height:40px;line-height:40px;text-align:center;color:white;background:#008db5;">見積書3</div>
+							<div slot="label" class="flex-grow-1 text-center"><form-control type="label" list="invoice_format">3</form-control></div>
+						</create-window>
+						<create-window href="/Estimate//4" top="0" left="0" width="1200" height="600" class="d-flex gap-3">
+							<div slot="label" style="width:120px;height:40px;line-height:40px;text-align:center;color:white;background:#008db5;">見積書4</div>
+							<div slot="label" class="flex-grow-1 text-center"><form-control type="label" list="invoice_format">4</form-control></div>
+						</create-window>
 					</div>
 				</div>
 				<div class="card">
