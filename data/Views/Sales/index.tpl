@@ -882,6 +882,7 @@ Flow.start({{/literal}
 								<th>No</th>
 								<th>内容</th>
 								<th>金額</th>
+								<th>仕入先</th>
 								<th>支払日</th>
 							</tr>
 						</thead>
@@ -891,6 +892,7 @@ Flow.start({{/literal}
 								<td class="table-group-row-no align-middle"></td>
 								<td>{$detail2[$i].subject}</td>
 								<td class="text-end">{$sales.numberFormat|predef_invoke:$detail2[$i].amount}</td>
+								<td>{$detail2[$i].supplier}</td>
 								<td>{$detail2[$i].payment_date}</td>
 							</tr>
 							{/predef_repeat}
