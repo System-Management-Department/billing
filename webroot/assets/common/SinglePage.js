@@ -555,6 +555,12 @@ class FormControlElement extends HTMLElement{
 	get value(){
 		return this.#value;
 	}
+	get text(){
+	    if("text" in this.#input){
+	        return this.#input.text;
+	    }
+	    return `${this.#input.value}`;
+	}
 	#setParts(type){
 		this.#input.setAttribute("part", "control");
 		this.#input.setAttribute("exportparts", FormControlElement.#types[type]);
@@ -643,6 +649,9 @@ class FCLabelElement extends HTMLElement{
 	set value(value){
 		this.#value = (typeof value == "string") ? value : JSON.stringify(value);
 		this.#setLabel();
+	}
+	get text(){
+	    return this.#input.textContent;
 	}
 	set props(value){
 		this.#props = value;
@@ -853,6 +862,10 @@ class FCSelectElement extends HTMLElement{
 		this.#value = value;
 		this.#setList();
 		this.#input.value = (typeof value == "string") ? value : `${value}`;
+	}
+	get text(){
+	    const checked = this.#input.querySelector(':checked');
+	    return (checked == null) ? "" : checked.textContent;
 	}
 	set props(value){
 		this.#props = value;
@@ -1085,6 +1098,9 @@ class FCKeywordElement extends HTMLElement{
 			this.#value.result = null;
 			this.#result.textContent = "\u200B";
 		}
+	}
+	get text(){
+	    return this.#result.textContent;
 	}
 	set props(value){
 		this.#props = value;

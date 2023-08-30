@@ -364,8 +364,13 @@ new VirtualPage("/1", class{
 			const slotObj = {
 				today: new Intl.DateTimeFormat("ja-JP").format(new Date()),
 				subject: document.querySelector('form-control[name="subject"]').value,
-				leader: "",
-				manager: ""
+				leader: document.querySelector('form-control[name="leader"]').text,
+				manager: document.querySelector('form-control[name="manager"]').text,
+				client_name: document.querySelector('form-control[name="client_name"]').value,
+				amount_exc: document.querySelector('form-control[name="amount_exc"]').text,
+				amount_tax: document.querySelector('form-control[name="amount_tax"]').text,
+				amount_inc: document.querySelector('form-control[name="amount_inc"]').text,
+				note: document.querySelector('form-control[name="note"]').value
 			};
 			const printArea = document.querySelector('#spmain [slot="print"]');
 			printArea.innerHTML = "";
@@ -664,13 +669,13 @@ function setDataTable(parent, columns, data, callback = null){
 						<div class="page">
 							<div data-page-break="headline">
 								<div class="d-flex flex-column">
-									<div class="text-end"><span data-slot="today">1970年 1月 1日</span></div>
+									<div class="text-end"><span data-slot="today"></span></div>
 									<h1 class="text-decoration-underline text-center">御見積書</h1>
-									<div class="text-decoration-underline client"><span>クライアント名</span>御中</div>
+									<div class="text-decoration-underline client"><span data-slot="client_name"></span>御中</div>
 									<div class="d-flex flex-row"><div class="flex-grow-1"></div><div>
 										<div class="co">株式会社ダイレクト・ホールディングス</div>
 										<div class="ab">
-											<div><span data-slot="leader">担当者名</span>・<span data-slot="manager">担当者名</span></div>
+											<div><span data-slot="leader"></span>・<span data-slot="manager"></span></div>
 											<div>〒163-1439</div>
 											<div>東京都新宿区西新宿3丁目20番2号</div>
 											<div>東京オペラシティタワー39階</div>
@@ -680,7 +685,7 @@ function setDataTable(parent, columns, data, callback = null){
 								</div>
 								<div class="d-flex flex-row gap-1">
 									<div>件名</div>
-									<div><span data-slot="subject">件名</span></div>
+									<div><span data-slot="subject"></span></div>
 								</div>
 								<div>
 									<div class="border-xs border-ts border-bs">仕様</div>
@@ -688,9 +693,9 @@ function setDataTable(parent, columns, data, callback = null){
 									<div class="border-xs border-bs"><span>仕様2</span></div>
 								</div>
 								<div>
-									<div class="flex-row gap-1">
+									<div class="d-flex flex-row gap-1">
 										<div>合計金額</div>
-										<div class="price">\<span>0,000,000</span>-</div>
+										<div class="price">\<span data-slot="amount_inc">0,000,000</span>-</div>
 										<div>（税込）</div>
 									</div>
 								</div>
@@ -725,22 +730,22 @@ function setDataTable(parent, columns, data, callback = null){
 									<tbody data-page-break="aggregate">
 										<tr>
 											<td colspan="4">上記計</td>
-											<td class="text-end"><span>0,000,000</span></td>
+											<td class="text-end" data-slot="amount_exc"><span>0,000,000</span></td>
 										</tr>
 										<tr>
 											<td colspan="4">消費税（10％）</td>
-											<td class="text-end"><span>0,000,000</span></td>
+											<td class="text-end" data-slot="amount_tax"><span>0,000,000</span></td>
 										</tr>
 										<tr>
 											<td colspan="4">合計</td>
-											<td class="text-end"><span>0,000,000</span></td>
+											<td class="text-end"><span data-slot="amount_inc">0,000,000</span></td>
 										</tr>
 									</tbody>
 								</table>
 							</div>
 							<div class="grow-1 flex-column">
 								<div>備考</div>
-								<div class="grow-1 border-2"><span>text text text text text text text text text text text text text text<br />text text text text text text text text text</span></div>
+								<div class="grow-1 border-2"><span data-slot="note" style="white-space: pre-wrap;"></span></div>
 							</div>
 						</div>
 					</print-page>
