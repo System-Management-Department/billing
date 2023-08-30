@@ -193,7 +193,7 @@ class Detail{
 		if((Detail.tableKeys[col] != "quantity") && (Detail.tableKeys[col] != "unit") && (Detail.tableKeys[col] != "unit_price")){
 			return true;
 		}
-		return(!this.#values.record);
+		return false;
 	}
 	get detail(){
 		let res = {};
@@ -288,12 +288,13 @@ class EditTableElement extends HTMLElement{
 	disconnectedCallback(){
 	}
 	get detailOption(){
+		const header = new Detail(Detail.header);
 		return {
 			fixedRowsTop: 1,
 			columns: Detail.tableKeys.map(key => Detail.tableColumn(key)),
 			manualColumnResize: true,
 			trimWhitespace: false,
-			data: [new Detail(Detail.header)],
+			data: [header],
 			dataSchema(){
 				return new Detail()
 			},
@@ -305,9 +306,13 @@ class EditTableElement extends HTMLElement{
 						readOnly: true
 					};
 				}
+				if(this.#hot == null){
+					return {readOnly: header.isReadOnly(cols)};
+				}
 				return {readOnly: this.#hot.getSourceData()[row].isReadOnly(cols)};
 			},
-			autoRowSize: true
+			autoRowSize: true,
+			minSpareRows: 1
 		};
 	}
 	set value(data){
@@ -359,6 +364,21 @@ if(id == "2"){
 
 new VirtualPage("/1", class{
 	constructor(vp){
+		document.querySelector('edit-table').addEventListener("change", e => {
+			const total = e.detail.reduce((a, row) => {
+				if(row.record == 1){
+					a.amount_exc += row.amount_exc;
+					a.amount_tax += row.amount_tax;
+					a.amount_inc += row.amount_inc;
+				}
+				return a; 
+			}, {amount_exc: 0, amount_inc: 0, amount_tax: 0});
+			document.querySelector('form-control[name="amount_exc"]').value = total.amount_exc;
+			document.querySelector('form-control[name="amount_tax"]').value = total.amount_tax;
+			document.querySelector('form-control[name="amount_inc"]').value = total.amount_inc;
+		});
+		
+		
 		const template = document.querySelector('#spmain [slot="print"] print-page');
 		document.querySelector('[data-trigger="print"]').addEventListener("click", e => {
 			const slotObj = {
@@ -385,7 +405,9 @@ new VirtualPage("/1", class{
 			const tbody = printArea.querySelector('tbody:has([data-table-slot])');
 			const tr = tbody.querySelector('tr');
 			tbody.removeChild(tr);
-			for(let i = 0; i < 50; i++){
+			const details = JSON.parse(document.querySelector('input[name="detail"]').value);
+			console.log(details);
+			for(let i = 0; i < details.length; i++){
 				tbody.appendChild(tr.cloneNode(true));
 			}
 			printArea.querySelector('print-page').pageBreak(
