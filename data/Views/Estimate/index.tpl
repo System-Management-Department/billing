@@ -3,6 +3,7 @@
 <link rel="stylesheet" type="text/css" href="/assets/boxicons/css/boxicons.min.css" />
 <link rel="stylesheet" type="text/css" href="/assets/common/layout.css" />
 <link rel="stylesheet" type="text/css" href="/assets/common/SinglePage.css" />
+<link rel="stylesheet" type="text/css" href="/assets/common/PrintPage.css" />
 <style type="text/css">
 #spmain::part(body){
 	height: auto;
@@ -35,8 +36,11 @@
 	font-weight: bold;
 	width: 10em;
 }
-form[slot]{
+form{
 	display: contents;
+}
+print-page{
+	padding: 24px;
 }
 edit-table{
 	display: block;
@@ -56,6 +60,8 @@ edit-table{
 <script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
 <script type="text/javascript" src="/assets/common/SQLite.js"></script>
 <script type="text/javascript" src="/assets/common/SinglePage.js"></script>
+<script type="text/javascript" src="/assets/common/PrintPage.js"></script>
+<script type="text/javascript" src="/assets/jspdf/jspdf.umd.min.js"></script>
 <script type="text/javascript" src="/assets/handsontable/handsontable.full.min.js"></script>
 <script type="text/javascript">
 class Detail{
@@ -345,7 +351,99 @@ class ListButtonElement extends HTMLElement{
 customElements.define("list-button", ListButtonElement);
 </script>{/literal}
 {jsiife id=$id}{literal}
+if(id == "2"){
+	Detail.tableKeys.push("circulation");
+}else if(id == "3"){
+	Detail.tableKeys.push("summary_data1", "summary_data2", "summary_data3");
+}
+
 new VirtualPage("/1", class{
+	constructor(vp){
+		const template = document.querySelector('#spmain [slot="print"] print-page');
+		document.querySelector('[data-trigger="print"]').addEventListener("click", e => {
+			const slotObj = {
+				today: new Intl.DateTimeFormat("ja-JP").format(new Date()),
+				subject: document.querySelector('form-control[name="subject"]').value,
+				leader: "",
+				manager: ""
+			};
+			const printArea = document.querySelector('#spmain [slot="print"]');
+			printArea.innerHTML = "";
+			printArea.appendChild(template.cloneNode(true));
+			const slotElements = printArea.querySelectorAll('[data-slot]');
+			for(let i = slotElements.length - 1; i >= 0; i--){
+				const attr = slotElements[i].getAttribute("data-slot");
+				if(attr in slotObj){
+					slotElements[i].textContent = slotObj[attr];
+				}
+			}
+			
+			let docIds = {};
+			const doc = new jspdf.jsPDF({unit: "pt"});
+			for(let fontName in PrintPage.font){
+				docIds[fontName] = `custom${Object.keys(docIds).length}`;
+				doc.addFileToVFS(PrintPage.font[fontName].alias, PrintPage.font[fontName].data);
+				doc.addFont(PrintPage.font[fontName].alias, docIds[fontName], 'normal');
+			}
+			
+			const pxPt = 0.75;
+			const textOpt = {align: "left", baseline: "top"};
+			const printPages = document.querySelectorAll('#spmain [slot="print"] print-page');
+			const pageCnt = printPages.length;
+			for(let i = 0; i < pageCnt; i++){
+				const printData = printPages[i].printData;
+				const textLen = printData.text.length;
+				let ctx = {};
+				doc.addPage(printData.page.size, printData.page.orientation);
+				for(let pos = 0; pos < textLen; pos++){
+					if(pos in printData.style){
+						let changeFont = false;
+						if("fontFamily" in printData.style[pos]){
+							changeFont = true;
+							ctx.fontFamily = docIds[printData.style[pos].fontFamily];
+						}
+						if("fontWeight" in printData.style[pos]){
+							changeFont = true;
+							ctx.fontWeight = printData.style[pos].fontWeight ? "bold" : null;
+						}
+						if(changeFont){
+							doc.setFont(ctx.fontFamily);
+						}
+						if("fontColor" in printData.style[pos]){
+							const colorParts = printData.style[pos].fontColor.match(/\d+/g);
+							doc.setTextColor(parseInt(colorParts[0]), parseInt(colorParts[1]), parseInt(colorParts[2]));
+						}
+						if("fontSize" in printData.style[pos]){
+							doc.setFontSize(printData.style[pos].fontSize * pxPt);
+						}
+						if("line" in printData.style[pos]){
+							for(let line of printData.style[pos].line){
+								const colorParts = line.color.match(/\d+/g);
+								doc.setDrawColor(parseInt(colorParts[0]), parseInt(colorParts[1]), parseInt(colorParts[2]));
+								doc.setLineWidth(line.width * pxPt);
+								doc.line(line.x1 * pxPt, line.y1 * pxPt, line.x2 * pxPt, line.y2 * pxPt);
+							}
+						}
+					}
+					const textData = printData.text[pos];
+					doc.text(textData.ch, textData.x * pxPt, textData.y * pxPt, textOpt);
+				}
+			}
+			doc.deletePage(1);
+			//doc.save('output.pdf');
+			open(doc.output("bloburi"));
+		});
+	}
+});
+new VirtualPage("/2", class{
+	constructor(vp){
+	}
+});
+new VirtualPage("/3", class{
+	constructor(vp){
+	}
+});
+new VirtualPage("/4", class{
 	constructor(vp){
 	}
 });
@@ -525,6 +623,7 @@ function setDataTable(parent, columns, data, callback = null){
 	<form>
 		<div id="spmain">
 			<template shadowroot="closed">
+				<slot name="print"></slot>
 				<div part="body">
 					<header part="header">
 						<nav part="nav1">
@@ -560,6 +659,92 @@ function setDataTable(parent, columns, data, callback = null){
 				</div>
 			</template>
 			<template data-page-share="">
+				<div slot="print" style="height:0;overflow:hidden;">
+					<print-page size="A4" orientation="P">
+						<div class="page">
+							<div data-page-break="headline">
+								<div class="d-flex flex-column">
+									<div class="text-end"><span data-slot="today">1970年 1月 1日</span></div>
+									<h1 class="text-decoration-underline text-center">御見積書</h1>
+									<div class="text-decoration-underline client"><span>クライアント名</span>御中</div>
+									<div class="d-flex flex-row"><div class="flex-grow-1"></div><div>
+										<div class="co">株式会社ダイレクト・ホールディングス</div>
+										<div class="ab">
+											<div><span data-slot="leader">担当者名</span>・<span data-slot="manager">担当者名</span></div>
+											<div>〒163-1439</div>
+											<div>東京都新宿区西新宿3丁目20番2号</div>
+											<div>東京オペラシティタワー39階</div>
+											<div>TEL：03-6416-4822</div>
+										</div>
+									</div></div>
+								</div>
+								<div class="d-flex flex-row gap-1">
+									<div>件名</div>
+									<div><span data-slot="subject">件名</span></div>
+								</div>
+								<div>
+									<div class="border-xs border-ts border-bs">仕様</div>
+									<div class="border-xs border-bd"><span>仕様1</span></div>
+									<div class="border-xs border-bs"><span>仕様2</span></div>
+								</div>
+								<div>
+									<div class="flex-row gap-1">
+										<div>合計金額</div>
+										<div class="price">\<span>0,000,000</span>-</div>
+										<div>（税込）</div>
+									</div>
+								</div>
+							</div>
+							<div>
+								<table class="w-100">
+									<colgroup data-page-clone="1">
+										<col class="tw1" />
+										<col class="tw2" />
+										<col class="tw3" />
+										<col class="tw4" />
+										<col class="tw5" />
+									</colgroup>
+									<thead  data-page-clone="1">
+										<tr>
+											<th>摘要</th>
+											<th>数量</th>
+											<th>単位</th>
+											<th>単価</th>
+											<th>金額</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr data-page-break="detail">
+											<td><span>DATA</span></td>
+											<td class="text-end"><span>0,000.00</span></td>
+											<td><span>DATA</span></td>
+											<td class="text-end"><span>0,000.00</span></td>
+											<td class="text-end"><span>0,000,000</span></td>
+										</tr>
+									</tbody>
+									<tbody data-page-break="aggregate">
+										<tr>
+											<td colspan="4">上記計</td>
+											<td class="text-end"><span>0,000,000</span></td>
+										</tr>
+										<tr>
+											<td colspan="4">消費税（10％）</td>
+											<td class="text-end"><span>0,000,000</span></td>
+										</tr>
+										<tr>
+											<td colspan="4">合計</td>
+											<td class="text-end"><span>0,000,000</span></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							<div class="grow-1 flex-column">
+								<div>備考</div>
+								<div class="grow-1 border-2"><span>text text text text text text text text text text text text text text<br />text text text text text text text text text</span></div>
+							</div>
+						</div>
+					</print-page>
+				</div>
 				<div slot="table1" class="table d-contents"><div class="d-contents">
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">案件番号</div>
@@ -662,7 +847,6 @@ function setDataTable(parent, columns, data, callback = null){
 				</div></div>
 			</template>
 			<template data-page-share="">
-				<div slot="tools" class="my-2"><form-control type="select" list="page">1</form-control></div>
 				<span slot="tools" class="btn btn-primary my-2" data-trigger="export">見積データ出力</span>
 				<span slot="tools" class="btn btn-primary my-2" data-trigger="print">見積書生成</span>
 				<span slot="tools"" class="btn btn-primary my-2" data-trigger="submit">登録</span>
@@ -670,7 +854,6 @@ function setDataTable(parent, columns, data, callback = null){
 		</div>
 	</form>
 	
-	<datalist id="page"><option value="1">1ページ</option><option value="2">次のページを追加</option></datalist>
 	<datalist id="category"></datalist>
 	<datalist id="division"></datalist>
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>
