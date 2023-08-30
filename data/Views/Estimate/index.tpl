@@ -382,6 +382,24 @@ new VirtualPage("/1", class{
 					slotElements[i].textContent = slotObj[attr];
 				}
 			}
+			const tbody = printArea.querySelector('tbody:has([data-table-slot])');
+			const tr = tbody.querySelector('tr');
+			tbody.removeChild(tr);
+			for(let i = 0; i < 50; i++){
+				tbody.appendChild(tr.cloneNode(true));
+			}
+			printArea.querySelector('print-page').pageBreak(
+				(function*(){
+					const elements = document.querySelectorAll('[data-page-break]');
+					const n = elements.length;
+					for(let i = 0; i < n; i++){
+						yield elements[i];
+					}
+				})(),
+				node => ((node.nodeType == Node.ELEMENT_NODE) && node.hasAttribute("data-page-clone")),
+				(page, node) => { page.insertAdjacentElement("afterend", node); }
+			);
+			
 			
 			let docIds = {};
 			const doc = new jspdf.jsPDF({unit: "pt"});
@@ -720,11 +738,11 @@ function setDataTable(parent, columns, data, callback = null){
 									</thead>
 									<tbody>
 										<tr data-page-break="detail">
-											<td><span>DATA</span></td>
-											<td class="text-end"><span>0,000.00</span></td>
-											<td><span>DATA</span></td>
-											<td class="text-end"><span>0,000.00</span></td>
-											<td class="text-end"><span>0,000,000</span></td>
+											<td><span data-table-slot="detail">DATA</span></td>
+											<td class="text-end"><span data-table-slot="quantity">0,000.00</span></td>
+											<td><span data-table-slot="unit">DATA</span></td>
+											<td class="text-end"><span data-table-slot="unit_price">0,000.00</span></td>
+											<td class="text-end"><span data-table-slot="amount_exc">0,000,000</span></td>
 										</tr>
 									</tbody>
 									<tbody data-page-break="aggregate">
