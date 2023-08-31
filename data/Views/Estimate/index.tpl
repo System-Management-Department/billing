@@ -266,6 +266,7 @@ class EditTableElement extends HTMLElement{
 		this.#input1 = document.createElement("input");
 		this.#input1.setAttribute("name", "detail");
 		this.#input1.setAttribute("type", "hidden");
+		this.#input1.value = "[]";
 		this.#input2 = document.createElement("input");
 		this.#input2.setAttribute("name", "detail_attribute");
 		this.#input2.setAttribute("type", "hidden");
@@ -406,9 +407,33 @@ new VirtualPage("/1", class{
 			const tr = tbody.querySelector('tr');
 			tbody.removeChild(tr);
 			const details = JSON.parse(document.querySelector('input[name="detail"]').value);
-			console.log(details);
-			for(let i = 0; i < details.length; i++){
-				tbody.appendChild(tr.cloneNode(true));
+			const proc = {
+				detail(value){
+					if(value == ""){
+						return "\u200B";
+					}
+					return value;
+				},
+				quantity(value){
+					return SinglePage.modal.number_format2.query(value);
+				},
+				unit_price(value){
+					return SinglePage.modal.number_format2.query(value);
+				},
+				amount_exc(value){
+					return SinglePage.modal.number_format.query(value);
+				}
+			};
+			for(let row of details){
+				const insertRow = tr.cloneNode(true);
+				const slotElements2 = insertRow.querySelectorAll('[data-table-slot]');
+				for(let i = slotElements2.length - 1; i >= 0; i--){
+					const attr = slotElements2[i].getAttribute("data-table-slot");
+					if(attr in row){
+						slotElements2[i].textContent = (attr in proc) ? proc[attr](row[attr]) : row[attr];
+					}
+				}
+				tbody.appendChild(insertRow);
 			}
 			printArea.querySelector('print-page').pageBreak(
 				(function*(){
@@ -565,6 +590,7 @@ Promise.all([
 		}, document.getElementById("division"));
 	
 	SinglePage.modal.number_format.setQuery(v => new Intl.NumberFormat().format(v));
+	SinglePage.modal.number_format2.setQuery(v => new Intl.NumberFormat(void(0), {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(v));
 	
 	SinglePage.location = `/${id}`;
 });
@@ -912,4 +938,5 @@ function setDataTable(parent, columns, data, callback = null){
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
 	<modal-dialog name="number_format"></modal-dialog>
+	<modal-dialog name="number_format2"></modal-dialog>
 {/block}
