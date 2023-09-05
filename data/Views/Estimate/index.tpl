@@ -74,7 +74,7 @@ class ListButtonElement extends HTMLElement{
 		this.#root = Object.assign(this.attachShadow({mode: "closed"}), {innerHTML: '<span></span>'});
 	}
 	connectedCallback(){
-		setTimeout(() => {this.setAttribute("data-result", this.textContent); } ,0);
+		queueMicrotask(() => {this.setAttribute("data-result", this.textContent); });
 	}
 	disconnectedCallback(){}
 	attributeChangedCallback(name, oldValue, newValue){
@@ -221,7 +221,7 @@ Promise.all([
 	};
 	const unrecordObj = {
 		quantity: null,
-		unit: "",
+		unit: null,
 		unit_price: null,
 		amount_exc: null,
 		amount_tax: null,
@@ -551,6 +551,63 @@ Promise.all([
 		//doc.save('output.pdf');
 		open(doc.output("bloburi"));
 	});
+	
+	document.querySelector('[data-trigger="submit"]').addEventListener("click", e => {
+		const formData = new FormData(document.querySelector('form'));
+		const details = document.getElementById("detail").jspreadsheet.options.data.map(rowProxy => {
+			let res = {};
+			const row = rowProxy[objectData];
+			for(let key in row){
+				if(typeof row[key] == "boolean"){
+					res[key] = row[key] ? 1 : 0;
+				}else{
+					res[key] = row[key];
+				}
+			}
+			return res;
+		});
+		formData.append("detail", JSON.stringify(details));
+		fetch(`/Estimate/regist`, {
+			method: "POST",
+			body: formData
+		}).then(res => res.json()).then(result => {
+			if(result.success){
+				const search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
+					const found = t.match(/^(.*?)=(.*)$/);
+					if(found){
+						a[found[1]] = decodeURIComponent(found[2]);
+					}
+					return a;
+				},{});
+				new BroadcastChannel(search.channel).postMessage(JSON.stringify(result));
+				close();
+			}else{
+				const messages = {};
+				const messages2 = document.createDocumentFragment();
+				for(let meaasge of result.messages.filter(m => (m[1] == 2))){
+					let token = meaasge[2].split("/");
+					if(token.length == 1){
+						messages[meaasge[2]] = meaasge[0];
+					}else if(token.length == 3){
+						messages2.appendChild(Object.assign(document.createElement("div"), {textContent: `${Number(token[1]) + 1}行目：${meaasge[0]}`}));
+					}
+				}
+				
+				const inputElements = form.querySelectorAll('form-control[name]');
+				const n = inputElements.length;
+				for(let i = 0; i < n; i++){
+					const name = inputElements[i].getAttribute("name");
+					inputElements[i].invalid = (name in messages);
+					inputElements[i].nextSibling.textContent = (name in messages) ? messages[name] : "";
+				}
+				const range = document.createRange();
+				const tableInvalid = document.querySelector('#detail~.invalid');
+				range.selectNodeContents(tableInvalid);
+				range.deleteContents();
+				tableInvalid.appendChild(messages2);
+			}
+		});
+	});
 });
 
 function formTableInit(parent, data){
@@ -598,7 +655,7 @@ function formTableInit(parent, data){
 			}
 			parent.appendChild(tableList[tableNo].table);
 		}
-		setTimeout(() => { resolve(parent); }, 0);
+		queueMicrotask(() => { resolve(parent); });
 	});
 }
 function formTableQuery(location){
@@ -643,7 +700,7 @@ function setDataTable(parent, columns, data, callback = null){
 				callback(dataRow, row);
 			}
 		}
-		setTimeout(() => { resolve(parent); }, 0);
+		queueMicrotask(() => { resolve(parent); });
 	});
 }
 {/literal}{/jsiife}
