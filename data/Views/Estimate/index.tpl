@@ -180,6 +180,16 @@ Promise.all([
 			option.textContent = row.name;
 			this.appendChild(option);
 		}, document.getElementById("division"));
+		console.log(master.tables);
+	master.select("ALL")
+		.setTable("specifications")
+		.apply()
+		.forEach(function(row){
+			const option = document.createElement("option");
+			option.setAttribute("value", row.code);
+			option.textContent = row.name;
+			this.appendChild(option);
+		}, document.getElementById("specification"));
 	
 	SinglePage.modal.number_format.setQuery(v => new Intl.NumberFormat().format(v));
 	SinglePage.modal.number_format2.setQuery(v => new Intl.NumberFormat(void(0), {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(v));
@@ -390,6 +400,7 @@ Promise.all([
 			amount_exc: document.querySelector('form-control[name="amount_exc"]').text,
 			amount_tax: document.querySelector('form-control[name="amount_tax"]').text,
 			amount_inc: document.querySelector('form-control[name="amount_inc"]').text,
+			specification: document.querySelector('form-control[name="specification"]').text,
 			note: document.querySelector('form-control[name="note"]').value
 		};
 		const printArea = document.querySelector('#spmain [slot="print"]');
@@ -487,6 +498,21 @@ Promise.all([
 			const textLen = printData.text.length;
 			let ctx = {};
 			doc.addPage(printData.page.size, printData.page.orientation);
+			for(let line of printData.line){
+				const colorParts = line.color.match(/\d+/g);
+				doc.setDrawColor(parseInt(colorParts[0]), parseInt(colorParts[1]), parseInt(colorParts[2]));
+				doc.setLineWidth(line.width * pxPt);
+				console.log(line);
+				if(line.style == "solid"){
+					doc.setLineDashPattern([], 0);
+				}else if(line.style == "dashed"){
+					doc.setLineDashPattern([2, 1], 0);
+				}else if(line.style == "dotted"){
+					doc.setLineDashPattern([1, 1], 0);
+				}
+				doc.line(line.x1 * pxPt, line.y1 * pxPt, line.x2 * pxPt, line.y2 * pxPt);
+			}
+			doc.setLineDashPattern([], 0);
 			for(let pos = 0; pos < textLen; pos++){
 				if(pos in printData.style){
 					let changeFont = false;
@@ -665,7 +691,7 @@ function setDataTable(parent, columns, data, callback = null){
 				<div slot="print" style="height:0;overflow:hidden;">
 					<print-page size="A4" orientation="P">
 						<div class="page">
-							<div data-page-break="headline">
+							<div data-page-break="headline" class="d-flex flex-column" style="gap: 20px;">
 								<div class="d-flex flex-column">
 									<div class="text-end"><span data-slot="today"></span></div>
 									<h1 class="text-decoration-underline text-center">御見積書</h1>
@@ -685,10 +711,10 @@ function setDataTable(parent, columns, data, callback = null){
 									<div>件名</div>
 									<div><span data-slot="subject"></span></div>
 								</div>
-								<div>
-									<div class="border-xs border-ts border-bs">仕様</div>
-									<div class="border-xs border-bd"><span>仕様1</span></div>
-									<div class="border-xs border-bs"><span>仕様2</span></div>
+								<div style="border: solid black calc(1rem / 12);">
+									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);">仕様</div>
+									<div class="border-xs border-bd" style="border-bottom: dashed black calc(1rem / 12);">&#8203;<span data-slot="specification"></span></div>
+									<div class="border-xs border-bs">&#8203;</div>
 								</div>
 								<div>
 									<div class="d-flex flex-row gap-1">
@@ -699,87 +725,61 @@ function setDataTable(parent, columns, data, callback = null){
 								</div>
 							</div>
 							<div>
-								<table class="w-100">
+								<table class="w-100" style="border: solid black calc(1rem / 6);">
 									<colgroup data-page-clone="1">
 										<col class="tw1" />
-										<col class="tw2" />
-										<col class="tw3" />
-										<col class="tw4" />
-										<col class="tw5" />
+										<col class="tw2" style="width: 80px;" />
+										<col class="tw3" style="width: 55px;" />
+										<col class="tw4" style="width: 80px;" />
+										<col class="tw5" style="width: 130px;" />
 									</colgroup>
-									<thead  data-page-clone="1">
+									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
 										<tr>
 											<th>摘要</th>
-											<th>数量</th>
-											<th>単位</th>
-											<th>単価</th>
-											<th>金額</th>
+											<th style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th style="border-left: solid black calc(1rem / 12);">単位</th>
+											<th style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th style="border-left: solid black calc(1rem / 12);">金額</th>
 										</tr>
 									</thead>
 									<tbody>
-										<tr data-page-break="detail">
+										<tr data-page-break="detail" style="border-bottom: dashed black calc(1rem / 12);">
 											<td><span data-table-slot="detail">DATA</span></td>
-											<td class="text-end"><span data-table-slot="quantity">0,000.00</span></td>
-											<td><span data-table-slot="unit">DATA</span></td>
-											<td class="text-end"><span data-table-slot="unit_price">0,000.00</span></td>
-											<td class="text-end"><span data-table-slot="amount_exc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="quantity">0,000.00</span></td>
+											<td style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit_price">0,000.00</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_exc">0,000,000</span></td>
 										</tr>
 									</tbody>
-									<tbody data-page-break="aggregate">
-										<tr>
+									<tbody data-page-break="aggregate" style="border-top: solid black calc(1rem / 6);">
+										<tr style="border-bottom: dashed black calc(1rem / 12);">
 											<td colspan="4">上記計</td>
-											<td class="text-end"><span data-slot="amount_exc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_exc">0,000,000</span></td>
 										</tr>
-										<tr>
+										<tr style="border-bottom: dashed black calc(1rem / 12);">
 											<td colspan="4">消費税（10％）</td>
-											<td class="text-end"><span data-slot="amount_tax">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_tax">0,000,000</span></td>
 										</tr>
 										<tr>
 											<td colspan="4">合計</td>
-											<td class="text-end"><span data-slot="amount_inc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_inc">0,000,000</span></td>
 										</tr>
 									</tbody>
 								</table>
 							</div>
-							<div class="grow-1 flex-column">
+							<div class="grow-1 flex-column" style="margin-top: 20px;">
 								<div>備考</div>
-								<div class="grow-1 border-2"><span data-slot="note" style="white-space: pre-wrap;"></span></div>
+								<div class="grow-1 border-2" style="height: 6em; border: solid black calc(1rem / 6);"><span data-slot="note" style="white-space: pre-wrap;"></span></div>
 							</div>
 						</div>
 					</print-page>
-				</div>
-				<div slot="table1" class="table d-contents"><div class="d-contents">
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">案件番号</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="project" type="text"></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">件名</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="subject" type="text"></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">部門</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="division" type="select" list="division"></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">部門長</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="leader" type="keyword" list="leader" placeholder="部門長名・部門長CDで検索"></form-control></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">営業担当者</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="manager" type="keyword" list="manager" placeholder="担当者名・担当者CDで検索"></form-control></form-control></div>
-					</div>
-				</div></div>
-				<div slot="main">
-					<div id="detail"></div>
-					<div class="invalid"></div>
 				</div>
 			</template>
 			<template data-page="/2">
 				<div slot="print" style="height:0;overflow:hidden;">
 					<print-page size="A4" orientation="P">
 						<div class="page">
-							<div data-page-break="headline">
+							<div data-page-break="headline" class="d-flex flex-column" style="gap: 20px;">
 								<div class="d-flex flex-column">
 									<div class="text-end"><span data-slot="today"></span></div>
 									<h1 class="text-decoration-underline text-center">御見積書</h1>
@@ -799,10 +799,10 @@ function setDataTable(parent, columns, data, callback = null){
 									<div>件名</div>
 									<div><span data-slot="subject"></span></div>
 								</div>
-								<div>
-									<div class="border-xs border-ts border-bs">仕様</div>
-									<div class="border-xs border-bd"><span>仕様1</span></div>
-									<div class="border-xs border-bs"><span>仕様2</span></div>
+								<div style="border: solid black calc(1rem / 12);">
+									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);">仕様</div>
+									<div class="border-xs border-bd" style="border-bottom: dashed black calc(1rem / 12);">&#8203;<span data-slot="specification"></span></div>
+									<div class="border-xs border-bs">&#8203;</div>
 								</div>
 								<div>
 									<div class="d-flex flex-row gap-1">
@@ -813,90 +813,64 @@ function setDataTable(parent, columns, data, callback = null){
 								</div>
 							</div>
 							<div>
-								<table class="w-100">
+								<table class="w-100" style="border: solid black calc(1rem / 6);">
 									<colgroup data-page-clone="1">
 										<col class="tw1" />
 										<col class="tw2" />
-										<col class="tw3" />
-										<col class="tw4" />
-										<col class="tw5" />
-										<col class="tw6" />
+										<col class="tw3" style="width: 80px;" />
+										<col class="tw4" style="width: 55px;" />
+										<col class="tw5" style="width: 80px;" />
+										<col class="tw6" style="width: 130px;" />
 									</colgroup>
-									<thead  data-page-clone="1">
+									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
 										<tr>
 											<th>摘要</th>
-											<th>発行部数</th>
-											<th>数量</th>
-											<th>単位</th>
-											<th>単価</th>
-											<th>金額</th>
+											<th style="border-left: solid black calc(1rem / 12);">発行部数</th>
+											<th style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th style="border-left: solid black calc(1rem / 12);">単位</th>
+											<th style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th style="border-left: solid black calc(1rem / 12);">金額</th>
 										</tr>
 									</thead>
 									<tbody>
-										<tr data-page-break="detail">
+										<tr data-page-break="detail" style="border-bottom: dashed black calc(1rem / 12);">
 											<td><span data-table-slot="detail">DATA</span></td>
-											<td class="text-end"><span data-table-slot-attribute="circulation">0,000,000</span></td>
-											<td class="text-end"><span data-table-slot="quantity">0,000.00</span></td>
-											<td><span data-table-slot="unit">DATA</span></td>
-											<td class="text-end"><span data-table-slot="unit_price">0,000.00</span></td>
-											<td class="text-end"><span data-table-slot="amount_exc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot-attribute="circulation">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="quantity">0,000.00</span></td>
+											<td style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit_price">0,000.00</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_exc">0,000,000</span></td>
 										</tr>
 									</tbody>
-									<tbody data-page-break="aggregate">
-										<tr>
+									<tbody data-page-break="aggregate" style="border-top: solid black calc(1rem / 6);">
+										<tr style="border-bottom: dashed black calc(1rem / 12);">
 											<td colspan="5">上記計</td>
-											<td class="text-end"><span data-slot="amount_exc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_exc">0,000,000</span></td>
 										</tr>
-										<tr>
+										<tr style="border-bottom: dashed black calc(1rem / 12);">
 											<td colspan="5">消費税（10％）</td>
-											<td class="text-end"><span data-slot="amount_tax">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_tax">0,000,000</span></td>
 										</tr>
 										<tr>
 											<td colspan="5">合計</td>
-											<td class="text-end"><span data-slot="amount_inc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_inc">0,000,000</span></td>
 										</tr>
 									</tbody>
 								</table>
 							</div>
-							<div class="grow-1 flex-column">
+							<div class="grow-1 flex-column" style="margin-top: 20px;">
 								<div>備考</div>
-								<div class="grow-1 border-2"><span data-slot="note" style="white-space: pre-wrap;"></span></div>
+								<div class="grow-1 border-2" style="height: 6em; border: solid black calc(1rem / 6);"><span data-slot="note" style="white-space: pre-wrap;"></span></div>
 							</div>
 						</div>
 					</print-page>
-				</div>
-				<div slot="table1" class="table d-contents"><div class="d-contents">
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">案件番号</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="project" type="text"></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">件名</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="subject" type="text"></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">部門</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="division" type="select" list="division"></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">部門長</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="leader" type="keyword" list="leader" placeholder="部門長名・部門長CDで検索"></form-control></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">営業担当者</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="manager" type="keyword" list="manager" placeholder="担当者名・担当者CDで検索"></form-control></form-control></div>
-					</div>
-				</div></div>
-				<div slot="main">
-					<div id="detail"></div>
-					<div class="invalid"></div>
 				</div>
 			</template>
 			<template data-page="/3">
 				<div slot="print" style="height:0;overflow:hidden;">
 					<print-page size="A4" orientation="P">
 						<div class="page">
-							<div data-page-break="headline">
+							<div data-page-break="headline" class="d-flex flex-column" style="gap: 20px;">
 								<div class="d-flex flex-column">
 									<div class="text-end"><span data-slot="today"></span></div>
 									<h1 class="text-decoration-underline text-center">御見積書</h1>
@@ -916,10 +890,10 @@ function setDataTable(parent, columns, data, callback = null){
 									<div>件名</div>
 									<div><span data-slot="subject"></span></div>
 								</div>
-								<div>
-									<div class="border-xs border-ts border-bs">仕様</div>
-									<div class="border-xs border-bd"><span>仕様1</span></div>
-									<div class="border-xs border-bs"><span>仕様2</span></div>
+								<div style="border: solid black calc(1rem / 12);">
+									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);">仕様</div>
+									<div class="border-xs border-bd" style="border-bottom: dashed black calc(1rem / 12);">&#8203;<span data-slot="specification"></span></div>
+									<div class="border-xs border-bs">&#8203;</div>
 								</div>
 								<div>
 									<div class="d-flex flex-row gap-1">
@@ -930,96 +904,70 @@ function setDataTable(parent, columns, data, callback = null){
 								</div>
 							</div>
 							<div>
-								<table class="w-100">
+								<table class="w-100" style="border: solid black calc(1rem / 6);">
 									<colgroup data-page-clone="1">
 										<col class="tw1" />
 										<col class="tw2" />
 										<col class="tw3" />
 										<col class="tw4" />
-										<col class="tw5" />
-										<col class="tw6" />
-										<col class="tw7" />
-										<col class="tw8" />
+										<col class="tw5" style="width: 80px;" />
+										<col class="tw6" style="width: 55px;" />
+										<col class="tw7" style="width: 80px;" />
+										<col class="tw8" style="width: 130px;" />
 									</colgroup>
-									<thead  data-page-clone="1">
+									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
 										<tr>
 											<th>摘要</th>
-											<th><span data-slot=""></span></th>
-											<th><span data-slot=""></span></th>
-											<th><span data-slot=""></span></th>
-											<th>数量</th>
-											<th>単位</th>
-											<th>単価</th>
-											<th>金額</th>
+											<th style="border-left: solid black calc(1rem / 12);"><span data-slot=""></span></th>
+											<th style="border-left: solid black calc(1rem / 12);"><span data-slot=""></span></th>
+											<th style="border-left: solid black calc(1rem / 12);"><span data-slot=""></span></th>
+											<th style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th style="border-left: solid black calc(1rem / 12);">単位</th>
+											<th style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th style="border-left: solid black calc(1rem / 12);">金額</th>
 										</tr>
 									</thead>
 									<tbody>
-										<tr data-page-break="detail">
+										<tr data-page-break="detail" style="border-bottom: dashed black calc(1rem / 12);">
 											<td><span data-table-slot="detail">DATA</span></td>
-											<td class="text-end"><span data-table-slot-attribute="summary_data1"></span></td>
-											<td class="text-end"><span data-table-slot-attribute="summary_data2"></span></td>
-											<td class="text-end"><span data-table-slot-attribute="summary_data3"></span></td>
-											<td class="text-end"><span data-table-slot="quantity">0,000.00</span></td>
-											<td><span data-table-slot="unit">DATA</span></td>
-											<td class="text-end"><span data-table-slot="unit_price">0,000.00</span></td>
-											<td class="text-end"><span data-table-slot="amount_exc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot-attribute="summary_data1"></span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot-attribute="summary_data2"></span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot-attribute="summary_data3"></span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="quantity">0,000.00</span></td>
+											<td style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit_price">0,000.00</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_exc">0,000,000</span></td>
 										</tr>
 									</tbody>
-									<tbody data-page-break="aggregate">
-										<tr>
+									<tbody data-page-break="aggregate" style="border-top: solid black calc(1rem / 6);">
+										<tr style="border-bottom: dashed black calc(1rem / 12);">
 											<td colspan="7">上記計</td>
-											<td class="text-end"><span data-slot="amount_exc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_exc">0,000,000</span></td>
 										</tr>
-										<tr>
+										<tr style="border-bottom: dashed black calc(1rem / 12);">
 											<td colspan="7">消費税（10％）</td>
-											<td class="text-end"><span data-slot="amount_tax">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_tax">0,000,000</span></td>
 										</tr>
 										<tr>
 											<td colspan="7">合計</td>
-											<td class="text-end"><span data-slot="amount_inc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_inc">0,000,000</span></td>
 										</tr>
 									</tbody>
 								</table>
 							</div>
-							<div class="grow-1 flex-column">
+							<div class="grow-1 flex-column" style="margin-top: 20px;">
 								<div>備考</div>
-								<div class="grow-1 border-2"><span data-slot="note" style="white-space: pre-wrap;"></span></div>
+								<div class="grow-1 border-2" style="height: 6em; border: solid black calc(1rem / 6);"><span data-slot="note" style="white-space: pre-wrap;"></span></div>
 							</div>
 						</div>
 					</print-page>
-				</div>
-				<div slot="table1" class="table d-contents"><div class="d-contents">
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">案件番号</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="project" type="text"></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">件名</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="subject" type="text"></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">部門</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="division" type="select" list="division"></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">部門長</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="leader" type="keyword" list="leader" placeholder="部門長名・部門長CDで検索"></form-control></form-control></div>
-					</div>
-					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">営業担当者</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="manager" type="keyword" list="manager" placeholder="担当者名・担当者CDで検索"></form-control></form-control></div>
-					</div>
-				</div></div>
-				<div slot="main">
-					<div id="detail"></div>
-					<div class="invalid"></div>
 				</div>
 			</template>
 			<template data-page="/4">
 				<div slot="print" style="height:0;overflow:hidden;">
 					<print-page size="A4" orientation="P">
 						<div class="page">
-							<div data-page-break="headline">
+							<div data-page-break="headline" class="d-flex flex-column" style="gap: 20px;">
 								<div class="d-flex flex-column">
 									<div class="text-end"><span data-slot="today"></span></div>
 									<h1 class="text-decoration-underline text-center">御見積書</h1>
@@ -1039,10 +987,10 @@ function setDataTable(parent, columns, data, callback = null){
 									<div>件名</div>
 									<div><span data-slot="subject"></span></div>
 								</div>
-								<div>
-									<div class="border-xs border-ts border-bs">仕様</div>
-									<div class="border-xs border-bd"><span>仕様1</span></div>
-									<div class="border-xs border-bs"><span>仕様2</span></div>
+								<div style="border: solid black calc(1rem / 12);">
+									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);">仕様</div>
+									<div class="border-xs border-bd" style="border-bottom: dashed black calc(1rem / 12);">&#8203;<span data-slot="specification"></span></div>
+									<div class="border-xs border-bs">&#8203;</div>
 								</div>
 								<div>
 									<div class="d-flex flex-row gap-1">
@@ -1053,55 +1001,57 @@ function setDataTable(parent, columns, data, callback = null){
 								</div>
 							</div>
 							<div>
-								<table class="w-100">
+								<table class="w-100" style="border: solid black calc(1rem / 6);">
 									<colgroup data-page-clone="1">
 										<col class="tw1" />
-										<col class="tw2" />
-										<col class="tw3" />
-										<col class="tw4" />
-										<col class="tw5" />
-										<col class="tw6" />
-										<col class="tw7" />
+										<col class="tw2" style="width: 80px;" />
+										<col class="tw3" style="width: 55px;" />
+										<col class="tw4" style="width: 80px;" />
+										<col class="tw5" style="width: 130px;" />
+										<col class="tw6" style="width: 130px;" />
+										<col class="tw7" style="width: 130px;" />
 									</colgroup>
-									<thead  data-page-clone="1">
+									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
 										<tr>
 											<th>摘要</th>
-											<th>数量</th>
-											<th>単位</th>
-											<th>単価</th>
-											<th>金額（税抜）</th>
-											<th>消費税（10％）</th>
-											<th>金額（税込）</th>
+											<th style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th style="border-left: solid black calc(1rem / 12);">単位</th>
+											<th style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th style="border-left: solid black calc(1rem / 12);">金額（税抜）</th>
+											<th style="border-left: solid black calc(1rem / 12);">消費税（10％）</th>
+											<th style="border-left: solid black calc(1rem / 12);">金額（税込）</th>
 										</tr>
 									</thead>
 									<tbody>
-										<tr data-page-break="detail">
+										<tr data-page-break="detail" style="border-bottom: dashed black calc(1rem / 12);">
 											<td><span data-table-slot="detail">DATA</span></td>
-											<td class="text-end"><span data-table-slot="quantity">0,000.00</span></td>
-											<td><span data-table-slot="unit">DATA</span></td>
-											<td class="text-end"><span data-table-slot="unit_price">0,000.00</span></td>
-											<td class="text-end"><span data-table-slot="amount_exc">0,000,000</span></td>
-											<td class="text-end"><span data-table-slot="amount_tax">0,000,000</span></td>
-											<td class="text-end"><span data-table-slot="amount_inc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="quantity">0,000.00</span></td>
+											<td style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit_price">0,000.00</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_exc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_tax">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_inc">0,000,000</span></td>
 										</tr>
 									</tbody>
-									<tbody data-page-break="aggregate">
+									<tbody data-page-break="aggregate" style="border-top: solid black calc(1rem / 6);">
 										<tr>
 											<td colspan="4">合計</td>
-											<td class="text-end"><span data-slot="amount_exc">0,000,000</span></td>
-											<td class="text-end"><span data-slot="amount_tax">0,000,000</span></td>
-											<td class="text-end"><span data-slot="amount_inc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_exc">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_tax">0,000,000</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_inc">0,000,000</span></td>
 										</tr>
 									</tbody>
 								</table>
 							</div>
-							<div class="grow-1 flex-column">
+							<div class="grow-1 flex-column" style="margin-top: 20px;">
 								<div>備考</div>
-								<div class="grow-1 border-2"><span data-slot="note" style="white-space: pre-wrap;"></span></div>
+								<div class="grow-1 border-2" style="height: 6em; border: solid black calc(1rem / 6);"><span data-slot="note" style="white-space: pre-wrap;"></span></div>
 							</div>
 						</div>
 					</print-page>
 				</div>
+			</template>
+			<template data-page-share="">
 				<div slot="table1" class="table d-contents"><div class="d-contents">
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">案件番号</div>
@@ -1144,6 +1094,10 @@ function setDataTable(parent, columns, data, callback = null){
 						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date"></form-control></div>
 					</div>
 					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">仕様</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="specification" type="select" list="specification"></form-control></div>
+					</div>
+					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">備考</div>
 						<div class="d-table-cell"><form-control fc-class="col-10" name="note" type="textarea"></form-control></div>
 					</div>
@@ -1174,6 +1128,10 @@ function setDataTable(parent, columns, data, callback = null){
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">入金予定日</div>
 						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date"></form-control></div>
+					</div>
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">仕様</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="specification" type="select" list="specification"></form-control></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">備考</div>
@@ -1214,6 +1172,7 @@ function setDataTable(parent, columns, data, callback = null){
 	<datalist id="category"></datalist>
 	<datalist id="division"></datalist>
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>
+	<datalist id="specification"></datalist>
 	<modal-dialog name="leader" label="部門長選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
