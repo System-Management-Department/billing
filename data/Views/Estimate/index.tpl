@@ -1220,9 +1220,8 @@ function setDataTable(parent, columns, data, callback = null){
 				</div></div>
 			</template>
 			<template data-page-share="">
-				<span slot="tools" class="btn btn-primary my-2" data-trigger="export">見積データ出力</span>
 				<span slot="tools" class="btn btn-primary my-2" data-trigger="print">見積書生成</span>
-				<span slot="tools"" class="btn btn-primary my-2" data-trigger="submit">登録</span>
+				<span slot="tools"" class="btn btn-primary my-2" data-trigger="submit">確定登録</span>
 			</template>
 		</div>
 	</form>
