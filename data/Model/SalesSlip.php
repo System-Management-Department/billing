@@ -8,6 +8,21 @@ class SalesSlip{
 		$check = new Validator();
 		self::validate($check, $masterData, $db);
 		$result = $check($q);
+		
+		try{
+			$detail = json_decode($q["detail"], true);
+			$len = count($detail);
+			for($i = 0; $i < $len; $i++){
+				$result2 = new Result();
+				$result2->onAddMessage(function(&$message, &$status, &$name, $i){
+					$name = "detail/{$i}/{$name}";
+				}, $i);
+				$check = new Validator();
+				self::validateDetail($check, $masterData, $db, $detail[$i]);
+				$result->mergeMessage($check($result2, $detail[$i]));
+			}
+		}catch(\Exception $ex){
+		}
 		return $result;
 	}
 	
@@ -79,28 +94,103 @@ class SalesSlip{
 	public static function execInsert($db, $q, $context, $result){
 		$db->beginTransaction();
 		try{
+			// 伝票番号生成
+			$sequence = $db->select("ONE")
+				->setTable("slip_sequence")
+				->setField("seq")
+				->andWhere("month=?", $q["sequence"])
+				->andWhere("type=1");
+			$slipNumber = $sequence() + 1;
+			$updateQuery = $db->updateSet("slip_sequence", [],[
+				"seq" => "seq+1",
+			])
+				->andWhere("month=?", $q["sequence"])
+				->andWhere("type=1");
+			$updateQuery();
+			
+			// 売上・売上追加情報・売上ワークフロー・売上明細・売上明細追加情報・仕入関係の登録
 			$insertQuery = $db->insertSet("sales_slips", [
-				"slip_number" => $q["slip_number"],
-				"accounting_date" => $q["accounting_date"],
-				"division" => $q["division"],
-				"team" => $q["team"],
-				"manager" => $q["manager"],
-				"billing_destination" => $q["billing_destination"],
-				"delivery_destination" => $q["delivery_destination"],
-				//"sales_tax_calculation" => $q["sales_tax_calculation"],
-				"subject" => $q["subject"],
-				"note" => $q["note"],
-				"header1" => $q["header1"],
-				"header2" => $q["header2"],
-				"header3" => $q["header3"],
-				"payment_date" => $q["payment_date"],
-				"detail" => $q["detail"],
 				"invoice_format" => $q["invoice_format"],
-			],[
-				"created" => "now()",
-				"modified" => "now()",
-			]);
+				"slip_number" => sprintf("%s%05d", $q["sequence"], $slipNumber),
+				"project" => $q["project"],
+				"subject" => $q["subject"],
+				"division" => $q["division"],
+				"leader" => $q["leader"],
+				"manager" => $q["manager"],
+				"client_name" => $q["client_name"],
+				"apply_client" => $q["apply_client"],
+				"payment_date" => $q["payment_date"],
+				"note" => $q["note"],
+				"amount_exc" => $q["amount_exc"],
+				"amount_tax" => $q["amount_tax"],
+				"amount_inc" => $q["amount_inc"],
+			],[]);
 			$insertQuery($id);
+			
+			if($q["invoice_format"] == 3){
+				$insertQuery = $db->insertSet("sales_attributes", [
+					"ss" => $id,
+					"data" => json_encode(["summary_header" => [
+						$q["summary_header1"],
+						$q["summary_header2"],
+						$q["summary_header3"],
+					]]),
+				],[]);
+				$insertQuery();
+			}
+			
+			$insertQuery = $db->insertSet("sales_workflow", [
+				"ss" => $id,
+				"regist_user" => $_SESSION["User.id"],
+			],[
+				"regist_datetime" => "now()",
+			]);
+			$insertQuery();
+			
+			$detailIds = [];
+			$detail = json_decode($q["detail"], true);
+			$len = count($detail);
+			for($i = 0; $i < $len; $i++){
+				$insertQuery = $db->insertSet("sales_details", [
+					"record" => $detail[$i]["record"],
+					"detail" => $detail[$i]["detail"],
+					"quantity" => $detail[$i]["quantity"],
+					"unit" => $detail[$i]["unit"],
+					"unit_price" => $detail[$i]["unit_price"],
+					"amount_exc" => $detail[$i]["amount_exc"],
+					"amount_tax" => $detail[$i]["amount_tax"],
+					"amount_inc" => $detail[$i]["amount_inc"],
+					"taxable" => $detail[$i]["taxable"],
+					"tax_rate" => $detail[$i]["tax_rate"],
+					"category" => $detail[$i]["category"],
+				],[]);
+				$insertQuery($sd);
+				
+				if($q["invoice_format"] == 2){
+					$insertQuery = $db->insertSet("sales_detail_attributes", [
+						"sd" => $sd,
+						"data" => json_encode(["circulation" => $detail[$i]["attributes"]["circulation"]]),
+					],[]);
+					$insertQuery();
+				}else if($q["invoice_format"] == 3){
+					$insertQuery = $db->insertSet("sales_detail_attributes", [
+						"sd" => $sd,
+						"data" => json_encode(["summary_data" => [
+							$detail[$i]["attributes"]["summary_data1"],
+							$detail[$i]["attributes"]["summary_data2"],
+							$detail[$i]["attributes"]["summary_data3"],
+						]]),
+					],[]);
+					$insertQuery();
+				}
+				
+				$insertQuery = $db->insertSet("purchase_relations", [
+					"ss" => $id,
+					"sd" => $sd,
+				],[]);
+				$insertQuery();
+			}
+			
 			$db->commit();
 		}catch(Exception $ex){
 			$result->addMessage("編集保存に失敗しました。", "ERROR", "");
@@ -109,7 +199,6 @@ class SalesSlip{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("編集保存が完了しました。", "INFO", "");
-			@Logger::record($db, "登録", ["sales_slips" => $id]);
 		}
 	}
 	

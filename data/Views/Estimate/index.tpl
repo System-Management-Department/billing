@@ -7,9 +7,6 @@
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jsuites.css" />
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jspreadsheet.css" />
 <style type="text/css">
-#spmain::part(body){
-	height: auto;
-}
 #spmain::part(d-table){
 	display: table;
 }
@@ -553,7 +550,8 @@ Promise.all([
 	});
 	
 	document.querySelector('[data-trigger="submit"]').addEventListener("click", e => {
-		const formData = new FormData(document.querySelector('form'));
+		const form = document.querySelector('form');
+		const formData = new FormData(form);
 		const details = document.getElementById("detail").jspreadsheet.options.data.map(rowProxy => {
 			let res = {};
 			const row = rowProxy[objectData];
@@ -566,6 +564,7 @@ Promise.all([
 			}
 			return res;
 		});
+		formData.append("invoice_format",id);
 		formData.append("detail", JSON.stringify(details));
 		fetch(`/Estimate/regist`, {
 			method: "POST",
@@ -707,6 +706,7 @@ function setDataTable(parent, columns, data, callback = null){
 {/block}
 {block name="body"}
 	<form>
+		<input type="hidden" name="sequence" value="{$sequence}" />
 		<div id="spmain">
 			<template shadowroot="closed">
 				<slot name="print"></slot>
@@ -1112,23 +1112,23 @@ function setDataTable(parent, columns, data, callback = null){
 				<div slot="table1" class="table d-contents"><div class="d-contents">
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">案件番号</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="project" type="text"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="project" type="text"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">件名</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="subject" type="text"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="subject" type="text"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">部門</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="division" type="select" list="division"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="division" type="select" list="division"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">部門長</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="leader" type="keyword" list="leader" placeholder="部門長名・部門長CDで検索"></form-control></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="leader" type="keyword" list="leader" placeholder="部門長名・部門長CDで検索"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">営業担当者</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="manager" type="keyword" list="manager" placeholder="担当者名・担当者CDで検索"></form-control></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="manager" type="keyword" list="manager" placeholder="担当者名・担当者CDで検索"></form-control><div class="invalid"></div></div>
 					</div>
 				</div></div>
 				<div slot="main">
@@ -1140,35 +1140,35 @@ function setDataTable(parent, columns, data, callback = null){
 				<div slot="table2" class="table d-contents"><div class="d-contents">
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">納品先</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="client_name" type="text"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="client_name" type="text"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">請求先</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="apply_client" type="keyword" list="apply_client" placeholder="請求先名・請求先CDで検索"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="apply_client" type="keyword" list="apply_client" placeholder="請求先名・請求先CDで検索"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">入金予定日</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">仕様</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="specification" type="select" list="specification"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="specification" type="select" list="specification"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">備考</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="note" type="textarea"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="note" type="textarea"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">税抜合計金額</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_exc" type="label" list="number_format"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_exc" type="label" list="number_format">0</form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">消費税合計金額</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_tax" type="label" list="number_format"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_tax" type="label" list="number_format">0</form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">税込合計金額</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_inc" type="label" list="number_format"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_inc" type="label" list="number_format">0</form-control><div class="invalid"></div></div>
 					</div>
 				</div></div>
 			</template>
@@ -1176,45 +1176,46 @@ function setDataTable(parent, columns, data, callback = null){
 				<div slot="table2" class="table d-contents"><div class="d-contents">
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">納品先</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="client_name" type="text"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="client_name" type="text"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">請求先</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="apply_client" type="keyword" list="apply_client" placeholder="請求先名・請求先CDで検索"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="apply_client" type="keyword" list="apply_client" placeholder="請求先名・請求先CDで検索"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">入金予定日</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">仕様</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="specification" type="select" list="specification"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="specification" type="select" list="specification"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">備考</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="note" type="textarea"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="note" type="textarea"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">摘要ヘッダ</div>
 						<div class="d-table-cell">
 							<div class="d-flex col-10 gap-3">
-								<form-control name="" type="text"></form-control>
-								<form-control name="" type="text"></form-control>
-								<form-control name="" type="text"></form-control>
+								<form-control name="summary_header1" type="text"></form-control>
+								<form-control name="summary_header2" type="text"></form-control>
+								<form-control name="summary_header3" type="text"></form-control>
 							</div>
+							<div class="invalid"></div>
 						</div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">税抜合計金額</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_exc" type="label" list="number_format"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_exc" type="label" list="number_format"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">消費税合計金額</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_tax" type="label" list="number_format"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_tax" type="label" list="number_format"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">税込合計金額</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_inc" type="label" list="number_format"></form-control></div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_inc" type="label" list="number_format"></form-control><div class="invalid"></div></div>
 					</div>
 				</div></div>
 			</template>
