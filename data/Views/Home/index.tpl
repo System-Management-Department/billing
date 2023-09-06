@@ -153,6 +153,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		SinglePage.modal.approval        .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
 		SinglePage.modal.disapproval     .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
 		SinglePage.modal.disapproval     .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.red_slip        .querySelector('table-sticky').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
 		SinglePage.modal.estimate        .querySelector('table-sticky').columns = [
 			{label: "フォーマット", width: "10rem", slot: "format", part: null},
 			{label: "件名", width: "10rem", slot: "subject", part: null},
@@ -167,6 +168,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		formTableInit(SinglePage.modal.withdraw        .querySelector('div'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.approval        .querySelector('div'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.disapproval     .querySelector('div'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.red_slip        .querySelector('div'), formTableQuery("#sales_slip").apply());
 		
 		SinglePage.modal.leader.setQuery(v => master.select("ONE").setTable("leaders").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 			const keyword = e.detail;
@@ -693,6 +695,79 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 			);
 			SinglePage.modal.disapproval.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
 		});
+		SinglePage.modal.red_slip.addEventListener("modal-open", e => {
+			const db = SinglePage.currentPage.instance.transaction;
+			const res = db.select("ROW")
+				.setTable("sales_slips")
+				.addField("sales_slips.*")
+				.andWhere("ss=?", Number(e.detail))
+				.leftJoin("sales_workflow using(ss)")
+				.addField("sales_workflow.regist_datetime")
+				.addField("sales_workflow.approval_datetime")
+				.apply();
+			const formControls = SinglePage.modal.red_slip.querySelectorAll('form-control[name]');
+			const n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("name");
+				formControls[i].value = res[name];
+			}
+			
+			const stable = SinglePage.modal.red_slip.querySelector('table-sticky');
+			const attrs = db.select("ROW").setTable("sales_attributes").andWhere("ss=?", Number(e.detail)).apply();
+			const attrData = (attrs == null) ? {} : JSON.parse(attrs.data);
+			setDataTable(
+				stable,
+				dataTableQuery("/Detail/Sales#list").apply(),
+				db.select("ALL")
+					.setTable("purchase_relations")
+					.andWhere("purchase_relations.ss=?", Number(e.detail))
+					.leftJoin("sales_details using(sd)")
+					.setField("DISTINCT sales_details.*")
+					.leftJoin("sales_detail_attributes using(sd)")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[0]') AS summary_data1")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[1]') AS summary_data2")
+					.addField("json_extract(sales_detail_attributes.data, '$.summary_data[2]') AS summary_data3")
+					.addField("json_extract(sales_detail_attributes.data, '$.circulation') AS circulation")
+					.apply(),
+				(row, data) => {
+					const category = row.querySelector('[slot="category"]');
+					const categoryOptions = document.querySelectorAll('#category option[value]');
+					const categoryCnt = categoryOptions.length;
+					let found = false;
+					for(let i = 0; i < categoryCnt; i++){
+						if(categoryOptions[i].getAttribute("value") == category.textContent){
+							category.textContent = categoryOptions[i].textContent;
+							found = true;
+							break;
+						}
+					}
+					if(!found){
+						category.textContent = "";
+					}
+					if(data.record == 0){
+						row.classList.add("table-secondary");
+					}
+				}
+			);
+			if("summary_header" in attrData){
+				let a = 1;
+				for(let header of attrData.summary_header){
+					const span = document.createElement("span");
+					span.textContent = header;
+					span.setAttribute("slot", `summary_data${a}`);
+					a++;
+					stable.appendChild(span);
+				}
+				stable.classList.remove("h-summary-data");
+			}else{
+				stable.classList.add("h-summary-data");
+			}
+			if(db.select("ONE").setTable("sales_slips").setField("invoice_format").andWhere("ss=?", Number(e.detail)).apply() == 2){
+				stable.classList.remove("h-circulation");
+			}else{
+				stable.classList.add("h-circulation");
+			}
+		});
 		
 		master.select("ALL")
 			.setTable("categories")
@@ -933,8 +1008,17 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="release" label="締め解除">
-		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
+		<div slot="body"></div>
+		<label slot="footer" class="d-contents"><span>コメント</span><input class="flex-grow-1 w-auto form-control" /></label>
 		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">締め解除</button>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
+	</modal-dialog>
+	<modal-dialog name="red_slip" label="赤伝票登録">
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
+		<div slot="body" class="mt-3">売上明細</div>
+		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
+		<label slot="footer" class="d-contents"><span>コメント</span><input class="flex-grow-1 w-auto form-control" /></label>
+		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">登録</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="payment" label="請求書受領">
