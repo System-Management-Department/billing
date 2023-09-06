@@ -659,15 +659,61 @@ class SalesSlip{
 		}
 	}
 	
+	public static function request($db, $q, $context, $result){
+		$id = $context->id;
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("sales_workflow", [],[
+				"request" => 1,
+				"request_datetime" => "NOW()",
+			]);
+			$updateQuery->andWhere("request=0");
+			$updateQuery->andWhere("ss=?", $id);
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("申請に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("申請を行いました。", "INFO", "");
+		}
+	}
+	
+	public static function withdraw($db, $q, $context, $result){
+		$id = $context->id;
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("sales_workflow", [],[
+				"request" => 0,
+				"request_datetime" => "NULL",
+			]);
+			$updateQuery->andWhere("request=1");
+			$updateQuery->andWhere("ss=?", $id);
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("取下に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("申請を取り下げました。", "INFO", "");
+		}
+	}
+	
 	public static function approval($db, $q, $context, $result){
 		$id = $context->id;
 		$db->beginTransaction();
 		try{
-			$updateQuery = $db->updateSet("sales_slips", [],[
+			$updateQuery = $db->updateSet("sales_workflow", [],[
 				"approval" => 1,
-				"accounting_date" => "CURDATE()",
+				"approval_datetime" => "NOW()",
+				"approval_user" => $_SESSION["User.id"],
 			]);
-			$updateQuery->andWhere("id=?", $id);
+			$updateQuery->andWhere("request=1");
+			$updateQuery->andWhere("ss=?", $id);
 			$updateQuery();
 			$db->commit();
 		}catch(Exception $ex){
@@ -677,7 +723,6 @@ class SalesSlip{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("承認が完了しました。", "INFO", "");
-			@Logger::record($db, "承認", ["sales_slips" => intval($id)]);
 		}
 	}
 	
@@ -685,11 +730,13 @@ class SalesSlip{
 		$id = $context->id;
 		$db->beginTransaction();
 		try{
-			$updateQuery = $db->updateSet("sales_slips", [],[
+			$updateQuery = $db->updateSet("sales_workflow", [],[
 				"approval" => 0,
-				"accounting_date" => "NULL",
+				"approval_datetime" => "NULL",
+				"approval_user" => "NULL",
 			]);
-			$updateQuery->andWhere("id=?", $id);
+			$updateQuery->andWhere("approval=1");
+			$updateQuery->andWhere("ss=?", $id);
 			$updateQuery();
 			$db->commit();
 		}catch(Exception $ex){
@@ -699,7 +746,6 @@ class SalesSlip{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("承認解除が完了しました。", "INFO", "");
-			@Logger::record($db, "承認解除", ["sales_slips" => intval($id)]);
 		}
 	}
 }

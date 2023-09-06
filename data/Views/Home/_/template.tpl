@@ -23,6 +23,7 @@
 							<div slot="label" style="width:120px;height:40px;line-height:40px;text-align:center;color:white;background:#008db5;">見積書4</div>
 							<div slot="label" class="flex-grow-1 text-center"><form-control type="label" list="invoice_format">4</form-control></div>
 						</create-window>
+						<show-dialog label="一時保存された見積一覧" target="estimate" class="btn btn-success"></show-dialog>
 					</div>
 				</div>
 				<div class="card">

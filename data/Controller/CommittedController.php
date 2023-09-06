@@ -169,6 +169,26 @@ class CommittedController extends ControllerBase{
 		return new JsonView($result);
 	}
 	
+	#[\Attribute\AcceptRole("admin", "manager", "leader")]
+	public function request(){
+		$db = Session::getDB();
+		
+		$result = new Result();
+		SalesSlip::request($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "manager", "leader")]
+	public function withdraw(){
+		$db = Session::getDB();
+		
+		$result = new Result();
+		SalesSlip::withdraw($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
+	
 	#[\Attribute\AcceptRole("admin", "leader")]
 	public function approval(){
 		$db = Session::getDB();
