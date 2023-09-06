@@ -865,6 +865,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		</main>
 	</div>
 	
+	<datalist id="request"><option value="">すべて</option><option value="1">申請中のもののみ</option></datalist>
 	<datalist id="category"></datalist>
 	<datalist id="division"></datalist>
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>

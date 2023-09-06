@@ -87,7 +87,8 @@
 						const request = row.querySelector('[slot="request"] show-dialog');
 						const approval = row.querySelector('[slot="approval"]');
 						const edit = row.querySelector('[slot="edit"]');
-						const delete_slip = row.querySelector('[slot="delete_slip"]');
+						const status = row.querySelector('[slot="status"]');
+						let delete_slip = row.querySelector('[slot="delete_slip"]');
 						if(apply_client != null){
 							apply_client.textContent = SinglePage.modal.apply_client.query(data.apply_client);
 						}
@@ -106,9 +107,15 @@
 								delete_slip.parentNode.removeChild(delete_slip);
 								delete_slip = null;
 							}
+							if(status != null){
+								status.innerHTML = '<i class="bi bi-reply-fill text-red"></i>申請中';
+							}
 						}else{
 							if(approval != null){
 								approval.parentNode.removeChild(approval);
+							}
+							if(status != null){
+								status.textContent = "";
 							}
 						}
 						if(data.release_datetime != null){

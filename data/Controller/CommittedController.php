@@ -52,6 +52,9 @@ class CommittedController extends ControllerBase{
 			if(!empty($_POST["apply_client"])){
 				$query->andWhere("apply_client=?", $_POST["apply_client"]);
 			}
+			if(!empty($_POST["status"])){
+				$query->andWhere("sales_workflow.request=1");
+			}
 		}
 		$searchIds = json_encode($query($cnt));
 		

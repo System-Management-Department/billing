@@ -27,6 +27,7 @@
 					dataTableQuery("/Purchase#list").apply(),
 					this.transaction.select("ALL")
 						.setTable("purchase_relations")
+						.addField("purchase_relations.sd")
 						.leftJoin("purchases using(pu)")
 						.addField("purchases.*")
 						.leftJoin("sales_slips using(ss)")
@@ -39,11 +40,30 @@
 						.addField("sales_slips.subject")
 						.apply(),
 					(row, data) => {
-						if(data.pu == null){
-							row.querySelector('[slot="payment"]').innerHTML = "";
-						}
+						const payment = row.querySelector('[slot="payment"] show-dialog');
 						const manager = row.querySelector('[slot="manager"]');
-						manager.textContent = SinglePage.modal.manager.query(manager.textContent);
+						const supplier = row.querySelector('[slot="supplier"]');
+						const checkbox = row.querySelector('[slot="checkbox"] span');
+						if(data.pu == null){
+							if(payment != null){
+								payment.parentNode.removeChild(payment);
+							}
+							if(checkbox != null){
+								checkbox.parentNode.removeChild(checkbox);
+							}
+						}else if(checkbox != null){
+							const input = document.createElement("input");
+							input.setAttribute("type", "checkbox");
+							input.setAttribute("value", data.pu);
+							input.checked = true;
+							checkbox.parentNode.replaceChild(input, checkbox);
+						}
+						if(manager != null){
+							manager.textContent = SinglePage.modal.manager.query(data.manager);
+						}
+						if(supplier != null){
+							supplier.textContent = SinglePage.modal.supplier.query(data.supplier);
+						}
 					}
 				);
 			});
