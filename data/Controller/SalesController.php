@@ -131,4 +131,48 @@ class SalesController extends ControllerBase{
 		
 		return new JsonView($result);
 	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function genSlipNumber(){
+		$db = Session::getDB();
+		$month = date("ym"); 
+		$result = new Result();
+		$db->beginTransaction();
+		try{
+			// 伝票番号生成
+			$sequence = $db->select("ONE")
+				->setTable("slip_sequence")
+				->setField("seq")
+				->andWhere("month=?", $month)
+				->andWhere("type=2");
+			$slipNumber = $sequence();
+			if(empty($slipNumber)){
+				$slipNumber = 1;
+				$insertQuery = $db->insertSet("slip_sequence", [
+					"seq" => 1,
+					"month" => $month,
+					"type" => 2,
+				],[]);
+				$insertQuery();
+				$db->commit();
+			}else{
+				$slipNumber++;
+				$updateQuery = $db->updateSet("slip_sequence", [],[
+					"seq" => "seq+1",
+				]);
+				$updateQuery->andWhere("month=?", $month);
+				$updateQuery->andWhere("type=2");
+				$updateQuery();
+				$db->commit();
+			}
+		}catch(Exception $ex){
+			$result->addMessage("伝票番号生成に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage(sprintf("%s%05d", $month, $slipNumber), "INFO", "no");
+		}
+		return new JsonView($result);
+	}
 }

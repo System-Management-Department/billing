@@ -124,19 +124,37 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 
 (function(){
 	let master = new SQLite();
+	let cache = new SQLite();
 {/literal}{foreach from=$includeDir item="path"}{if file_exists("`$path``$smarty.const.DIRECTORY_SEPARATOR`script.tpl")}
 {include file="`$path``$smarty.const.DIRECTORY_SEPARATOR`script.tpl"}
 {/if}{/foreach}{literal}
-	new Promise((resolve, reject) => {
-		document.addEventListener("DOMContentLoaded", e => {
-			master.use("master").then(master => {
-				fetch("/Default/master").then(res => res.arrayBuffer()).then(buffer => {
-					master.import(buffer, "master");
-					resolve();
+	Promise.all([
+		new Promise((resolve, reject) => {
+			document.addEventListener("DOMContentLoaded", e => {
+				master.use("master").then(master => {
+					fetch("/Default/master").then(res => res.arrayBuffer()).then(buffer => {
+						master.import(buffer, "master");
+						resolve();
+					});
 				});
 			});
-		});
-	}).then(() => {
+		}),
+		cache.use("cache").then(db => {
+			let update = false;
+			if(!("close_data" in db.tables)){
+				update = true;
+				db.createTable("close_data", ["selected", "dt"], []);
+			}
+			if(!("sales_data" in db.tables)){
+				update = true;
+				db.createTable("sales_data", ["selected", "slip_number", "dt"], []);
+			}
+			if(update){
+				return db.commit();
+			}
+			return Promise.resolve(null);
+		})
+	]).then(() => {
 		SinglePage.modal.leader      .querySelector('table-sticky').columns = dataTableQuery("/Modal/Leader#list").setField("label,width,slot,part").apply();
 		SinglePage.modal.manager     .querySelector('table-sticky').columns = dataTableQuery("/Modal/Manager#list").setField("label,width,slot,part").apply();
 		SinglePage.modal.apply_client.querySelector('table-sticky').columns = dataTableQuery("/Modal/ApplyClient#list").setField("label,width,slot,part").apply();
