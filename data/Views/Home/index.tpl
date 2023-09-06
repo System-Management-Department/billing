@@ -106,13 +106,16 @@ class CreateWindowElement extends HTMLElement{
 }
 customElements.define("create-window", CreateWindowElement);
 
+Toaster.classTranslate = function(code){
+	const classes = ["toast show bg-success", "toast show bg-warning", "toast show bg-danger"];
+	return classes[code];
+}
 CreateWindowElement.channel = "";
 new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e => {
 	const message = JSON.parse(e.data);
-	const classes = ["toast show bg-success", "toast show bg-warning", "toast show bg-danger"];
 	Toaster.show(message.messages.map(m => {
 		return {
-			"class": classes[m[1]],
+			"class": m[1],
 			message: m[0],
 			title: message.title
 		};

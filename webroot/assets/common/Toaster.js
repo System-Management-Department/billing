@@ -12,7 +12,7 @@ class Toaster{
 			let body = document.createElement("div");
 			let title = document.createElement("strong");
 			toast.setAttribute("slot", "toast");
-			toast.setAttribute("class", message["class"]);
+			toast.setAttribute("class", (Toaster.classTranslate == null) ? message["class"] : Toaster.classTranslate(message["class"]));
 			header.setAttribute("class", "toast-header");
 			body.setAttribute("class", "toast-body text-white");
 			title.setAttribute("class", "me-auto");
@@ -26,4 +26,5 @@ class Toaster{
 			new bootstrap.Toast(toast, option);
 		}
 	}
+	static classTranslate = null;
 }

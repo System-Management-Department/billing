@@ -8,7 +8,24 @@
 				this.reload();
 			});
 			vp.addEventListener("reload", e => { this.reload(); });
-			vp.addEventListener("modal-close", e => { console.log(e); });
+			vp.addEventListener("modal-close", e => {
+				if((e.dialog == "disapproval") && (e.trigger == "submit")){
+					// 承認解除
+					fetch(`/Sales/disapproval/${e.result}`)
+						.then(res => res.json()).then(result => {
+							if(result.success){
+								this.reload();
+							}
+							Toaster.show(result.messages.map(m => {
+								return {
+									"class": m[1],
+									message: m[0],
+									title: "承認解除"
+								};
+							}));
+						});
+				}
+			});
 			document.querySelector('table-sticky').columns = dataTableQuery("/Sales#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Sales#search").apply()).then(form => { form.submit(); });
 		}

@@ -16,10 +16,9 @@
 							if(result.success){
 								this.reload();
 							}
-							const classes = ["toast show bg-success", "toast show bg-warning", "toast show bg-danger"];
 							Toaster.show(result.messages.map(m => {
 								return {
-									"class": classes[m[1]],
+									"class": m[1],
 									message: m[0],
 									title: "承認"
 								};
@@ -32,10 +31,9 @@
 							if(result.success){
 								this.reload();
 							}
-							const classes = ["toast show bg-success", "toast show bg-warning", "toast show bg-danger"];
 							Toaster.show(result.messages.map(m => {
 								return {
-									"class": classes[m[1]],
+									"class": m[1],
 									message: m[0],
 									title: "申請"
 								};
@@ -48,10 +46,9 @@
 							if(result.success){
 								this.reload();
 							}
-							const classes = ["toast show bg-success", "toast show bg-warning", "toast show bg-danger"];
 							Toaster.show(result.messages.map(m => {
 								return {
-									"class": classes[m[1]],
+									"class": m[1],
 									message: m[0],
 									title: "申請取下"
 								};
@@ -82,6 +79,7 @@
 						.leftJoin("sales_workflow using(ss)")
 						.addField("sales_workflow.regist_datetime")
 						.addField("sales_workflow.request")
+						.addField("sales_workflow.release_datetime")
 						.apply(),
 					(row, data) => {
 						const apply_client = row.querySelector('[slot="apply_client"]');
@@ -106,10 +104,16 @@
 							}
 							if(delete_slip != null){
 								delete_slip.parentNode.removeChild(delete_slip);
+								delete_slip = null;
 							}
 						}else{
 							if(approval != null){
 								approval.parentNode.removeChild(approval);
+							}
+						}
+						if(data.release_datetime != null){
+							if(delete_slip != null){
+								delete_slip.parentNode.removeChild(delete_slip);
 							}
 						}
 					}
