@@ -108,6 +108,7 @@
 								delete_slip = null;
 							}
 							if(status != null){
+								status.classList.add("text-danger");
 								status.innerHTML = '<i class="bi bi-reply-fill text-red"></i>申請中';
 							}
 						}else{

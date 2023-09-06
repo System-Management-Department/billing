@@ -24,6 +24,13 @@ class PurchaseController extends ControllerBase{
 			->leftJoin("sales_slips using(ss)")
 			->leftJoin("sales_details using(sd)")
 			->andWhere("sales_details.record=1");
+		if($_SESSION["User.role"] == "manager"){
+			// 担当者　自身の所有するすべて
+			$query->andWhere("EXISTS(SELECT 1 FROM sales_workflow WHERE sales_workflow.regist_user=? AND sales_workflow.ss=purchase_relations.ss)", $_SESSION["User.id"]);
+		}else if($_SESSION["User.role"] == "leader"){
+			// 責任者　自身の所有するすべてと、自身の部署のもの
+			$query->andWhere("(EXISTS(SELECT 1 FROM sales_workflow WHERE sales_workflow.regist_user=? AND sales_workflow.ss=purchase_relations.ss) OR sales_slips.division=?)", $_SESSION["User.id"], $_SESSION["User.departmentCode"]);
+		}
 		if(!empty($_POST)){
 			if(!empty($_POST["slip_number"])){
 				$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));

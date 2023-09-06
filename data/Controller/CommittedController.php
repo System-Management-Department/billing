@@ -31,6 +31,16 @@ class CommittedController extends ControllerBase{
 			->leftJoin("sales_workflow using(ss)")
 			->andWhere("approval=0")
 			->andWhere("close=0");
+		if($_SESSION["User.role"] == "manager"){
+			// 担当者　自身の所有するすべて
+			$query->andWhere("sales_workflow.regist_user=?", $_SESSION["User.id"]);
+		}else if($_SESSION["User.role"] == "leader"){
+			// 責任者　自身の所有するすべてと、自身の部署の申請中のもの
+			$query->andWhere("(sales_workflow.regist_user=? OR (sales_slips.division=? AND sales_workflow.request=1))", $_SESSION["User.id"], $_SESSION["User.departmentCode"]);
+		}else if($_SESSION["User.role"] == "entry"){
+			// 経理　自身の所有するすべてと、申請中のすべて
+			$query->andWhere("(sales_workflow.regist_user=? OR sales_workflow.request=1)", $_SESSION["User.id"]);
+		}
 		if(!empty($_POST)){
 			if(!empty($_POST["slip_number"])){
 				$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
