@@ -99,6 +99,8 @@
 							if(request != null){
 								request.setAttribute("label", "取下");
 								request.setAttribute("target", "withdraw");
+								request.classList.remove("btn-primary");
+								request.classList.add("btn-warning");
 							}
 							if(edit != null){
 								edit.parentNode.removeChild(edit);

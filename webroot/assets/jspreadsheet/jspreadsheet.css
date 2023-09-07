@@ -107,7 +107,7 @@
 
 .jexcel > thead > tr > td.selected
 {
-    background-color:#dcdcdc;
+    background-color:#7adf3a;
 }
 
 .jexcel > thead > tr > td.arrow-up
@@ -194,7 +194,7 @@
 }
 .jexcel > tbody > tr.selected > td:first-child
 {
-    background-color:#dcdcdc;
+    background-color:#7adf3a;
 }
 .jexcel > tbody > tr > td > select,
 .jexcel > tbody > tr > td > input,
