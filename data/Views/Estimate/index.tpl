@@ -159,15 +159,15 @@ Promise.all([
 		);
 	});
 	
-	master.select("ALL")
+	const categories = master.select("ALL")
 		.setTable("categories")
-		.apply()
-		.forEach(function(row){
-			const option = document.createElement("option");
-			option.setAttribute("value", row.code);
-			option.textContent = row.name;
-			this.appendChild(option);
-		}, document.getElementById("category"));
+		.apply();
+	categories.forEach(function(row){
+		const option = document.createElement("option");
+		option.setAttribute("value", row.code);
+		option.textContent = row.name;
+		this.appendChild(option);
+	}, document.getElementById("category"));
 	master.select("ALL")
 		.setTable("divisions")
 		.apply()
@@ -258,7 +258,7 @@ Promise.all([
 		{ [refDetail]: "amount_exc", type: 'numeric', title: '税抜金額', width: 100, mask:'#,##' },
 		{ [refDetail]: "amount_tax", type: 'numeric', title: '消費税金額', width: 100, mask:'#,##' },
 		{ [refDetail]: "amount_inc", type: 'numeric', title: '税込金額', width: 100, mask:'#,##' },
-		{ [refDetail]: "category",   type: 'text', title: 'カテゴリー', width: 200 }
+		{ [refDetail]: "category",   type: 'dropdown', title: 'カテゴリー', width: 200, source: categories.map(r => r.name) }
 	];
 	if(id == "2"){
 		tableColumns.push(
@@ -284,6 +284,16 @@ Promise.all([
 					}
 					if(prop == objectData){
 						return target;
+					}
+					if((refDetail in tableColumns[prop]) && (tableColumns[prop][refDetail] == "category")){
+						let found = null;
+						const search = target.category;
+						for(let category of categories){
+							if(search == category.code){
+								found = category.name;
+							}
+						}
+						return found;
 					}
 					if(refAttr in tableColumns[prop]){
 						return target.attributes[tableColumns[prop][refAttr]];
@@ -313,6 +323,14 @@ Promise.all([
 								}else{
 									value = Number(value.replace(/,/g, ""));
 								}
+							}else if(tableColumns[prop][refDetail] == "category"){
+								let found = null;
+								for(let category of categories){
+									if(value == category.name){
+										found = category.code;
+									}
+								}
+								value = found;
 							}
 							obj[tableColumns[prop][refDetail]] = value;
 							obj.amount_exc = Math.floor(obj.quantity * obj.unit_price);
