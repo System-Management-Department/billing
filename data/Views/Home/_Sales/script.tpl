@@ -37,9 +37,9 @@
 					selected.push(checked[i].getAttribute("value"));
 				}
 				cache.insertSet("close_data", {
-					selected: selected.join(","),
+					selected: JSON.stringify(selected),
 					dt: dt
-				}, {});
+				}, {}).apply();
 				cache.commit().then(() => {
 					open(`/Sales/closeList?channel=${CreateWindowElement.channel}&key=${dt}`, "_blank", "left=0,top:0,width:1200,height:600");
 				});
@@ -62,16 +62,16 @@
 								selected.push(checked[i].getAttribute("value"));
 							}
 							cache.insertSet("sales_data", {
-								selected: selected.join(","),
+								selected: JSON.stringify(selected),
 								slip_number: number,
 								dt: dt
-							}, {});
+							}, {}).apply();
 							return cache.commit();
 						}else{
 							Promise.reject(null);
 						}
 					}).then(() => {
-						open(`/Sales/export?channel=${CreateWindowElement.channel}&key=${number}`, "_blank", "left=0,top:0,width:1200,height:600");
+						open(`/Sales/exportList?channel=${CreateWindowElement.channel}&key=${number}`, "_blank", "left=0,top:0,width:1200,height:600");
 					});
 			});
 		}
