@@ -41,7 +41,7 @@
 					dt: dt
 				}, {}).apply();
 				cache.commit().then(() => {
-					open(`/Sales/closeList?channel=${CreateWindowElement.channel}&key=${dt}`, "_blank", "left=0,top:0,width:1200,height:600");
+					open(`/Sales/closeList?channel=${CreateWindowElement.channel}&key=${dt}`, "_blank", "left=0,top=0,width=1000,height=300");
 				});
 			});
 			document.querySelector('[data-proc="export"]').addEventListener("click", e => {
@@ -71,7 +71,7 @@
 							Promise.reject(null);
 						}
 					}).then(() => {
-						open(`/Sales/exportList?channel=${CreateWindowElement.channel}&key=${number}`, "_blank", "left=0,top:0,width:1200,height:600");
+						open(`/Sales/exportList?channel=${CreateWindowElement.channel}&key=${number}`, "_blank", "left=0,top=0,width=1200,height=600");
 					});
 			});
 		}
