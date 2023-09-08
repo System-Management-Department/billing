@@ -2564,7 +2564,7 @@
                 if (obj.options.columns[j].type == 'checkbox' || obj.options.columns[j].type == 'radio') {
                     obj.records[y][j].children[0].checked = obj.options.data[y][j];
                 } else if (obj.options.columns[j].type == 'dropdown' || obj.options.columns[j].type == 'autocomplete') {
-                    obj.records[y][j].textContent = obj.getDropDownValue(x, obj.options.data[y][j]);
+                    obj.records[y][j].textContent = obj.getDropDownValue(j, obj.options.data[y][j]);
                 } else if (obj.options.columns[j].type == 'calendar') {
                     // Try formatted date
                     var formatted = null;
