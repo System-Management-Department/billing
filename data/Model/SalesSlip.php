@@ -347,7 +347,9 @@ class SalesSlip{
 				"close_datetime" => "NOW()",
 				"close_user" => $_SESSION["User.id"],
 			]);
-			$updateQuery->andWhere("ss IN (SELECT ss FROM JSON_TABLE(?, '$[*]' COLUMNS(slip_number TEXT PATH '$')) AS t LEFT JOIN sales_slips USING(slip_number))", $q["id"]);
+			$updateQuery->addWith("search AS (SELECT ss FROM JSON_TABLE(?, '$[*]' COLUMNS(slip_number TEXT PATH '$')) AS t LEFT JOIN sales_slips USING(slip_number))", $q["id"]);
+			$updateQuery->andWhere("EXISTS(SELECT 1 FROM search WHERE search.ss=sales_workflow.ss)");
+			// TODO 検索条件の修正
 			$updateQuery();
 			$db->commit();
 		}catch(Exception $ex){
@@ -384,21 +386,24 @@ class SalesSlip{
 	}
 	
 	public static function execRelease($db, $q, $context, $result){
-		$id = $q["id"];
-		$t = [];
-		foreach($id as $item){
-			$t[] = ["id" => $item];
-		}
 		$db->beginTransaction();
 		try{
-			$updateQuery = $db->updateSet("sales_slips", [],[
+			$updateQuery = $db->updateSet("sales_workflow", [],[
+				"request" => 0,
+				"request_datetime" => "NULL",
 				"approval" => 0,
-				"output_processed" => 0,
-				"close_processed" => 0,
-				"accounting_date" => "NULL",
-				"closing_date" => "NULL",
+				"approval_datetime" => "NULL",
+				"approval_user" => "NULL",
+				"close" => 0,
+				"close_version" => "NULL",
+				"close_datetime" => "NULL",
+				"close_user" => "NULL",
+				"release_datetime" => "NOW()",
+				"release_comment" => $q["comment"],
 			]);
-			$updateQuery->andWhere("id IN (SELECT id FROM JSON_TABLE(?, '$[*]' COLUMNS(id INT PATH '$.id')) AS t)", json_encode($t));
+			$updateQuery->addWith("search AS (SELECT ss FROM JSON_TABLE(?, '$[*]' COLUMNS(slip_number TEXT PATH '$')) AS t LEFT JOIN sales_slips USING(slip_number))", $q["id"]);
+			$updateQuery->andWhere("EXISTS(SELECT 1 FROM search WHERE search.ss=sales_workflow.ss)");
+			// TODO 検索条件の修正
 			$updateQuery();
 			$db->commit();
 		}catch(Exception $ex){
@@ -408,7 +413,6 @@ class SalesSlip{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("請求締解除が完了しました。", "INFO", "");
-			@Logger::record($db, "請求締解除", ["sales_slips" => $id]);
 		}
 	}
 	
