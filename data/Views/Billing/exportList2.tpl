@@ -46,12 +46,10 @@ new VirtualPage("/", class{
 		const tbody = document.querySelector('tbody');
 		const query = transaction.select("ALL")
 			.addWith("relations AS (SELECT DISTINCT ss,sd FROM purchase_relations)")
-			.addWith("temppurchases AS (SELECT sd,sum(amount_inc) AS amount_inc FROM purchases LEFT JOIN purchase_relations USING(pu) GROUP BY sd)")
 			.addTable("sales_slips")
 			.leftJoin("relations USING(ss)")
 			.leftJoin("sales_details USING(sd)")
 			.leftJoin("sales_workflow USING(ss)")
-			.leftJoin("temppurchases USING(sd)")
 			.leftJoin("master.system_apply_clients AS apply_clients ON sales_slips.apply_client=apply_clients.code")
 			.leftJoin("master.clients AS clients ON apply_clients.client=clients.code")
 			.andWhere("sales_details.record=1");
@@ -65,9 +63,7 @@ new VirtualPage("/", class{
 			"sales_details.quantity",
 			"sales_details.unit_price",
 			"sales_details.amount_inc",
-			"sales_details.amount_exc",
-			"ifnull(temppurchases.amount_inc, 0)",
-			"(sales_details.amount_inc - ifnull(temppurchases.amount_inc, 0))"
+			"sales_details.amount_exc"
 		];
 		for(let i = 0; i < fields.length; i++){
 			query.addField(`${fields[i]} AS field${i}`);
@@ -180,7 +176,7 @@ new VirtualPage("/", class{
 				}
 			}
 			doc.deletePage(1);
-			doc.save('売上一覧表.pdf');
+			doc.save('請求一覧表.pdf');
 		});
 	}
 });
@@ -207,10 +203,10 @@ Promise.all([
 		return a;
 	},{});
 	try{
-		const data = cache.select("ONE").setTable("sales_data").setField("selected").andWhere("slip_number=?", search.key).apply();
+		const data = cache.select("ONE").setTable("billing_data").setField("selected").andWhere("slip_number=?", search.key).apply();
 		const formData = new FormData();
 		formData.append("slip_number_array", data);
-		return fetch("/Sales/search", {
+		return fetch("/Billing/search", {
 			method: "POST",
 			body: formData
 		}).then(res => res.arrayBuffer());
@@ -235,7 +231,7 @@ Promise.all([
 					<header part="header">
 						<nav part="nav1">
 							<div part="container">
-								<div part="title">売上一覧表出力</div>
+								<div part="title">請求一覧表出力</div>
 							</div>
 						</nav>
 						<nav part="nav2">
@@ -248,12 +244,10 @@ Promise.all([
 			<template data-page="/">
 				<div slot="main" style="background-color: gray; padding:10px;" class="d-flex flex-column gap-2 overflow-auto">
 					<print-page size="A3" orientation="l" class="flex-shrink-0">
-						<div class="d-flex justify-content-between"><div style="font-size: 20px;">【 売上一覧表 】</div><div>日付           年　　月　　日</div></div>
+						<div class="d-flex justify-content-between"><div style="font-size: 20px;">【 請求一覧表 】</div><div>日付           年　　月　　日</div></div>
 						<div class="d-flex justify-content-end" style="margin-bottom: 20px;">株式会社ダイレクト・ホールディングス</div>
 						<table class="w-100" style="border: solid black calc(1rem / 6);white-space: pre;">
 							<colgroup data-page-clone="1">
-								<col />
-								<col />
 								<col />
 								<col />
 								<col />
@@ -279,8 +273,6 @@ Promise.all([
 									<th>売価</th>
 									<th>売上金額（税込）</th>
 									<th>売上金額（税抜）</th>
-									<th>仕入金額（税込）</th>
-									<th>利益（税込）</th>
 								</tr>
 							</thead>
 							<tbody></tbody>
@@ -295,8 +287,6 @@ Promise.all([
 									<td class="d-none"></td>
 									<td class="d-none"></td>
 									<td class="d-none"></td>
-									<td></td>
-									<td></td>
 									<td></td>
 									<td></td>
 								</tr>

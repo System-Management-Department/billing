@@ -118,6 +118,50 @@ class BillingController extends ControllerBase{
 		]), "application/vnd.sqlite3");
 	}
 	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function genSlipNumber(){
+		$db = Session::getDB();
+		$month = date("ym"); 
+		$result = new Result();
+		$db->beginTransaction();
+		try{
+			// 伝票番号生成
+			$sequence = $db->select("ONE")
+				->setTable("slip_sequence")
+				->setField("seq")
+				->andWhere("month=?", $month)
+				->andWhere("type=3");
+			$slipNumber = $sequence();
+			if(empty($slipNumber)){
+				$slipNumber = 1;
+				$insertQuery = $db->insertSet("slip_sequence", [
+					"seq" => 1,
+					"month" => $month,
+					"type" => 3,
+				],[]);
+				$insertQuery();
+				$db->commit();
+			}else{
+				$slipNumber++;
+				$updateQuery = $db->updateSet("slip_sequence", [],[
+					"seq" => "seq+1",
+				]);
+				$updateQuery->andWhere("month=?", $month);
+				$updateQuery->andWhere("type=3");
+				$updateQuery();
+				$db->commit();
+			}
+		}catch(Exception $ex){
+			$result->addMessage("伝票番号生成に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage(sprintf("%s%05d", $month, $slipNumber), "INFO", "no");
+		}
+		return new JsonView($result);
+	}
+	
 	#[\Attribute\AcceptRole("admin", "entry")]
 	public function closeUndo(){
 		$db = Session::getDB();
@@ -136,5 +180,17 @@ class BillingController extends ControllerBase{
 		SalesSlip::execRelease($db, $_POST, $this->requestContext, $result);
 		
 		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function exportList(){
+		$v = new View();
+		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function exportList2(){
+		$v = new View();
+		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}
 }

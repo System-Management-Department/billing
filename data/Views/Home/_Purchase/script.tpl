@@ -38,12 +38,20 @@
 						.addField("sales_slips.project")
 						.addField("sales_slips.slip_number")
 						.addField("sales_slips.subject")
+						.leftJoin("sales_workflow using(ss)")
+						.addField("sales_workflow.request")
 						.apply(),
 					(row, data) => {
+						const edit = row.querySelector('[slot="edit"]');
 						const payment = row.querySelector('[slot="payment"] show-dialog');
 						const manager = row.querySelector('[slot="manager"]');
 						const supplier = row.querySelector('[slot="supplier"]');
 						const checkbox = row.querySelector('[slot="checkbox"] span');
+						if(data.request == 1){
+							if(edit != null){
+								edit.parentNode.removeChild(edit);
+							}
+						}
 						if(data.pu == null){
 							if(payment != null){
 								payment.parentNode.removeChild(payment);

@@ -149,6 +149,10 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				update = true;
 				db.createTable("sales_data", ["selected", "slip_number", "dt"], []);
 			}
+			if(!("billing_data" in db.tables)){
+				update = true;
+				db.createTable("billing_data", ["selected", "slip_number", "dt"], []);
+			}
 			if(update){
 				return db.commit();
 			}
@@ -187,6 +191,8 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		formTableInit(SinglePage.modal.approval        .querySelector('div'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.disapproval     .querySelector('div'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.red_slip        .querySelector('div'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.payment         .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.payment         .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
 		
 		SinglePage.modal.leader.setQuery(v => master.select("ONE").setTable("leaders").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 			const keyword = e.detail;
@@ -729,6 +735,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const name = formControls[i].getAttribute("name");
 				formControls[i].value = res[name];
 			}
+			SinglePage.modal.red_slip.querySelector('[slot="footer"] input').value = "";
 			
 			const stable = SinglePage.modal.red_slip.querySelector('table-sticky');
 			const attrs = db.select("ROW").setTable("sales_attributes").andWhere("ss=?", Number(e.detail)).apply();
@@ -784,6 +791,30 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				stable.classList.remove("h-circulation");
 			}else{
 				stable.classList.add("h-circulation");
+			}
+		});
+		SinglePage.modal.release.querySelector('[data-proxy]').addEventListener("click", e => {
+			const result = SinglePage.modal.release.querySelector('[slot="footer"] input').value;
+			if(result == ""){
+				alert("コメントを入力してください。");
+			}else{
+				SinglePage.modal.release.hide("submit", result);
+			}
+		});
+		SinglePage.modal.red_slip.querySelector('[data-proxy]').addEventListener("click", e => {
+			const result = SinglePage.modal.red_slip.querySelector('[slot="footer"] input').value;
+			if(result == ""){
+				alert("コメントを入力してください。");
+			}else{
+				SinglePage.modal.red_slip.hide("submit", result);
+			}
+		});
+		SinglePage.modal.payment.querySelector('[data-proxy]').addEventListener("click", e => {
+			const result = SinglePage.modal.payment.querySelector('[slot="footer"] input').value;
+			if(result == ""){
+				alert("コメントを入力してください。");
+			}else{
+				SinglePage.modal.payment.hide("submit", result);
 			}
 		});
 		
@@ -1027,21 +1058,24 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 	</modal-dialog>
 	<modal-dialog name="release" label="締め解除">
 		<div slot="body"></div>
-		<label slot="footer" class="d-contents"><span>コメント</span><input class="flex-grow-1 w-auto form-control" /></label>
-		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">締め解除</button>
+		<label slot="footer" class="d-contents"><span>コメント<span class="text-danger">（必須入力）</span></span><input class="flex-grow-1 w-auto form-control" /></label>
+		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">締め解除</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="red_slip" label="赤伝票登録">
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
 		<div slot="body" class="mt-3">売上明細</div>
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
-		<label slot="footer" class="d-contents"><span>コメント</span><input class="flex-grow-1 w-auto form-control" /></label>
-		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">登録</button>
+		<label slot="footer" class="d-contents"><span>コメント<span class="text-danger">（必須入力）</span></span><input class="flex-grow-1 w-auto form-control" /></label>
+		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">登録</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="payment" label="請求書受領">
-		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
-		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">請求書受領</button>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="1"></div>
+		<div slot="body" class="mt-3">仕入明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
+		<label slot="footer" class="d-contents"><span>コメント<span class="text-danger">（必須入力）</span></span><input class="flex-grow-1 w-auto form-control" /></label>
+		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">請求書受領</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="estimate" label="見積選択">

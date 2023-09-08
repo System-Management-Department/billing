@@ -380,6 +380,12 @@ class ModalDialogElement extends HTMLElement{
 		}
 		this.#modal.showModal();
 	}
+	hide(trigger = null, result = null){
+		this.#modal.close();
+		if((trigger != null) || (result != null)){
+			SinglePage.currentPage.dispatchEvent(new ModalDialogEvent("modal-close", this.getAttribute("name"), trigger, result));
+		}
+	}
 	setQuery(func){
 		this.#query = func;
 		return this;

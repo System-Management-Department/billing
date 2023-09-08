@@ -388,7 +388,9 @@ class SalesSlip{
 	public static function execRelease($db, $q, $context, $result){
 		$db->beginTransaction();
 		try{
-			$updateQuery = $db->updateSet("sales_workflow", [],[
+			$updateQuery = $db->updateSet("sales_workflow", [
+				"release_comment" => $q["comment"],
+			],[
 				"request" => 0,
 				"request_datetime" => "NULL",
 				"approval" => 0,
@@ -399,7 +401,6 @@ class SalesSlip{
 				"close_datetime" => "NULL",
 				"close_user" => "NULL",
 				"release_datetime" => "NOW()",
-				"release_comment" => $q["comment"],
 			]);
 			$updateQuery->addWith("search AS (SELECT ss FROM JSON_TABLE(?, '$[*]' COLUMNS(slip_number TEXT PATH '$')) AS t LEFT JOIN sales_slips USING(slip_number))", $q["id"]);
 			$updateQuery->andWhere("EXISTS(SELECT 1 FROM search WHERE search.ss=sales_workflow.ss)");
