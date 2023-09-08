@@ -32,10 +32,6 @@ class SalesController extends ControllerBase{
 			$query->andWhere("(sales_workflow.regist_user=? OR sales_slips.division=?)", $_SESSION["User.id"], $_SESSION["User.departmentCode"]);
 		}
 		if(!empty($_POST)){
-			if(!empty($_POST["slip_number_array"])){
-				$query->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(slip_number TEXT PATH '$')) AS t)", $_POST["slip_number_array"]);
-				$query->andWhere("EXISTS(SELECT 1 FROM find WHERE find.slip_number=sales_slips.slip_number)");
-			}
 			if(!empty($_POST["slip_number"])){
 				$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
 			}

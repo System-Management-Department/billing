@@ -310,19 +310,44 @@ class SalesSlip{
 	}
 	
 	public static function execClose($db, $q, $context, $result){
-		$id = $q["id"];
-		$t = [];
-		foreach($id as $item){
-			$t[] = ["id" => $item];
-		}
+		$month = date("ym"); 
 		$db->beginTransaction();
 		try{
-			$updateQuery = $db->updateSet("sales_slips", [],[
-				"close_processed" => 1,
-				"closing_date" => "CURRENT_DATE()",
-				"closed_count" => "closed_count+1",
+			// 版番号生成
+			$sequence = $db->select("ONE")
+				->setTable("slip_sequence")
+				->setField("seq")
+				->andWhere("month=?", $month)
+				->andWhere("type=5");
+			$slipNumber = $sequence();
+			if(empty($slipNumber)){
+				$slipNumber = 1;
+				$insertQuery = $db->insertSet("slip_sequence", [
+					"seq" => 1,
+					"month" => $month,
+					"type" => 5,
+				],[]);
+				$insertQuery();
+				$db->commit();
+			}else{
+				$slipNumber++;
+				$updateQuery = $db->updateSet("slip_sequence", [],[
+					"seq" => "seq+1",
+				]);
+				$updateQuery->andWhere("month=?", $month);
+				$updateQuery->andWhere("type=5");
+				$updateQuery();
+				$db->commit();
+			}
+			$version = sprintf("%s%05d", $month, $slipNumber);
+			
+			$updateQuery = $db->updateSet("sales_workflow", [],[
+				"close" => 1,
+				"close_version" => $version,
+				"close_datetime" => "NOW()",
+				"close_user" => $_SESSION["User.id"],
 			]);
-			$updateQuery->andWhere("id IN (SELECT id FROM JSON_TABLE(?, '$[*]' COLUMNS(id INT PATH '$.id')) AS t)", json_encode($t));
+			$updateQuery->andWhere("ss IN (SELECT ss FROM JSON_TABLE(?, '$[*]' COLUMNS(slip_number TEXT PATH '$')) AS t LEFT JOIN sales_slips USING(slip_number))", $q["id"]);
 			$updateQuery();
 			$db->commit();
 		}catch(Exception $ex){
@@ -332,7 +357,29 @@ class SalesSlip{
 		}
 		if(!$result->hasError()){
 			$result->addMessage("請求締が完了しました。", "INFO", "");
-			@Logger::record($db, "請求締", ["sales_slips" => $id]);
+			$result->addMessage($version, "INFO", "no");
+		}
+	}
+	
+	public static function execCloseUndo($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("sales_workflow", [],[
+				"close" => 0,
+				"close_version" => "NULL",
+				"close_datetime" => "NULL",
+				"close_user" => "NULL",
+			]);
+			$updateQuery->andWhere("close_version=?", $q["id"]);
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("更新に失敗しました。", "ERROR", "");
+			$result->setData($ex->getMessage());
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("更新が完了しました。", "INFO", "");
 		}
 	}
 	
@@ -362,300 +409,6 @@ class SalesSlip{
 		if(!$result->hasError()){
 			$result->addMessage("請求締解除が完了しました。", "INFO", "");
 			@Logger::record($db, "請求締解除", ["sales_slips" => $id]);
-		}
-	}
-	
-	public static function checkInsert2($db, $q, $masterData, $context){
-		$check = new Validator();
-		self::validate2($check, $masterData, $db);
-		$result = $check($q);
-		return $result;
-	}
-	
-	public static function checkUpdate2($db, $q, $masterData, $context){
-		$id = $context->id;
-		$check = new Validator();
-		self::validate2($check, $masterData, $db);
-		$result = $check($q);
-		return $result;
-	}
-	
-	/**
-		登録・更新共通の検証
-	*/
-	public static function validate2($check, $masterData, $db){
-		$check["delivery_destination"]->required("納品先を入力してください。")
-			->length("納品先は80文字以下で入力してください。", null, 255);
-		$check["subject"]->required("件名を入力してください。");
-		$check["payment_date"]->required("入金予定日を入力してください。")
-			->date("入金予定日を正しく入力してください。");
-		$check["invoice_format"]->required("請求書パターンを入力してください。")
-			->range("請求書パターンを正しく入力してください。", "in", array_keys(SelectionModifiers::invoiceFormat([])));
-	}
-	
-	public static function execInsert2($db, $q, $context, $result){
-		$id = $context->id;
-		$month = date("ym"); 
-		$db->beginTransaction();
-		try{
-			$query = $db->select("ONE")
-				->setTable("basic_info")
-				->setField("`value`")
-				->andWhere("`key`=?", "slip_number_seq")
-				->andWhere("`value` like ?", "{$month}%");
-			$seq = $query();
-			$deleteQuery = $db->delete("basic_info")
-				->andWhere("`key`=?", "slip_number_seq");
-			$deleteQuery();
-			if($seq == null){
-				$number = sprintf("%04d%05d", $month, 1);
-			}else{
-				$str = substr($seq, 4);
-				$number = sprintf("%04d%05d", $month, intval($str) + 1);
-			}
-			$insertQuery = $db->insertSet("basic_info", [
-				"key"   => "slip_number_seq",
-				"value" => $number,
-			], []);
-			$insertQuery();
-			
-			$extendFields = ["manager"];
-			$overrideFields = [
-				"delivery_destination", "subject",
-				"note", "header1", "header2", "header3",
-				"payment_date", "detail", "invoice_format",
-			];
-			$nowFields = ["created", "modified"];
-			$insertFields = array_merge([
-				"slip_number", "project", "billing_destination"
-				//"division", "team",
-			], $overrideFields, $extendFields, $nowFields);
-			$insertQuery = $db->insertSelect("sales_slips", implode(",", $insertFields))
-				->addTable("projects")
-				->andWhere("projects.code=?", $id);
-			foreach($insertFields as $field){
-				match(true){
-					($field == "slip_number") =>
-						$insertQuery->addField("?", $number),
-					($field == "project") =>
-						$insertQuery->addField("?", $id),
-					($field == "billing_destination") =>
-						$insertQuery->addField("projects.apply_client"),
-					in_array($field, $overrideFields) =>
-						$insertQuery->addField("?", $q[$field]),
-					in_array($field, $extendFields) =>
-						$insertQuery->addField("projects.{$field}"),
-					in_array($field, $nowFields) =>
-						$insertQuery->addField("now()"),
-				};
-			}
-			$insertQuery();
-			$db->commit();
-		}catch(Exception $ex){
-			$result->addMessage("編集保存に失敗しました。", "ERROR", "");
-			$result->setData($ex);
-			$db->rollback();
-		}
-		if(!$result->hasError()){
-			$result->addMessage("編集保存が完了しました。", "INFO", "");
-			@Logger::record($db, "登録", ["projects" => $id]);
-		}
-	}
-	
-	public static function execUpdate2($db, $q, $context, $result){
-		$id = $context->id;
-		$db->beginTransaction();
-		try{
-			$updateQuery = $db->updateSet("sales_slips", [
-				"delivery_destination" => $q["delivery_destination"],
-				"subject" => $q["subject"],
-				"note" => $q["note"],
-				"header1" => $q["header1"],
-				"header2" => $q["header2"],
-				"header3" => $q["header3"],
-				"payment_date" => $q["payment_date"],
-				"detail" => $q["detail"],
-				"invoice_format" => $q["invoice_format"],
-			],[
-				"output_processed" => 0,
-				"modified" => "now()",
-			]);
-			$updateQuery->andWhere("id=?", $id)
-				->andWhere("close_processed=0");
-			$updateQuery();
-			$db->commit();
-		}catch(Exception $ex){
-			$result->addMessage("編集保存に失敗しました。", "ERROR", "");
-			$result->setData($ex);
-			$db->rollback();
-		}
-		if(!$result->hasError()){
-			$result->addMessage("編集保存が完了しました。", "INFO", "");
-			@Logger::record($db, "編集", ["sales_slips" => intval($id)]);
-		}
-	}
-	
-	public static function checkInsert3($db, $q, $masterData, $context){
-		$check = new Validator();
-		self::validate2($check, $masterData, $db);
-		$check["billing_destination"]->required("請求先を入力してください。");
-			//->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
-		$result = $check($q);
-		return $result;
-	}
-	
-	public static function checkUpdate3($db, $q, $masterData, $context){
-		$id = $context->id;
-		$check = new Validator();
-		self::validate2($check, $masterData, $db);
-		$check["billing_destination"]->required("請求先を入力してください。");
-			//->range("請求先を正しく入力してください。", "in", ($db->select("COL")->setTable("apply_clients")->setField("code"))());
-		$result = $check($q);
-		return $result;
-	}
-	
-	public static function execInsert3($db, $q, $context, $result){
-		$id = $q["sid"];
-		$month = date("ym"); 
-		$db->beginTransaction();
-		try{
-			$query = $db->select("ONE")
-				->setTable("basic_info")
-				->setField("`value`")
-				->andWhere("`key`=?", "slip_number_seq")
-				->andWhere("`value` like ?", "{$month}%");
-			$seq = $query();
-			$deleteQuery = $db->delete("basic_info")
-				->andWhere("`key`=?", "slip_number_seq");
-			$deleteQuery();
-			if($seq == null){
-				$number = sprintf("%04d%05d", $month, 1);
-			}else{
-				$str = substr($seq, 4);
-				$number = sprintf("%04d%05d", $month, intval($str) + 1);
-			}
-			$insertQuery = $db->insertSet("basic_info", [
-				"key"   => "slip_number_seq",
-				"value" => $number,
-			], []);
-			$insertQuery();
-			
-			$deleteQuery = $db->delete("sales_slips")
-				->andWhere("spreadsheet=?", $id);
-			$deleteQuery();
-			
-			$deleteQuery = $db->delete("purchases")
-				->andWhere("spreadsheet=?", $id);
-			$deleteQuery();
-			
-			
-			$insertQuery = $db->insertSet("sales_slips", [
-				"spreadsheet"          => $id,
-				"delivery_destination" => $q["delivery_destination"],
-				"subject"              => $q["subject"],
-				"note"                 => $q["note"],
-				"header1"              => $q["header1"],
-				"header2"              => $q["header2"],
-				"header3"              => $q["header3"],
-				"payment_date"         => $q["payment_date"],
-				"detail"               => $q["detail"],
-				"invoice_format"       => $q["invoice_format"],
-				"billing_destination"  => $q["billing_destination"],
-				"slip_number"          => $number,
-			],[
-				"division" => "@division",
-				"manager"  => "@manager",
-				"created"  => "now()",
-				"modified" => "now()",
-			]);
-			$insertQuery();
-			
-			$jsonTable = $db->getJsonArray2Tabel([
-				"purchases" => [
-					"payment_date" => '$.payment_date',
-					"unit"         => '$.unit',
-					"quantity"     => '$.quantity',
-					"unit_price"   => '$.unit_price',
-					"amount"       => '$.amount',
-					"subject"      => '$.subject',
-					"note"         => '$.note',
-					"ingest"       => '$.ingest'
-				]
-			], "json_table");
-			$insertQuery = $db->insertSelect("purchases", "spreadsheet,payment_date,unit,quantity,unit_price,amount,subject,note,ingest,created,modified")
-				->addField("?", $id)
-				->addTable($jsonTable, $q["purchases"])
-				->addField("json_table.payment_date,json_table.unit,json_table.quantity,json_table.unit_price,json_table.amount,json_table.subject,json_table.note,json_table.ingest")
-				->addField("now(),now()");
-			$insertQuery();
-			
-			$db->commit();
-		}catch(Exception $ex){
-			$result->addMessage("編集保存に失敗しました。", "ERROR", "");
-			$result->setData($ex);
-			$db->rollback();
-		}
-		if(!$result->hasError()){
-			$result->addMessage("編集保存が完了しました。", "INFO", "");
-			@Logger::record($db, "登録", ["spreadsheet" => $id]);
-		}
-	}
-	
-	public static function execUpdate3($db, $q, $context, $result){
-		$id = $q["sid"];
-		$month = date("ym"); 
-		$db->beginTransaction();
-		try{
-			$deleteQuery = $db->delete("purchases")
-				->andWhere("spreadsheet=?", $id);
-			$deleteQuery();
-			
-			
-			$updateQuery = $db->updateSet("sales_slips", [
-				"delivery_destination" => $q["delivery_destination"],
-				"subject"              => $q["subject"],
-				"note"                 => $q["note"],
-				"header1"              => $q["header1"],
-				"header2"              => $q["header2"],
-				"header3"              => $q["header3"],
-				"payment_date"         => $q["payment_date"],
-				"detail"               => $q["detail"],
-				"invoice_format"       => $q["invoice_format"],
-				"billing_destination"  => $q["billing_destination"],
-			],[
-				"modified" => "now()",
-			]);
-			$updateQuery->andWhere("spreadsheet=?", $id);
-			$updateQuery();
-			
-			$jsonTable = $db->getJsonArray2Tabel([
-				"purchases" => [
-					"payment_date" => '$.payment_date',
-					"unit"         => '$.unit',
-					"quantity"     => '$.quantity',
-					"unit_price"   => '$.unit_price',
-					"amount"       => '$.amount',
-					"subject"      => '$.subject',
-					"note"         => '$.note',
-					"ingest"       => '$.ingest'
-				]
-			], "json_table");
-			$insertQuery = $db->insertSelect("purchases", "spreadsheet,payment_date,unit,quantity,unit_price,amount,subject,note,ingest,created,modified")
-				->addField("?", $id)
-				->addTable($jsonTable, $q["purchases"])
-				->addField("json_table.payment_date,json_table.unit,json_table.quantity,json_table.unit_price,json_table.amount,json_table.subject,json_table.note,json_table.ingest")
-				->addField("now(),now()");
-			$insertQuery();
-			
-			$db->commit();
-		}catch(Exception $ex){
-			$result->addMessage("編集保存に失敗しました。", "ERROR", "");
-			$result->setData($ex);
-			$db->rollback();
-		}
-		if(!$result->hasError()){
-			$result->addMessage("編集保存が完了しました。", "INFO", "");
-			@Logger::record($db, "更新", ["spreadsheet" => $id]);
 		}
 	}
 	

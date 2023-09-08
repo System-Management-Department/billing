@@ -29,19 +29,27 @@
 			document.querySelector('table-sticky').columns = dataTableQuery("/Sales#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Sales#search").apply()).then(form => { form.submit(); });
 			document.querySelector('[data-proc="close"]').addEventListener("click", e => {
-				const dt = Date.now();
+				let number = null;
 				const selected = [];
 				const checked = document.querySelectorAll('table-row [slot="checkbox"] [value]:checked');
 				const n = checked.length;
 				for(let i = 0; i < n; i++){
 					selected.push(checked[i].getAttribute("value"));
 				}
-				cache.insertSet("close_data", {
-					selected: JSON.stringify(selected),
-					dt: dt
-				}, {}).apply();
-				cache.commit().then(() => {
-					open(`/Sales/closeList?channel=${CreateWindowElement.channel}&key=${dt}`, "_blank", "left=0,top=0,width=1000,height=300");
+				const formData = new FormData();
+				formData.append("id", JSON.stringify(selected));
+				fetch("/Sales/close", {
+					method: "POST",
+					body: formData
+				}).then(res => res.json()).then(result => {
+					for(let message of result.messages){
+						if(message[2] == "no"){
+							number = message[0];
+						}
+					}
+					if(number != null){
+						open(`/Sales/closeList?channel=${CreateWindowElement.channel}&key=${number}`, "_blank", "left=0,top=0,width=1000,height=300");
+					}
 				});
 			});
 			document.querySelector('[data-proc="export"]').addEventListener("click", e => {
@@ -68,7 +76,7 @@
 							}, {}).apply();
 							return cache.commit();
 						}else{
-							Promise.reject(null);
+							return Promise.reject(null);
 						}
 					}).then(() => {
 						open(`/Sales/exportList?channel=${CreateWindowElement.channel}&key=${number}`, "_blank", "left=0,top=0,width=1200,height=600");

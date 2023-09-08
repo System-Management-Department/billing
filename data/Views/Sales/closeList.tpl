@@ -108,16 +108,41 @@ new VirtualPage("/", class{
 			a.setAttribute("download", `請求データ（${label}）_${search.key}.csv`);
 			body.appendChild(a);
 		}
+		
+		const undoBtn = document.createElement("button");
+		undoBtn.textContent = `取り消し`;
+		undoBtn.className = "btn btn-warning";
+		undoBtn.setAttribute("type", "button");
+		body.appendChild(undoBtn);
+		undoBtn.addEventListener("click", e => {
+			const formData = new FormData();
+			formData.append("id", search.key);
+			fetch("/Billing/closeUndo", {
+				method: "POST",
+				body: formData
+			}).then(res => res.json()).then(result => {
+				if(result.success){
+					close();
+				}
+			});
+		});
 	}
 });
 
 let master = new SQLite();
-let cache = new SQLite();
 let transaction = new SQLite();
-let search = null;
+let search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
+	found = t.match(/^(.*?)=(.*)$/);
+	if(found){
+		a[found[1]] = decodeURIComponent(found[2]);
+	}
+	return a;
+},{});
+const searchQuery = new FormData();
+searchQuery.append("version", search.key);
 Promise.all([
 	master.use("master").then(master => fetch("/Default/master")).then(res => res.arrayBuffer()),
-	cache.use("cache"),
+	fetch("/Billing/search", {method: "POST", body: searchQuery}).then(res => res.arrayBuffer()),
 	new Promise((resolve, reject) => {
 		document.addEventListener("DOMContentLoaded", e => {
 			resolve();
@@ -125,28 +150,8 @@ Promise.all([
 	})
 ]).then(response => {
 	master.import(response[0], "master");
-	search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
-		found = t.match(/^(.*?)=(.*)$/);
-		if(found){
-			a[found[1]] = decodeURIComponent(found[2]);
-		}
-		return a;
-	},{});
-	try{
-		const data = cache.select("ONE").setTable("close_data").setField("selected").andWhere("dt=?", Number(search.key)).apply();
-		const formData = new FormData();
-		formData.append("slip_number_array", data);
-		return fetch("/Sales/search", {
-			method: "POST",
-			body: formData
-		}).then(res => res.arrayBuffer());
-	}catch(ex){
-		Promise.reject(null);
-	}
-}).then(buffer => {
-	transaction.import(buffer, "transaction");
+	transaction.import(response[1], "transaction");
 	transaction.attach(master, "master");
-	
 	SinglePage.location = `/`;
 }, () => { close(); });
 {/literal}</script>
