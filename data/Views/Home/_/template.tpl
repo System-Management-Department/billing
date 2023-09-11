@@ -78,7 +78,7 @@
 							<td><a class="btn btn-info" href="/x-reports/purchase/">仕入一覧表フォルダ</a></td>
 						</tr>
 						<tr class="table-secondary">
-							<td><page-link href="/Purchase" class="btn btn-info">赤伝一覧表</page-link></td>
+							<td><page-link href="/RedSlip" class="btn btn-info">赤伝一覧表</page-link></td>
 							<td><div class="flex-grow-1 text-center">
 								<div>赤伝情報の確認</div>
 							</div></td>
