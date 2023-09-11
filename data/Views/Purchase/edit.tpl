@@ -72,9 +72,13 @@ new VirtualPage("/edit", class{
 					const obj = document.getElementById("detail").jspreadsheet;
 					const insert = obj.options.dataProxy();
 					insert[objectData].supplier = e.result;
-					pasteEvent = true;
-					obj.insertRow(insert);
-					pasteEvent = false;
+					if(obj.options.data.length == 0){
+						obj.setData([insert]);
+					}else{
+						pasteEvent = true;
+						obj.insertRow(insert);
+						pasteEvent = false;
+					}
 				}
 			}
 		});
@@ -212,6 +216,7 @@ Promise.all([
 				}
 			}
 		},
+		allowDeletingAllRows: true,
 		columns: tableColumns,
 		toolbar: toolbar,
 		dataProxy(){
