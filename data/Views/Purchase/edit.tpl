@@ -11,9 +11,46 @@
 <script type="text/javascript" src="/assets/common/SinglePage.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jsuites.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jspreadsheet.js"></script>
+<script type="text/javascript">{literal}
+class ListButtonElement extends HTMLElement{
+	#root;
+	constructor(){
+		super();
+		this.#root = Object.assign(this.attachShadow({mode: "closed"}), {innerHTML: '<span></span>'});
+	}
+	connectedCallback(){
+		setTimeout(() => {this.setAttribute("data-result", this.textContent); } ,0);
+	}
+	disconnectedCallback(){}
+	attributeChangedCallback(name, oldValue, newValue){
+		if(name == "label"){
+			const label = this.#root.querySelector('span');
+			if(newValue == null){
+				label.textContent = "";
+			}else{
+				label.textContent = newValue;
+			}
+		}
+	}
+	static get observedAttributes(){ return ["label"]; }
+}
+customElements.define("list-button", ListButtonElement);
+{/literal}</script>
 {jsiife id=$id}{literal}
 new VirtualPage("/", class{
 	constructor(vp){
+		vp.addEventListener("modal-close", e => {
+			if(e.dialog == "supplier"){
+				if(e.trigger == "list"){
+					const obj = document.getElementById("detail").jspreadsheet;
+					const insert = obj.options.dataProxy();
+					insert[objectData].supplier = e.result;
+					pasteEvent = true;
+					obj.insertRow(insert);
+					pasteEvent = false;
+				}
+			}
+		});
 		document.querySelector('[data-trigger="submit"]').addEventListener("click", e => { close(); });
 	}
 });
@@ -23,6 +60,7 @@ let transaction = new SQLite();
 const objectData = Symbol("objectData");
 const searchQuery = new FormData();
 searchQuery.append("sd", id);
+let pasteEvent = false;
 Promise.all([
 	master.use("master").then(master => fetch("/Default/master")).then(res => res.arrayBuffer()),
 	fetch("/Purchase/search", {method: "POST", body: searchQuery}).then(res => res.arrayBuffer()),
@@ -92,7 +130,6 @@ Promise.all([
 		{ [refDetail]: "payment_date", type: 'calendar', title: '支払日', width: 100 }
 	];
 	
-	let pasteEvent = false;
 	const obj = jspreadsheet(document.getElementById("detail"), {
 		onbeforepaste: (el, data, x, y) => {
 			if(x != 0){
@@ -183,18 +220,6 @@ Promise.all([
 		text: { rowNumber: "項番" },
 		onselection: (el, borderLeft, borderTop, borderRight, borderBottom, origin) => {
 			toolbarDisplay(borderTop);
-		},
-		onchange: (el, cell, x, y, value, oldValue) => {
-			const total = obj.options.data.reduce((a, rowProxy) => {
-				const row = rowProxy[objectData];
-				a.amount_exc += row.amount_exc;
-				a.amount_tax += row.amount_tax;
-				a.amount_inc += row.amount_inc;
-				return a; 
-			}, {amount_exc: 0, amount_inc: 0, amount_tax: 0});
-			//document.querySelector('form-control[name="amount_exc"]').value = total.amount_exc;
-			//document.querySelector('form-control[name="amount_tax"]').value = total.amount_tax;
-			//document.querySelector('form-control[name="amount_inc"]').value = total.amount_inc;
 		}
 	});
 	obj.setData(transaction.select("ALL")
@@ -207,7 +232,7 @@ Promise.all([
 		})
 	);
 	obj.toolbar.querySelector('.toolbar-supplier').addEventListener("click", e => {
-		SinglePage.modal.supplier.show();
+		SinglePage.modal.supplier.show({detail: null});
 	});
 	obj.toolbar.querySelector('.toolbar-taxable').addEventListener("change", e => {
 		const selected = obj.selectedCell.map(Number);
