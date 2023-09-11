@@ -1,4 +1,5 @@
 {block name="styles" append}{literal}
+<link rel="stylesheet" type="text/css" href="/assets/bootstrap/font/bootstrap-icons.css" />
 <link rel="stylesheet" type="text/css" href="/assets/common/layout.css" />
 <link rel="stylesheet" type="text/css" href="/assets/common/SinglePage.css" />
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jsuites.css" />
@@ -35,6 +36,19 @@ Promise.all([
 	transaction.import(response[1], "transaction");
 	transaction.attach(master, "master");
 	
+	SinglePage.modal.supplier.querySelector('table-sticky').columns = dataTableQuery("/Modal/Supplier#list").setField("label,width,slot,part").apply();
+	SinglePage.modal.supplier.setQuery(v => master.select("ONE").setTable("suppliers").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
+		const keyword = e.detail;
+		setDataTable(
+			SinglePage.modal.supplier.querySelector('table-sticky'),
+			dataTableQuery("/Modal/Supplier#list").apply(),
+			master.select("ALL")
+				.setTable("suppliers")
+				.apply(),
+			row => {}
+		);
+	});
+		
 	const suppliers = master.select("ALL")
 		.setTable("suppliers")
 		.apply();
@@ -78,18 +92,30 @@ Promise.all([
 		{ [refDetail]: "payment_date", type: 'calendar', title: '支払日', width: 100 }
 	];
 	
+	let pasteEvent = false;
 	const obj = jspreadsheet(document.getElementById("detail"), {
 		onbeforepaste: (el, data, x, y) => {
 			if(x != 0){
 				return data;
 			}
-			// 仕入先チェック　無効な仕入先を除外
-			console.log({el, data, x, y});
-			const a = obj.parseCSV(data, "\t");
-			console.log(a);
-			return data;
+			pasteEvent = true;
+			return obj.parseCSV(data, "\t").filter(row => {
+				// 仕入先チェック　無効な仕入先を除外
+				let found = null;
+				for(let supplier of suppliers){
+					if(row[0] == supplier.name){
+						found = supplier.code;
+					}
+				}
+				return(found != null);
+			}).map(row => row.map(val => `"${val.split("\"").join("\"\"")}"`).join("\t")).join("\r\n") + "\r\n";
 		},
-		
+		onpaste: (el, data) => {
+			pasteEvent = false;
+		},
+		onbeforeinsertrow: (el, rowNumber, numOfRows, insertBefore) => {
+			return pasteEvent;
+		},
 		columns: tableColumns,
 		toolbar: toolbar,
 		dataProxy(){
@@ -181,7 +207,7 @@ Promise.all([
 		})
 	);
 	obj.toolbar.querySelector('.toolbar-supplier').addEventListener("click", e => {
-		
+		SinglePage.modal.supplier.show();
 	});
 	obj.toolbar.querySelector('.toolbar-taxable').addEventListener("change", e => {
 		const selected = obj.selectedCell.map(Number);
@@ -207,7 +233,99 @@ Promise.all([
 	obj.toolbar.querySelector('.toolbar-tax-rate input').addEventListener("keydown", e => {
 		e.stopPropagation();
 	});
+	
 });
+function formTableInit(parent, data){
+	return new Promise((resolve, reject) => {
+		let tableList = {};
+		for(let row of data){
+			if(!(row.column in tableList)){
+				tableList[row.column] = {
+					table: Object.assign(document.createElement("table"), {className: "table my-0"}),
+					tbody: document.createElement("tbody")
+				};
+				const colgroup = document.createElement("colgroup");
+				colgroup.appendChild(Object.assign(document.createElement("col"), {className: "bg-light"}));
+				colgroup.appendChild(document.createElement("col"));
+				tableList[row.column].table.appendChild(colgroup)
+				tableList[row.column].table.appendChild(tableList[row.column].tbody);
+			}
+			const tr = document.createElement("tr");
+			const th = document.createElement("th");
+			const td = document.createElement("td");
+			const formControl = document.createElement("form-control");
+			th.textContent = row.label;
+			th.className = "align-middle ps-4";
+			formControl.setAttribute("fc-class", `col-${row.width}`);
+			formControl.setAttribute("name", row.name);
+			formControl.setAttribute("type", row.type);
+			if((row.list != null) && (row.list != "")){
+				formControl.setAttribute("list", row.list);
+			}
+			if((row.placeholder != null) && (row.placeholder != "")){
+				formControl.setAttribute("placeholder", row.placeholder);
+			}
+			
+			td.appendChild(formControl);
+			tr.appendChild(th);
+			tr.appendChild(td);
+			tableList[row.column].tbody.appendChild(tr);
+		}
+		const tableColumns = Object.keys(tableList).sort();
+		for(let tableNo of tableColumns){
+			if(parent.tagName == "SEARCH-FORM"){
+				tableList[tableNo].table.setAttribute("slot", "body");
+			}
+			parent.appendChild(tableList[tableNo].table);
+		}
+		setTimeout(() => { resolve(parent); }, 0);
+	});
+}
+function formTableQuery(location){
+	return master.select("ALL").setTable("form_datas").andWhere("location=?", location).setOrderBy("CAST(no AS INTEGER)");
+}
+function dataTableQuery(location){
+	return master.select("ALL").setTable("table_datas").andWhere("location=?", location).setOrderBy("CAST(no AS INTEGER)");
+}
+function setDataTable(parent, columns, data, callback = null){
+	return new Promise((resolve, reject) => {
+		parent.innerHTML = "";
+		const text = document.createElement("span");
+		for(let row of data){
+			const elements = [];
+			for(let col of columns){
+				const div = document.createElement("div");
+				const dataElement = document.createElement(col.tag_name);
+				const classList = (col.class_list == null) ? [] : col.class_list.split(/\s/).filter(v => v != "");
+				let attrStr = (col.attributes == null) ? "" : col.attributes;
+				do{
+					const nextStr = attrStr.replace(/^\s*([a-zA-Z0-9\-]+)="([^"]*?)"/, (str, name, value) => {
+						if(name != ""){
+							dataElement.setAttribute(name, Object.assign(text, {innerHTML: value}).textContent);
+						}
+						return "";
+					});
+					if(attrStr == nextStr){
+						break;
+					}
+					attrStr = nextStr;
+				}while(true);
+				div.setAttribute("slot", col.slot);
+				dataElement.textContent = row[col.property];
+				if(classList.length > 0){
+					dataElement.classList.add(...classList);
+				}
+				div.appendChild(dataElement);
+				elements.push(div);
+			}
+			const dataRow = parent.insertRow(...elements);
+			if(callback != null){
+				callback(dataRow, row);
+			}
+		}
+		setTimeout(() => { resolve(parent); }, 0);
+	});
+}
 {/literal}{/jsiife}{/block}
 {block name="body"}
 	<div id="spmain">
