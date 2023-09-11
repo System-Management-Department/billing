@@ -20,7 +20,6 @@
 				this.transaction = new SQLite();
 				this.transaction.import(buffer, "transaction");
 				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
-				console.log(info);
 				
 				setDataTable(
 					document.querySelector('table-sticky'),

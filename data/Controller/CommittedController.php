@@ -202,6 +202,16 @@ class CommittedController extends ControllerBase{
 		return new JsonView($result);
 	}
 	
+	#[\Attribute\AcceptRole("admin", "manager", "leader")]
+	public function deleteSlip(){
+		$db = Session::getDB();
+		
+		$result = new Result();
+		SalesSlip::deleteSlip($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
+	
 	#[\Attribute\AcceptRole("admin", "leader")]
 	public function approval(){
 		$db = Session::getDB();

@@ -44,6 +44,7 @@ print-page table td:nth-of-type(13){
 new VirtualPage("/", class{
 	constructor(vp){
 		const tbody = document.querySelector('tbody');
+		const fragment = document.createDocumentFragment();
 		const query = transaction.select("ALL")
 			.addWith("relations AS (SELECT DISTINCT ss,sd FROM purchase_relations)")
 			.addWith("temppurchases AS (SELECT sd,sum(amount_inc) AS amount_inc FROM purchases LEFT JOIN purchase_relations USING(pu) GROUP BY sd)")
@@ -73,7 +74,9 @@ new VirtualPage("/", class{
 			query.addField(`${fields[i]} AS field${i}`);
 		}
 		let total = new Array(fields.length).fill(0);
+		query.setLimit("3001");
 		const data = query.apply();
+		const memover = data.length > 3000;
 		let rowno = 1;
 		for(let row of data){
 			const tr = document.createElement("tr");
@@ -85,12 +88,19 @@ new VirtualPage("/", class{
 				}
 			}
 			rowno++;
-			tbody.appendChild(tr);
+			fragment.appendChild(tr);
 		}
-		const tfoot = document.querySelectorAll('tbody.tfoot td');
-		for(let i = 0; i < fields.length; i++){
-			if(tfoot[i + 1].textContent == ""){
-				tfoot[i + 1].textContent = total[i];
+		tbody.appendChild(fragment);
+		if(memover){
+			const tfoot = document.querySelector('tbody.tfoot');
+			tfoot.innerHTML = `<td colspan="${fields.length + 1}" class="text-start text-danger">エラー　出力可能な売上一覧表の上限を超過しています。</td>`;
+			alert("出力可能な売上一覧表の上限を超過しています。");
+		}else{
+			const tfoot = document.querySelectorAll('tbody.tfoot td');
+			for(let i = 0; i < fields.length; i++){
+				if(tfoot[i + 1].textContent == ""){
+					tfoot[i + 1].textContent = total[i];
+				}
 			}
 		}
 		

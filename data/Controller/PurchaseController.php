@@ -32,6 +32,9 @@ class PurchaseController extends ControllerBase{
 			$query->andWhere("(EXISTS(SELECT 1 FROM sales_workflow WHERE sales_workflow.regist_user=? AND sales_workflow.ss=purchase_relations.ss) OR sales_slips.division=?)", $_SESSION["User.id"], $_SESSION["User.departmentCode"]);
 		}
 		if(!empty($_POST)){
+			if(!empty($_POST["sd"])){
+				$query->andWhere("purchase_relations.sd=?", $_POST["sd"]);
+			}
 			if(!empty($_POST["slip_number"])){
 				$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
 			}
@@ -95,5 +98,12 @@ class PurchaseController extends ControllerBase{
 			"purchases" => $query7(),
 			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt]]]
 		]), "application/vnd.sqlite3");
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry")]
+	public function edit(){
+		$v = new View();
+		$v["id"] = $this->requestContext->id;
+		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}
 }

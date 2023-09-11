@@ -461,6 +461,40 @@ class SalesSlip{
 		}
 	}
 	
+	public static function deleteSlip($db, $q, $context, $result){
+		$id = $context->id;
+		$db->beginTransaction();
+		try{
+			// TODO検索条件
+			$deleteQuery = $db->delete("sales_slips")->andWhere("ss=?", $id);
+			$deleteQuery();
+			$deleteQuery = $db->delete("sales_attributes")->andWhere("ss=?", $id);
+			$deleteQuery();
+			$deleteQuery = $db->delete("sales_workflow")->andWhere("ss=?", $id);
+			$deleteQuery();
+			$deleteQuery = $db->delete("sales_details")->andWhere("sd IN(SELECT sd FROM purchase_relations WHERE ss=?)", $id);
+			$deleteQuery();
+			$deleteQuery = $db->delete("sales_details")->andWhere("sd IN(SELECT sd FROM purchase_relations WHERE ss=?)", $id);
+			$deleteQuery();
+			$deleteQuery = $db->delete("sales_detail_attributes")->andWhere("sd IN(SELECT sd FROM purchase_relations WHERE ss=?)", $id);
+			$deleteQuery();
+			$deleteQuery = $db->delete("purchases")->andWhere("pu IN(SELECT pu FROM purchase_relations WHERE ss=?)", $id);
+			$deleteQuery();
+			$deleteQuery = $db->delete("purchases_attributes")->andWhere("pu IN(SELECT pu FROM purchase_relations WHERE ss=?)", $id);
+			$deleteQuery();
+			$deleteQuery = $db->delete("purchase_relations")->andWhere("ss=?", $id);
+			$deleteQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("案件削除に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("案件を削除しました。", "INFO", "");
+		}
+	}
+	
 	public static function approval($db, $q, $context, $result){
 		$id = $context->id;
 		$db->beginTransaction();

@@ -54,8 +54,22 @@
 								};
 							}));
 						});
+				}else if((e.dialog == "delete_slip") && (e.trigger == "submit")){
+					// 案件削除
+					fetch(`/Committed/deleteSlip/${e.result}`)
+						.then(res => res.json()).then(result => {
+							if(result.success){
+								this.reload();
+							}
+							Toaster.show(result.messages.map(m => {
+								return {
+									"class": m[1],
+									message: m[0],
+									title: "案件削除"
+								};
+							}));
+						});
 				}
-				console.log(e);
 			});
 			document.querySelector('table-sticky').columns = dataTableQuery("/Committed#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Committed#search").apply()).then(form => { form.submit(); });
