@@ -37,8 +37,35 @@ class ListButtonElement extends HTMLElement{
 customElements.define("list-button", ListButtonElement);
 {/literal}</script>
 {jsiife id=$id}{literal}
-new VirtualPage("/", class{
+new VirtualPage("/edit", class{
 	constructor(vp){
+		formTableInit(document.getElementById("sales_slip"), formTableQuery("#sales_slip").apply()).then(form => {
+			const res = transaction.select("ROW")
+				.setTable("sales_slips")
+				.addField("sales_slips.*")
+				.leftJoin("sales_workflow using(ss)")
+				.addField("sales_workflow.regist_datetime")
+				.addField("sales_workflow.approval_datetime")
+				.apply();
+			const formControls = form.querySelectorAll('form-control[name]');
+			const n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("name");
+				formControls[i].value = res[name];
+			}
+		});
+		formTableInit(document.getElementById("sales_detail"), formTableQuery("/Purchase#edit").apply()).then(form => {
+			const res = transaction.select("ROW")
+				.setTable("sales_details")
+				.andWhere("sd=?", Number(id))
+				.apply();
+			const formControls = form.querySelectorAll('form-control[name]');
+			const n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("name");
+				formControls[i].value = res[name];
+			}
+		});
 		vp.addEventListener("modal-close", e => {
 			if(e.dialog == "supplier"){
 				if(e.trigger == "list"){
@@ -90,8 +117,31 @@ Promise.all([
 	const suppliers = master.select("ALL")
 		.setTable("suppliers")
 		.apply();
+	const categories = master.select("ALL")
+		.setTable("categories")
+		.apply();
+	categories.forEach(function(row){
+		const option = document.createElement("option");
+		option.setAttribute("value", row.code);
+		option.textContent = row.name;
+		this.appendChild(option);
+	}, document.getElementById("category"));
+	master.select("ALL")
+		.setTable("divisions")
+		.apply()
+		.forEach(function(row){
+			const option = document.createElement("option");
+			option.setAttribute("value", row.code);
+			option.textContent = row.name;
+			this.appendChild(option);
+		}, document.getElementById("division"));
+	SinglePage.modal.leader.setQuery(v => master.select("ONE").setTable("leaders").setField("name").andWhere("code=?", v).apply());
+	SinglePage.modal.manager.setQuery(v => master.select("ONE").setTable("managers").setField("name").andWhere("code=?", v).apply());
+	SinglePage.modal.apply_client.setQuery(v => master.select("ONE").setTable("system_apply_clients").setField("unique_name").andWhere("code=?", v).apply());
+	SinglePage.modal.number_format.setQuery(v => new Intl.NumberFormat().format(v));
+	SinglePage.modal.number_format2.setQuery(v => new Intl.NumberFormat(void(0), {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(v));
 	
-	SinglePage.location = "/";
+	SinglePage.location = "/edit";
 	
 	const refDetail = Symbol("refDetail");
 	const taxableObj = {
@@ -384,7 +434,9 @@ function setDataTable(parent, columns, data, callback = null){
 				<slot name="main"></slot>
 			</div>
 		</template>
-		<template data-page="/">
+		<template data-page="/edit">
+			<div slot="main" id="sales_slip" class="d-grid flex-row" style="column-gap: 0.75rem; grid-template: 1fr/1fr 1fr; grid-auto-columns: 1fr; grid-auto-flow: column; align-items: start;"></div>
+			<div slot="main" id="sales_detail" class="d-grid flex-row" style="column-gap: 0.75rem; grid-template: 1fr/1fr 1fr; grid-auto-columns: 1fr; grid-auto-flow: column; align-items: start;"></div>
 			<div slot="main" class="flex-grow-1">
 				<div id="detail"></div>
 				<div class="invalid"></div>
@@ -394,6 +446,14 @@ function setDataTable(parent, columns, data, callback = null){
 			<span slot="tools"" class="btn btn-primary my-2" data-trigger="submit">仕入登録</span>
 		</template>
 	</div>
+	<datalist id="category"></datalist>
+	<datalist id="division"></datalist>
+	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>
+	<modal-dialog name="number_format"></modal-dialog>
+	<modal-dialog name="number_format2"></modal-dialog>
+	<modal-dialog name="leader" label="部門長選択"></modal-dialog>
+	<modal-dialog name="manager" label="当社担当者選択"></modal-dialog>
+	<modal-dialog name="apply_client" label="請求先選択"></modal-dialog>
 	<modal-dialog name="supplier" label="仕入先選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
