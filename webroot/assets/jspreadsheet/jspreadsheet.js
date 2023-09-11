@@ -884,6 +884,12 @@
                         for (var i = 0; i < obj.options.columns.length; i++) {
                             row[i] = obj.options.data[j][obj.options.columns[i].name];
                         }
+                        var objectSymbols = Object.getOwnPropertySymbols(obj.options.data[j]);
+                        for (var symbol of objectSymbols) {
+                            if (typeof row[symbol] == 'object') {
+                                Object.assign(row[symbol], obj.options.data[j][symbol]);
+                            }
+                        }
                         data.push(row);
                     }
 

@@ -153,11 +153,21 @@ Promise.all([
 		onbeforeinsertrow: (el, rowNumber, numOfRows, insertBefore) => {
 			return pasteEvent;
 		},
+		onbeforedeleterow: (el, rowNumber, numOfRows) => {
+			const obj = el.jspreadsheet;
+			const n = rowNumber + numOfRows;
+			for(let i = rowNumber; i < n; i++){
+				if(obj.options.data[i][objectData].pu != null){
+					return false;
+				}
+			}
+		},
 		columns: tableColumns,
 		toolbar: toolbar,
 		dataProxy(){
 			return new Proxy(
 				Object.assign({
+					pu: null,
 					supplier: null,
 					detail: "",
 					quantity: 0,
@@ -167,7 +177,8 @@ Promise.all([
 					amount_tax: 0,
 					amount_inc: 0,
 					note: "",
-					payment_date: ""
+					payment_date: "",
+					[objectData]: {}
 				}, taxableObj), {
 				get(target, prop, receiver){
 					if(prop == "length"){
@@ -200,13 +211,17 @@ Promise.all([
 								value = Number(value.replace(/,/g, ""));
 							}
 						}else if(tableColumns[prop][refDetail] == "supplier"){
-							let found = obj.supplier;
-							for(let supplier of suppliers){
-								if(value == supplier.name){
-									found = supplier.code;
+							if((obj.supplier == null) || (obj.pu == null)){
+								let found = obj.supplier;
+								for(let supplier of suppliers){
+									if(value == supplier.name){
+										found = supplier.code;
+									}
 								}
+								value = found;
+							}else{
+								value = obj.supplier;
 							}
-							value = found;
 						}
 						obj[tableColumns[prop][refDetail]] = value;
 						obj.amount_exc = Math.floor(obj.quantity * obj.unit_price);
