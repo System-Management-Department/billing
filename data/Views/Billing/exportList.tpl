@@ -136,7 +136,7 @@ Promise.all([
 		const data = cache.select("ONE").setTable("close_data").setField("selected").andWhere("dt=?", Number(search.key)).apply();
 		const formData = new FormData();
 		formData.append("slip_number_array", data);
-		return fetch("/Sales/search", {
+		return fetch("/Billing/search", {
 			method: "POST",
 			body: formData
 		}).then(res => res.arrayBuffer());
