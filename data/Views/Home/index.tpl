@@ -885,6 +885,35 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				stable.classList.add("h-circulation");
 			}
 		});
+		SinglePage.modal.payment.addEventListener("modal-open", e => {
+			const db = SinglePage.currentPage.instance.transaction;
+			let res = db.select("ROW")
+				.setTable("purchase_relations")
+				.andWhere("purchase_relations.pu=?", Number(e.detail))
+				.leftJoin("sales_slips using(ss)")
+				.addField("sales_slips.*")
+				.leftJoin("sales_workflow using(ss)")
+				.addField("sales_workflow.regist_datetime")
+				.addField("sales_workflow.approval_datetime")
+				.apply();
+			let formControls = SinglePage.modal.payment.querySelectorAll('[data-table="1"] form-control[name]');
+			let n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("name");
+				formControls[i].value = res[name];
+			}
+			res = db.select("ROW")
+				.setTable("purchases")
+				.andWhere("pu=?", Number(e.detail))
+				.apply();
+			formControls = SinglePage.modal.payment.querySelectorAll('[data-table="2"] form-control[name]');
+			n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("name");
+				formControls[i].value = res[name];
+			}
+			SinglePage.modal.payment.querySelector('[slot="footer"] input').value = "";
+		});
 		SinglePage.modal.release.querySelector('[data-proxy]').addEventListener("click", e => {
 			const result = SinglePage.modal.release.querySelector('[slot="footer"] input').value;
 			if(result == ""){
@@ -909,6 +938,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				SinglePage.modal.payment.hide("submit", result);
 			}
 		});
+		SinglePage.modal.number_format.setQuery(v => new Intl.NumberFormat().format(v));
 		
 		master.select("ALL")
 			.setTable("categories")
@@ -1183,4 +1213,5 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
+	<modal-dialog name="number_format"></modal-dialog>
 {/block}
