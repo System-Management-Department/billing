@@ -233,7 +233,7 @@ Promise.all([
 		}else{
 			obj.toolbar.querySelector('.toolbar-taxable').style.display = "none";
 		}
-		obj.toolbar.querySelector('.toolbar-record').value = data.taxable ? "1" : "0";
+		obj.toolbar.querySelector('.toolbar-taxable').value = data.taxable ? "1" : "0";
 		if(data.taxable){
 			obj.toolbar.querySelector('.toolbar-tax-rate').style.display = "block";
 			obj.toolbar.querySelector('.toolbar-tax-rate input').value = data.tax_rate * 100;

@@ -28,7 +28,6 @@ edit-table{
 <script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
 <script type="text/javascript" src="/assets/common/SQLite.js"></script>
 <script type="text/javascript" src="/assets/common/SinglePage.js"></script>
-<script type="text/javascript" src="/assets/handsontable/handsontable.full.min.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jsuites.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jspreadsheet.js"></script>
 <script type="text/javascript">
@@ -62,6 +61,19 @@ new VirtualPage("/edit", class{
 		document.querySelector('[data-trigger="submit"]').addEventListener("click", e => {
 			const form = document.querySelector("form");
 			const formData = new FormData(form);
+			const details = document.getElementById("detail").jspreadsheet.options.data.map(rowProxy => {
+				let res = {};
+				const row = rowProxy[objectData];
+				for(let key in row){
+					if(typeof row[key] == "boolean"){
+						res[key] = row[key] ? 1 : 0;
+					}else{
+						res[key] = row[key];
+					}
+				}
+				return res;
+			});
+			formData.append("detail", JSON.stringify(details));
 			fetch(`/Committed/update/${id}`, {
 				method: "POST",
 				body: formData
@@ -244,13 +256,13 @@ Promise.all([
 	};
 	const toolbarDisplay = top => {
 		const data = obj.options.data[top][objectData];
-		obj.toolbar.querySelector('.toolbar-record').value = data.record ? "1" : "0";
+		obj.toolbar.querySelector('.toolbar-record').textContent = data.record ? "通常行" : "見出し行";
 		if(data.record){
 			obj.toolbar.querySelector('.toolbar-taxable').style.display = "block";
 		}else{
 			obj.toolbar.querySelector('.toolbar-taxable').style.display = "none";
 		}
-		obj.toolbar.querySelector('.toolbar-record').value = data.taxable ? "1" : "0";
+		obj.toolbar.querySelector('.toolbar-taxable').value = data.taxable ? "1" : "0";
 		if(data.taxable){
 			obj.toolbar.querySelector('.toolbar-tax-rate').style.display = "block";
 			obj.toolbar.querySelector('.toolbar-tax-rate input').value = data.tax_rate * 100;
@@ -260,7 +272,7 @@ Promise.all([
 		}
 	};
 	const toolbar = document.createDocumentFragment();
-	toolbar.appendChild(Object.assign(document.createElement("select"), {innerHTML: '<option value="0">見出し行</option><option value="1">通常行</option>', className: 'toolbar-record'}));
+	toolbar.appendChild(Object.assign(document.createElement("span"), {innerHTML: '見出し行', className: 'toolbar-record'}));
 	toolbar.appendChild(Object.assign(document.createElement("select"), {innerHTML: '<option value="1">課税</option><option value="0">非課税</option>', className: 'toolbar-taxable'}));
 	toolbar.appendChild(Object.assign(document.createElement("div"), {innerHTML: '税率<input type="number" style="width: 7ex" />％', className: 'toolbar-tax-rate'}));
 	
@@ -325,9 +337,9 @@ Promise.all([
 						}
 						obj.attributes[tableColumns[prop][refAttr]] = value;
 					}else if(refDetail in tableColumns[prop]){
-						if((tableColumns[prop][refDetail] != "detail") && (value != "") && (!obj.record)){
-							Object.assign(obj, recordObj);
-						}
+						//if((tableColumns[prop][refDetail] != "detail") && (value != "") && (!obj.record)){
+						//	Object.assign(obj, recordObj);
+						//}
 						if(tableColumns[prop][refDetail] == "detail"){
 							obj[tableColumns[prop][refDetail]] = value;
 						}else if(obj.record){
@@ -375,27 +387,29 @@ Promise.all([
 			document.querySelector('form-control[name="amount_inc"]').value = total.amount_inc;
 		}
 	});
-	obj.toolbar.querySelector('.toolbar-record').addEventListener("change", e => {
-		const selected = obj.selectedCell.map(Number);
-		const top = Math.min(selected[1], selected[3]);
-		const bottom = Math.max(selected[1], selected[3]);
-		for(let i = top; i <= bottom; i++){
-			Object.assign(obj.options.data[i][objectData], e.currentTarget.value == "0" ? unrecordObj : recordObj);
-			obj.updateRow(null, i, null, null);
-		}
-		toolbarDisplay(top);
-	});
+	//obj.toolbar.querySelector('.toolbar-record').addEventListener("change", e => {
+	//	const selected = obj.selectedCell.map(Number);
+	//	const top = Math.min(selected[1], selected[3]);
+	//	const bottom = Math.max(selected[1], selected[3]);
+	//	for(let i = top; i <= bottom; i++){
+	//		Object.assign(obj.options.data[i][objectData], e.currentTarget.value == "0" ? unrecordObj : recordObj);
+	//		obj.updateRow(null, i, null, null);
+	//	}
+	//	toolbarDisplay(top);
+	//});
 	obj.toolbar.querySelector('.toolbar-taxable').addEventListener("change", e => {
 		const selected = obj.selectedCell.map(Number);
 		const top = Math.min(selected[1], selected[3]);
 		const bottom = Math.max(selected[1], selected[3]);
 		for(let i = top; i <= bottom; i++){
 			const data = obj.options.data[i][objectData];
-			if((e.currentTarget.value == "1") && (!data.record)){
-				Object.assign(data, recordObj);
-				obj.updateRow(null, i, null, null);
+			//if((e.currentTarget.value == "1") && (!data.record)){
+			//	Object.assign(data, recordObj);
+			//	obj.updateRow(null, i, null, null);
+			//}
+			if(data.record){
+				Object.assign(data, e.currentTarget.value == "0" ? untaxableObj : taxableObj);
 			}
-			Object.assign(data, e.currentTarget.value == "0" ? untaxableObj : taxableObj);
 		}
 		toolbarDisplay(top);
 	});
@@ -406,11 +420,16 @@ Promise.all([
 		for(let i = top; i <= bottom; i++){
 			const data = obj.options.data[i][objectData];
 			const rate = Number(e.currentTarget.value / 100);
-			if(!data.record){
-				Object.assign(data, recordObj, {taxable: true});
-				obj.updateRow(null, i, null, null);
+			//if(!data.record){
+			//	Object.assign(data, recordObj, {taxable: true});
+			//	obj.updateRow(null, i, null, null);
+			//}
+			if(data.record){
+				if(!data.taxable){
+					Object.assign(data, {taxable: true});
+				}
+				data.tax_rate = rate;
 			}
-			data.tax_rate = rate;
 		}
 		toolbarDisplay(top);
 	});
