@@ -50,9 +50,6 @@ edit-table{
 	font-size: 1rem;
 	color: #dc3545;
 }
-#HandsontableCopyPaste{
-	display: none;
-}
 </style>
 {/literal}{/block}
 {block name="scripts"}{literal}

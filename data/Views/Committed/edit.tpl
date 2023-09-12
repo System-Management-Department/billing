@@ -4,6 +4,8 @@
 <link rel="stylesheet" type="text/css" href="/assets/boxicons/css/boxicons.min.css" />
 <link rel="stylesheet" type="text/css" href="/assets/common/layout.css" />
 <link rel="stylesheet" type="text/css" href="/assets/common/SinglePage.css" />
+<link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jsuites.css" />
+<link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jspreadsheet.css" />
 <style type="text/css">
 #spmain::part(body){
 	height: auto;
@@ -20,9 +22,6 @@ edit-table{
 	font-size: 1rem;
 	color: #dc3545;
 }
-#HandsontableCopyPaste{
-	display: none;
-}
 </style>
 {/literal}{/block}
 {block name="scripts"}{literal}
@@ -30,269 +29,9 @@ edit-table{
 <script type="text/javascript" src="/assets/common/SQLite.js"></script>
 <script type="text/javascript" src="/assets/common/SinglePage.js"></script>
 <script type="text/javascript" src="/assets/handsontable/handsontable.full.min.js"></script>
+<script type="text/javascript" src="/assets/jspreadsheet/jsuites.js"></script>
+<script type="text/javascript" src="/assets/jspreadsheet/jspreadsheet.js"></script>
 <script type="text/javascript">
-class Detail{
-	#values;
-	constructor(arg = null){
-		if(arg == Detail.header){
-			this.#values = {
-				detail: "内容",
-				quantity: "数量",
-				unit: "単位",
-				unit_price: "単価",
-				amount_exc: "税抜金額",
-				amount_tax: "消費税金額",
-				amount_inc: "税込金額",
-				category: "カテゴリー",
-				circulation: "発行部数"
-			};
-		}else if((arg != null) && (typeof arg == "object")){
-			this.#values = {
-				sd: ("sd" in arg) ? arg.sd : null,
-				detail: ("detail" in arg) ? arg.detail : null,
-				quantity: ("quantity" in arg) ? arg.quantity : null,
-				unit: ("unit" in arg) ? arg.unit : null,
-				unit_price: ("unit_price" in arg) ? arg.unit_price : null,
-				amount_exc: ("amount_exc" in arg) ? arg.amount_exc : null,
-				amount_tax: ("amount_tax" in arg) ? arg.amount_tax : null,
-				amount_inc: ("amount_inc" in arg) ? arg.amount_inc : null,
-				category: ("category" in arg) ? arg.category : null,
-				record: ("record" in arg) ? (arg.record == 1) : false,
-				taxable: ("taxable" in arg) ? (arg.taxable == 1) : false,
-				tax_rate: ("tax_rate" in arg) ? arg.tax_rate : null,
-				[Detail.attributes]: ("attributes" in arg) ? JSON.parse(arg.attributes) : null
-			};
-		}else{
-			this.#values = {
-				sd: null,
-				detail: null,
-				quantity: null,
-				unit: null,
-				unit_price: null,
-				amount_exc: null,
-				amount_tax: null,
-				amount_inc: null,
-				category: null,
-				record: false,
-				taxable: false,
-				tax_rate: null,
-				[Detail.attributes]: null // {summary_data: ["", "", ""], circulation: null}
-			};
-		}
-	}
-	dataValue(key, ...args){
-		if(args.length > 0){
-			const value = args[0];
-			if((key == "quantity") || (key == "unit_price")){
-				this.#values[key] = Number(value);
-				this.#values.record = true;
-				this.#values.taxable = true;
-				this.#values.tax_rate = 0.1;
-				this.#values.amount_exc = Math.floor(this.#values.quantity * this.#values.unit_price);
-				this.#values.amount_tax = Math.floor(this.#values.amount_exc * this.#values.tax_rate);
-				this.#values.amount_inc = Math.floor(this.#values.amount_exc + this.#values.amount_tax);
-			}else if(key == "category"){
-				const optionElements = document.querySelectorAll('#category [value]');
-				const n = optionElements.length;
-				let found = false;
-				for(let i = 0; i < n; i++){
-					if(value == optionElements[i].textContent){
-						this.#values[key] = optionElements[i].getAttribute("value");
-						found = true;
-						break;
-					}
-				}
-				if(!found){
-					this.#values[key] = null;
-				}
-			}else if(key == "circulation"){
-				this.#values[Detail.attributes].circulation = value;
-			}else if(key == "summary_data1"){
-				this.#values[Detail.attributes].summary_data[0] = value;
-			}else if(key == "summary_data2"){
-				this.#values[Detail.attributes].summary_data[1] = value;
-			}else if(key == "summary_data3"){
-				this.#values[Detail.attributes].summary_data[2] = value;
-			}else{
-				this.#values[key] = value;
-			}
-		}else{
-			if(!("record" in this.#values)){
-				return this.#values[key];
-			}else if(key == "category"){
-				const optionElements = document.querySelectorAll('#category [value]');
-				const n = optionElements.length;
-				for(let i = 0; i < n; i++){
-					if(this.#values[key] == optionElements[i].getAttribute("value")){
-						return optionElements[i].textContent;
-					}
-				}
-				return null;
-			}else if(key == "circulation"){
-				if(this.#values[Detail.attributes] == null){
-					this.#values[Detail.attributes] = {};
-				}
-				return this.#values[Detail.attributes].circulation;
-			}else if(key == "summary_data1"){
-				if(this.#values[Detail.attributes] == null){
-					this.#values[Detail.attributes] = {summary_data: ["", "", ""]};
-				}
-				return this.#values[Detail.attributes].summary_data[0];
-			}else if(key == "summary_data2"){
-				if(this.#values[Detail.attributes] == null){
-					this.#values[Detail.attributes] = {summary_data: ["", "", ""]};
-				}
-				return this.#values[Detail.attributes].summary_data[1];
-			}else if(key == "summary_data3"){
-				if(this.#values[Detail.attributes] == null){
-					this.#values[Detail.attributes] = {summary_data: ["", "", ""]};
-				}
-				return this.#values[Detail.attributes].summary_data[2];
-			}else{
-				return this.#values[key];
-			}
-		}
-	}
-	isReadOnly(col){
-		if((Detail.tableKeys[col] == "detail") || (Detail.tableKeys[col] == "circulation") || (Detail.tableKeys[col] == "summary_data1") || (Detail.tableKeys[col] == "summary_data2") || (Detail.tableKeys[col] == "summary_data3")){
-			return false;
-		}
-		if((Detail.tableKeys[col] != "quantity") && (Detail.tableKeys[col] != "unit") && (Detail.tableKeys[col] != "unit_price")){
-			return true;
-		}
-		return(!this.#values.record);
-	}
-	get detail(){
-		let res = {};
-		for(let key in this.#values){
-			res[key] = (typeof this.#values[key] == "boolean") ? (this.#values[key] ? 1 : 0) : this.#values[key]
-		}
-		return res;
-	}
-	get attribute(){
-		return {sd: this.#values.sd ,data: this.#values[Detail.attributes]};
-	}
-	static header = Symbol("header");
-	static info = Symbol("info");
-	static attributes = Symbol("attributes");
-	static tableKeys = ["detail", "quantity", "unit", "unit_price", "amount_exc", "amount_tax", "amount_inc", "category"];
-	static tableColumn(key){
-		if((key == "amount_exc") || (key == "amount_tax") || (key == "amount_inc")){
-			return {
-				data: (...args) => {
-					const obj = args.shift();
-					return obj.dataValue(key, ...args);
-				},
-				type: "numeric",
-				readOnly: true,
-				numericFormat: {
-					pattern: '0,0',
-				},
-			};
-		}else if((key == "quantity") || (key == "unit_price") || (key == "circulation")){
-			return {
-				data: (...args) => {
-					const obj = args.shift();
-					return obj.dataValue(key, ...args);
-				},
-				type: "numeric",
-				numericFormat: {
-					pattern: '0,0',
-				}
-			};
-		}else if((key == "detail") || (key == "unit") || (key == "summary_data1") || (key == "summary_data2") || (key == "summary_data3")){
-			return {
-				data: (...args) => {
-					const obj = args.shift();
-					return obj.dataValue(key, ...args);
-				},
-				type: "text"
-			};
-		}else{
-			return {
-				data: (...args) => {
-					const obj = args.shift();
-					return obj.dataValue(key, ...args);
-				},
-				type: "text",
-				readOnly: true
-			};
-		}
-	}
-}
-class EditTableElement extends HTMLElement{
-	#root; #hot; #observer; #input1; #input2;
-	constructor(){
-		super();
-		this.#root = null;
-		this.#hot = null;
-		this.#observer = new ResizeObserver((entries, observer) => {
-			this.#hot.updateSettings({height: this.clientHeight});
-		});
-		this.#observer.observe(this);
-		this.#input1 = document.createElement("input");
-		this.#input1.setAttribute("name", "detail");
-		this.#input1.setAttribute("type", "hidden");
-		this.#input2 = document.createElement("input");
-		this.#input2.setAttribute("name", "detail_attribute");
-		this.#input2.setAttribute("type", "hidden");
-		this.appendChild(this.#input1);
-		this.appendChild(this.#input2);
-	}
-	attributeChangedCallback(name, oldValue, newValue){}
-	connectedCallback(){
-		if(this.#root == null){
-			this.#root = Object.assign(this.attachShadow({mode: "closed"}), {innerHTML: '<link rel="stylesheet" type="text/css" href="/assets/handsontable/handsontable.full.min.css" /><div></div>'});
-			this.#hot = new Handsontable(this.#root.querySelector('div'), this.detailOption);
-			this.#hot.addHook("afterChange", () => {
-				const sd = this.#hot.getSourceData().slice(1);
-				this.dispatchEvent(new CustomEvent("change", {detail: sd.map(r => r.detail)}));
-				this.#input1.value = JSON.stringify(sd.map(r => r.detail));
-				this.#input2.value = JSON.stringify(sd.map((r, i) => Object.assign({row: i}, r.attribute)).filter(r => r.data != null));
-			});
-		}
-	}
-	disconnectedCallback(){
-	}
-	get detailOption(){
-		return {
-			fixedRowsTop: 1,
-			columns: Detail.tableKeys.map(key => Detail.tableColumn(key)),
-			manualColumnResize: true,
-			trimWhitespace: false,
-			data: [new Detail(Detail.header)],
-			dataSchema(){
-				return new Detail()
-			},
-			afterCreateRow(...amount){},
-			cells: (row, cols, prop) => {
-				if(row == 0){
-					return {
-						renderer: "html",
-						readOnly: true
-					};
-				}
-				return {readOnly: this.#hot.getSourceData()[row].isReadOnly(cols)};
-			},
-			autoRowSize: true
-		};
-	}
-	set value(data){
-		let loadData = [new Detail(Detail.header)];
-		if(Array.isArray(data)){
-			for(let row of data){
-				loadData.push(new Detail(row));
-			}
-		}
-		this.#hot.updateSettings({columns: Detail.tableKeys.map(key => Detail.tableColumn(key))});
-		this.#hot.loadData(loadData);
-		this.#hot.render();
-	}
-	static observedAttributes = [];
-}
-customElements.define("edit-table", EditTableElement);
-
-
 class ListButtonElement extends HTMLElement{
 	#root;
 	constructor(){
@@ -364,54 +103,12 @@ new VirtualPage("/edit", class{
 				}
 			});
 		});
-		
-		const salesSlip = transaction.select("ROW")
-			.setTable("sales_slips")
-			.apply();
-		formTableInit(document.querySelector('.sales-form'), formTableQuery("/Sales#edit").apply()).then(form => {
-			const inputElements = form.querySelectorAll('form-control[name]');
-			const n = inputElements.length;
-			for(let i = 0; i < n; i++){
-				const name = inputElements[i].getAttribute("name");
-				if(name in salesSlip){
-					inputElements[i].value = salesSlip[name];
-				}
-			}
-		});
-		
-		if(salesSlip.invoice_format == 2){
-			Detail.tableKeys.push("circulation");
-		}else if(salesSlip.invoice_format == 3){
-			Detail.tableKeys.push("summary_data1", "summary_data2", "summary_data3");
-		}
-		const detail = transaction.select("All")
-			.setTable("sales_details")
-			.addField("sales_details.*")
-			.leftJoin("sales_detail_attributes using(sd)")
-			.addField("sales_detail_attributes.data AS attributes")
-			.apply();
-		const table = document.querySelector('edit-table');
-		table.value = detail;
-		table.addEventListener("change", e => {
-			const total = e.detail.reduce((a, r) => {
-				if(r.record == 1){
-					a.amount_exc += r.amount_exc;
-					a.amount_tax += r.amount_tax;
-					a.amount_inc += r.amount_inc;
-				}
-				return a;
-			}, {amount_exc: 0, amount_tax: 0, amount_inc: 0});
-			document.querySelector('form form-control[name="amount_exc"]').value = total.amount_exc;
-			document.querySelector('form form-control[name="amount_tax"]').value = total.amount_tax;
-			document.querySelector('form form-control[name="amount_inc"]').value = total.amount_inc;
-			console.log(total);
-			
-		});
 	}
 });
 
 let master = new SQLite();
 let transaction = new SQLite();
+const objectData = Symbol("objectData");
 Promise.all([
 	master.use("master").then(master => fetch("/Default/master")).then(res => res.arrayBuffer()),
 	transaction.use("transaction").then(transaction => fetch(`/Committed/detail/${id}`)).then(res => res.arrayBuffer()),
@@ -464,15 +161,15 @@ Promise.all([
 		);
 	});
 	
-	master.select("ALL")
+	const categories = master.select("ALL")
 		.setTable("categories")
-		.apply()
-		.forEach(function(row){
-			const option = document.createElement("option");
-			option.setAttribute("value", row.code);
-			option.textContent = row.name;
-			this.appendChild(option);
-		}, document.getElementById("category"));
+		.apply();
+	categories.forEach(function(row){
+		const option = document.createElement("option");
+		option.setAttribute("value", row.code);
+		option.textContent = row.name;
+		this.appendChild(option);
+	}, document.getElementById("category"));
 	master.select("ALL")
 		.setTable("divisions")
 		.apply()
@@ -482,10 +179,259 @@ Promise.all([
 			option.textContent = row.name;
 			this.appendChild(option);
 		}, document.getElementById("division"));
+	master.select("ALL")
+		.setTable("specifications")
+		.apply()
+		.forEach(function(row){
+			const option = document.createElement("option");
+			option.setAttribute("value", row.code);
+			option.textContent = row.name;
+			this.appendChild(option);
+		}, document.getElementById("specification"));
 	
 	SinglePage.modal.number_format.setQuery(v => new Intl.NumberFormat().format(v));
+	SinglePage.modal.number_format2.setQuery(v => new Intl.NumberFormat(void(0), {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(v));
 	
 	SinglePage.location = "/edit";
+	
+	const salesSlip = transaction.select("ROW")
+		.setTable("sales_slips")
+		.apply();
+	formTableInit(document.querySelector('.sales-form'), formTableQuery("/Sales#edit").apply()).then(form => {
+		const inputElements = form.querySelectorAll('form-control[name]');
+		const n = inputElements.length;
+		for(let i = 0; i < n; i++){
+			const name = inputElements[i].getAttribute("name");
+			if(name in salesSlip){
+				inputElements[i].value = salesSlip[name];
+			}
+		}
+	});
+	const refDetail = Symbol("refDetail");
+	const refAttr = Symbol("refAttr");
+	const jse = document.getElementById("detail");
+	const taxableObj = {
+		taxable: true,
+		tax_rate: 0.1
+	};
+	const untaxableObj = {
+		taxable: false,
+		tax_rate: null
+	};
+	const recordObj = {
+		quantity: 0,
+		unit: "",
+		unit_price: 0,
+		amount_exc: 0,
+		amount_tax: 0,
+		amount_inc: 0,
+		category: "",
+		record: true,
+		taxable: true,
+		tax_rate: 0.1
+	};
+	const unrecordObj = {
+		quantity: null,
+		unit: null,
+		unit_price: null,
+		amount_exc: null,
+		amount_tax: null,
+		amount_inc: null,
+		category: "",
+		record: false,
+		taxable: false,
+		tax_rate: null
+	};
+	const toolbarDisplay = top => {
+		const data = obj.options.data[top][objectData];
+		obj.toolbar.querySelector('.toolbar-record').value = data.record ? "1" : "0";
+		if(data.record){
+			obj.toolbar.querySelector('.toolbar-taxable').style.display = "block";
+		}else{
+			obj.toolbar.querySelector('.toolbar-taxable').style.display = "none";
+		}
+		obj.toolbar.querySelector('.toolbar-record').value = data.taxable ? "1" : "0";
+		if(data.taxable){
+			obj.toolbar.querySelector('.toolbar-tax-rate').style.display = "block";
+			obj.toolbar.querySelector('.toolbar-tax-rate input').value = data.tax_rate * 100;
+			
+		}else{
+			obj.toolbar.querySelector('.toolbar-tax-rate').style.display = "none";
+		}
+	};
+	const toolbar = document.createDocumentFragment();
+	toolbar.appendChild(Object.assign(document.createElement("select"), {innerHTML: '<option value="0">見出し行</option><option value="1">通常行</option>', className: 'toolbar-record'}));
+	toolbar.appendChild(Object.assign(document.createElement("select"), {innerHTML: '<option value="1">課税</option><option value="0">非課税</option>', className: 'toolbar-taxable'}));
+	toolbar.appendChild(Object.assign(document.createElement("div"), {innerHTML: '税率<input type="number" style="width: 7ex" />％', className: 'toolbar-tax-rate'}));
+	
+	let tableColumns = [
+		{ [refDetail]: "detail",     type: 'text', title: '内容', width: 200 },
+		{ [refDetail]: "quantity",   type: 'numeric', title: '数量', width: 60, mask:'#,##.00' },
+		{ [refDetail]: "unit",       type: 'text', title: '単位', width: 60 },
+		{ [refDetail]: "unit_price", type: 'numeric', title: '単価', width: 80, mask:'#,##.00' },
+		{ [refDetail]: "amount_exc", type: 'numeric', title: '税抜金額', width: 100, mask:'#,##' },
+		{ [refDetail]: "amount_tax", type: 'numeric', title: '消費税金額', width: 100, mask:'#,##' },
+		{ [refDetail]: "amount_inc", type: 'numeric', title: '税込金額', width: 100, mask:'#,##' },
+		{ [refDetail]: "category",   type: 'dropdown', title: 'カテゴリー', width: 200, source: categories.map(r => r.name) }
+	];
+	if(salesSlip.invoice_format == "2"){
+		tableColumns.push(
+			{ [refAttr]: "circulation", type: 'numeric', title: '発行部数', width: 60, mask:'#,##' }
+		);
+	}else if(salesSlip.invoice_format == "3"){
+		tableColumns.push(
+			{ [refAttr]: "summary_data1", type: 'text', title: '摘要１', width: 200 },
+			{ [refAttr]: "summary_data2", type: 'text', title: '摘要２', width: 200 },
+			{ [refAttr]: "summary_data3", type: 'text', title: '摘要３', width: 200 }
+		);
+	}
+	const obj = jspreadsheet(jse, {
+		minDimensions: [1, 1],
+		columns: tableColumns,
+		toolbar: toolbar,
+		dataProxy(){
+			return new Proxy(
+				Object.assign({detail: "", attributes: {}}, unrecordObj), {
+				get(target, prop, receiver){
+					if(prop == "length"){
+						return tableColumns.length;
+					}
+					if(prop == objectData){
+						return target;
+					}
+					if((refDetail in tableColumns[prop]) && (tableColumns[prop][refDetail] == "category")){
+						let found = null;
+						const search = target.category;
+						for(let category of categories){
+							if(search == category.code){
+								found = category.name;
+							}
+						}
+						return found;
+					}
+					if(refAttr in tableColumns[prop]){
+						return target.attributes[tableColumns[prop][refAttr]];
+					}
+					return target[tableColumns[prop][refDetail]];
+				},
+				set(obj, prop, value){
+					if(refAttr in tableColumns[prop]){
+						if(tableColumns[prop][refAttr] == "circulation"){
+							if(value == ""){
+								value = 0;
+							}else if(typeof value != "number"){
+								value = Number(value.replace(/,/g, ""));
+							}
+						}
+						obj.attributes[tableColumns[prop][refAttr]] = value;
+					}else if(refDetail in tableColumns[prop]){
+						if((tableColumns[prop][refDetail] != "detail") && (value != "") && (!obj.record)){
+							Object.assign(obj, recordObj);
+						}
+						if(tableColumns[prop][refDetail] == "detail"){
+							obj[tableColumns[prop][refDetail]] = value;
+						}else if(obj.record){
+							if((tableColumns[prop][refDetail] == "quantity") || (tableColumns[prop][refDetail] == "unit_price")){
+								if(value == ""){
+									value = 0;
+								}else if(typeof value != "number"){
+									value = Number(value.replace(/,/g, ""));
+								}
+							}else if(tableColumns[prop][refDetail] == "category"){
+								let found = null;
+								for(let category of categories){
+									if(value == category.name){
+										found = category.code;
+									}
+								}
+								value = found;
+							}
+							obj[tableColumns[prop][refDetail]] = value;
+							obj.amount_exc = Math.floor(obj.quantity * obj.unit_price);
+							obj.amount_tax = Math.floor((obj.taxable) ? obj.amount_exc * obj.tax_rate : 0);
+							obj.amount_inc = obj.amount_exc + obj.amount_tax;
+						}
+					}
+					return true;
+				}
+			});
+		},
+		text: { rowNumber: "項番" },
+		onselection: (el, borderLeft, borderTop, borderRight, borderBottom, origin) => {
+			toolbarDisplay(borderTop);
+		},
+		onchange: (el, cell, x, y, value, oldValue) => {
+			const total = obj.options.data.reduce((a, rowProxy) => {
+				const row = rowProxy[objectData];
+				if(row.record == 1){
+					a.amount_exc += row.amount_exc;
+					a.amount_tax += row.amount_tax;
+					a.amount_inc += row.amount_inc;
+				}
+				return a; 
+			}, {amount_exc: 0, amount_inc: 0, amount_tax: 0});
+			document.querySelector('form-control[name="amount_exc"]').value = total.amount_exc;
+			document.querySelector('form-control[name="amount_tax"]').value = total.amount_tax;
+			document.querySelector('form-control[name="amount_inc"]').value = total.amount_inc;
+		}
+	});
+	obj.toolbar.querySelector('.toolbar-record').addEventListener("change", e => {
+		const selected = obj.selectedCell.map(Number);
+		const top = Math.min(selected[1], selected[3]);
+		const bottom = Math.max(selected[1], selected[3]);
+		for(let i = top; i <= bottom; i++){
+			Object.assign(obj.options.data[i][objectData], e.currentTarget.value == "0" ? unrecordObj : recordObj);
+			obj.updateRow(null, i, null, null);
+		}
+		toolbarDisplay(top);
+	});
+	obj.toolbar.querySelector('.toolbar-taxable').addEventListener("change", e => {
+		const selected = obj.selectedCell.map(Number);
+		const top = Math.min(selected[1], selected[3]);
+		const bottom = Math.max(selected[1], selected[3]);
+		for(let i = top; i <= bottom; i++){
+			const data = obj.options.data[i][objectData];
+			if((e.currentTarget.value == "1") && (!data.record)){
+				Object.assign(data, recordObj);
+				obj.updateRow(null, i, null, null);
+			}
+			Object.assign(data, e.currentTarget.value == "0" ? untaxableObj : taxableObj);
+		}
+		toolbarDisplay(top);
+	});
+	obj.toolbar.querySelector('.toolbar-tax-rate input').addEventListener("input", e => {
+		const selected = obj.selectedCell.map(Number);
+		const top = Math.min(selected[1], selected[3]);
+		const bottom = Math.max(selected[1], selected[3]);
+		for(let i = top; i <= bottom; i++){
+			const data = obj.options.data[i][objectData];
+			const rate = Number(e.currentTarget.value / 100);
+			if(!data.record){
+				Object.assign(data, recordObj, {taxable: true});
+				obj.updateRow(null, i, null, null);
+			}
+			data.tax_rate = rate;
+		}
+		toolbarDisplay(top);
+	});
+	obj.toolbar.querySelector('.toolbar-tax-rate input').addEventListener("keydown", e => {
+		e.stopPropagation();
+	});
+	obj.setData(transaction.select("All")
+		.setTable("sales_details")
+		.addField("sales_details.*")
+		.leftJoin("sales_detail_attributes using(sd)")
+		.addField("sales_detail_attributes.data AS attributes")
+		.apply()
+		.map(row => {
+			const insert = obj.options.dataProxy();
+			row.record = (row.record == 1);
+			row.taxable = (row.taxable == 1);
+			Object.assign(insert[objectData], row);
+			return insert;
+		}),
+		true
+	);
 });
 
 function formTableInit(parent, data){
@@ -605,16 +551,17 @@ function setDataTable(parent, columns, data, callback = null){
 				<div>
 					<div class="sales-form" style="display: grid; column-gap: 0.75rem; grid-template: 1fr/1fr 1fr; grid-auto-columns: 1fr; grid-auto-flow: column; align-items: start;"></div>
 				</div>
-				<edit-table></edit-table>
+				<div id="detail"></div>
 				<div class="invalid"></div>
-				<div><button type="button" class="btn btn-success" data-trigger="submit">登録</button></div>
 			</form>
+			<span slot="tools" class="btn btn-primary my-2" data-trigger="submit">登録</span>
 		</template>
 	</div>
 	
 	<datalist id="category"></datalist>
 	<datalist id="division"></datalist>
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>
+	<datalist id="specification"></datalist>
 	<modal-dialog name="leader" label="部門長選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
@@ -625,4 +572,5 @@ function setDataTable(parent, columns, data, callback = null){
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
 	<modal-dialog name="number_format"></modal-dialog>
+	<modal-dialog name="number_format2"></modal-dialog>
 {/block}

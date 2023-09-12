@@ -860,40 +860,44 @@
          * @param array data In case no data is sent, default is reloaded
          * @return void
          */
-        obj.setData = function(data) {
-            // Update data
-            if (data) {
-                if (typeof(data) == 'string') {
-                    data = JSON.parse(data);
-                }
-
-                obj.options.data = data;
-            }
-
-            // Data
-            if (! obj.options.data) {
-                obj.options.data = [];
-            }
-
-            // Prepare data
-            if (obj.options.data && obj.options.data[0]) {
-                if (! Array.isArray(obj.options.data[0])) {
-                    var data = [];
-                    for (var j = 0; j < obj.options.data.length; j++) {
-                        var row = (obj.options.dataProxy == null) ? [] : obj.options.dataProxy();
-                        for (var i = 0; i < obj.options.columns.length; i++) {
-                            row[i] = obj.options.data[j][obj.options.columns[i].name];
-                        }
-                        var objectSymbols = Object.getOwnPropertySymbols(obj.options.data[j]);
-                        for (var symbol of objectSymbols) {
-                            if (typeof row[symbol] == 'object') {
-                                Object.assign(row[symbol], obj.options.data[j][symbol]);
-                            }
-                        }
-                        data.push(row);
+        obj.setData = function(data, force) {
+            if (force) {
+                obj.options.data = data
+            } else {
+                // Update data
+                if (data) {
+                    if (typeof(data) == 'string') {
+                        data = JSON.parse(data);
                     }
 
                     obj.options.data = data;
+                }
+
+                // Data
+                if (! obj.options.data) {
+                    obj.options.data = [];
+                }
+
+                // Prepare data
+                if (obj.options.data && obj.options.data[0]) {
+                    if (! Array.isArray(obj.options.data[0])) {
+                        var data = [];
+                        for (var j = 0; j < obj.options.data.length; j++) {
+                            var row = (obj.options.dataProxy == null) ? [] : obj.options.dataProxy();
+                            for (var i = 0; i < obj.options.columns.length; i++) {
+                                row[i] = obj.options.data[j][obj.options.columns[i].name];
+                            }
+                            var objectSymbols = Object.getOwnPropertySymbols(obj.options.data[j]);
+                            for (var symbol of objectSymbols) {
+                                if (typeof row[symbol] == 'object') {
+                                    Object.assign(row[symbol], obj.options.data[j][symbol]);
+                                }
+                            }
+                            data.push(row);
+                        }
+
+                        obj.options.data = data;
+                    }
                 }
             }
 
