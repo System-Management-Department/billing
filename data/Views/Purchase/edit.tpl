@@ -82,7 +82,53 @@ new VirtualPage("/edit", class{
 				}
 			}
 		});
-		document.querySelector('[data-trigger="submit"]').addEventListener("click", e => { close(); });
+		document.querySelector('[data-trigger="submit"]').addEventListener("click", e => {
+			const formData = new FormData();
+			const details = document.getElementById("detail").jspreadsheet.options.data.map(rowProxy => {
+				let res = {};
+				const row = rowProxy[objectData];
+				for(let key in row){
+					if(typeof row[key] == "boolean"){
+						res[key] = row[key] ? 1 : 0;
+					}else{
+						res[key] = row[key];
+					}
+				}
+				return res;
+			});
+			formData.append("sd",id);
+			formData.append("detail", JSON.stringify(details));
+			fetch(`/Purchase/regist`, {
+				method: "POST",
+				body: formData
+			}).then(res => res.json()).then(result => {
+				if(result.success){
+					const search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
+						const found = t.match(/^(.*?)=(.*)$/);
+						if(found){
+							a[found[1]] = decodeURIComponent(found[2]);
+						}
+						return a;
+					},{});
+					new BroadcastChannel(search.channel).postMessage(JSON.stringify(result));
+					close();
+				}else{
+					const messages = document.createDocumentFragment();
+					for(let meaasge of result.messages.filter(m => (m[1] == 2))){
+						let token = meaasge[2].split("/");
+						if(token.length == 3){
+							messages.appendChild(Object.assign(document.createElement("div"), {textContent: `${Number(token[1]) + 1}行目：${meaasge[0]}`}));
+						}
+					}
+					
+					const range = document.createRange();
+					const tableInvalid = document.querySelector('#detail~.invalid');
+					range.selectNodeContents(tableInvalid);
+					range.deleteContents();
+					tableInvalid.appendChild(messages);
+				}
+			});
+		});
 	}
 });
 
@@ -181,7 +227,7 @@ Promise.all([
 		{ [refDetail]: "amount_tax",   type: 'numeric', title: '消費税金額', width: 100, mask:'#,##' },
 		{ [refDetail]: "amount_inc",   type: 'numeric', title: '税込金額', width: 100, mask:'#,##' },
 		{ [refDetail]: "note",         type: 'text', title: '備考', width: 200 },
-		{ [refDetail]: "payment_date", type: 'calendar', title: '支払日', width: 100 }
+		{ [refDetail]: "payment_date", type: 'calendar', title: '支払日', width: 100, options: { format: 'YYYY-MM-DD' } }
 	];
 	
 	const obj = jspreadsheet(document.getElementById("detail"), {
@@ -264,6 +310,10 @@ Promise.all([
 								value = 0;
 							}else if(typeof value != "number"){
 								value = Number(value.replace(/,/g, ""));
+							}
+						}else if(tableColumns[prop][refDetail] == "payment_date"){
+							if(value != ""){
+								value = value.replace(/\s[0-9:]+$/, "");
 							}
 						}else if(tableColumns[prop][refDetail] == "supplier"){
 							if((obj.supplier == null) || (obj.pu == null)){

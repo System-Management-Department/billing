@@ -10,7 +10,7 @@ use App\RedirectResponse;
 use App\Validator;
 use Model\Session;
 use Model\Result;
-use Model\SalesSlip;
+use Model\Purchase;
 use Model\SQLite;
 
 class PurchaseController extends ControllerBase{
@@ -105,5 +105,19 @@ class PurchaseController extends ControllerBase{
 		$v = new View();
 		$v["id"] = $this->requestContext->id;
 		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
+	}
+	
+	#[\Attribute\AcceptRole("admin", "manager", "leader")]
+	public function regist(){
+		$db = Session::getDB();
+		
+		// 検証
+		$result = Purchase::checkInsert($db, $_POST, [], $this->requestContext);
+		
+		if(!$result->hasError()){
+			Purchase::execInsert($db, $_POST, $this->requestContext, $result);
+		}
+		
+		return new JsonView($result);
 	}
 }
