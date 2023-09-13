@@ -8,7 +8,12 @@ table-sticky.h-summary-data::part(d-summary-data),table-sticky.h-summary-data ta
 table-sticky.h-circulation::part(d-circulation),table-sticky.h-circulation table-row::part(d-circulation){
 	display: none;
 }
-
+{/literal}
+{if !(($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "manager"))}{literal}#spmain *::part(d-manager){ display: none; }{/literal}{/if}
+{if !(($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "leader"))}{literal}#spmain *::part(d-leader){ display: none; }{/literal}{/if}
+{if !(($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "entry"))}{literal}#spmain *::part(d-entry){ display: none; }{/literal}{/if}
+{if !($smarty.session["User.role"] eq "admin")}{literal}#spmain *::part(d-admin){ display: none; }{/literal}{/if}
+{literal}
 </style>
 {/literal}{/block}
 {block name="scripts" append}{literal}

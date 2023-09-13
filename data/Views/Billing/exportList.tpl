@@ -161,7 +161,7 @@ Promise.all([
 					<header part="header">
 						<nav part="nav1">
 							<div part="container">
-								<div part="title">請求締め</div>
+								<div part="title">請求データ</div>
 							</div>
 						</nav>
 						<nav part="nav2">
