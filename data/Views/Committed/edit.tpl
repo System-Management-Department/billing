@@ -108,7 +108,7 @@ new VirtualPage("/edit", class{
 						inputElements[i].nextSibling.textContent = (name in messages) ? messages[name] : "";
 					}
 					const range = document.createRange();
-					const tableInvalid = document.querySelector('edit-table~.invalid');
+					const tableInvalid = document.querySelector('#detail~.invalid');
 					range.selectNodeContents(tableInvalid);
 					range.deleteContents();
 					tableInvalid.appendChild(messages2);
@@ -385,7 +385,11 @@ Promise.all([
 			document.querySelector('form-control[name="amount_exc"]').value = total.amount_exc;
 			document.querySelector('form-control[name="amount_tax"]').value = total.amount_tax;
 			document.querySelector('form-control[name="amount_inc"]').value = total.amount_inc;
-		}
+		},
+		allowInsertRow: false,
+		allowManualInsertRow: false,
+		allowDeleteRow: false,
+		allowDeletingAllRows: false
 	});
 	//obj.toolbar.querySelector('.toolbar-record').addEventListener("change", e => {
 	//	const selected = obj.selectedCell.map(Number);
