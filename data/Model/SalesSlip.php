@@ -541,4 +541,57 @@ class SalesSlip{
 			$result->addMessage("承認解除が完了しました。", "INFO", "");
 		}
 	}
+	
+	public static function redSlip($db, $q, $context, $result){
+		$month = date("ym"); 
+		$db->beginTransaction();
+		try{
+			// 伝票生成
+			$sequence = $db->select("ONE")
+				->setTable("slip_sequence")
+				->setField("seq")
+				->andWhere("month=?", $month)
+				->andWhere("type=1");
+			$slipNumber = $sequence();
+			if(empty($slipNumber)){
+				$slipNumber = 1;
+				$insertQuery = $db->insertSet("slip_sequence", [
+					"seq" => 1,
+					"month" => $month,
+					"type" => 1,
+				],[]);
+				$insertQuery();
+				$db->commit();
+			}else{
+				$slipNumber++;
+				$updateQuery = $db->updateSet("slip_sequence", [],[
+					"seq" => "seq+1",
+				]);
+				$updateQuery->andWhere("month=?", $month);
+				$updateQuery->andWhere("type=1");
+				$updateQuery();
+				$db->commit();
+			}
+			
+			$updateQuery = $db->updateSet("sales_workflow", [
+				"lost_slip_number" => sprintf("%s%05d", $month, $slipNumber),
+				"lost_comment" => $q["comment"],
+				"lost_user" => $_SESSION["User.id"],
+			],[
+				"lost" => 1,
+				"lost_datetime" => "NOW()",
+			]);
+			$updateQuery->andWhere("close=1");
+			$updateQuery->andWhere("ss=?", $q["id"]);
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("赤伝登録に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("赤伝登録が完了しました。", "INFO", "");
+		}
+	}
 }

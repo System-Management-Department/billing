@@ -183,6 +183,16 @@ class BillingController extends ControllerBase{
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function redSlip(){
+		$db = Session::getDB();
+		$result = new Result();
+		
+		SalesSlip::redSlip($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function exportList(){
 		$v = new View();
 		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");

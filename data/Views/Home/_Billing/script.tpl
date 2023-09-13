@@ -36,6 +36,27 @@
 						}));
 					});
 					this.reload();
+				}else if((e.dialog == "red_slip") && (e.trigger == "submit")){
+					// 赤伝
+					const formData = new FormData();
+					formData.append("id", e.result.target);
+					formData.append("comment", e.result.value);
+					fetch(`/Billing/redSlip/`,{
+						method: "POST",
+						body: formData
+					}).then(res => res.json()).then(result => {
+						if(result.success){
+							this.reload();
+						}
+						Toaster.show(result.messages.map(m => {
+							return {
+								"class": m[1],
+								message: m[0],
+								title: "赤伝登録"
+							};
+						}));
+					});
+					this.reload();
 				}
 			});
 			document.querySelector('table-sticky').columns = dataTableQuery("/Billing#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
@@ -105,11 +126,24 @@
 						.addField("sales_slips.*")
 						.leftJoin("sales_workflow using(ss)")
 						.addField("sales_workflow.regist_datetime")
+						.addField("sales_workflow.lost")
+						.addField("sales_workflow.lost_slip_number")
+						.addField("sales_workflow.lost_comment")
 						.apply(),
-					(row, data) => {
+					(row, data, insert) => {
+						const red_slip = row.querySelector('[slot="red_slip"]');
 						const apply_client = row.querySelector('[slot="apply_client"]');
 						const manager = row.querySelector('[slot="manager"]');
-						const checkbox = row.querySelector('[slot="checkbox"] span');
+						let checkbox = row.querySelector('[slot="checkbox"] span');
+						if(data.lost == 1){
+							if(red_slip != null){
+								red_slip.parentNode.removeChild(red_slip);
+							}
+							if(checkbox != null){
+								checkbox.parentNode.removeChild(checkbox);
+								checkbox = null;
+							}
+						}
 						if(apply_client != null){
 							apply_client.textContent = SinglePage.modal.apply_client.query(data.apply_client);
 						}
@@ -122,6 +156,30 @@
 							input.setAttribute("value", data.slip_number);
 							input.checked = true;
 							checkbox.parentNode.replaceChild(input, checkbox);
+						}
+						if(data.lost == 1){
+							const row2 = insert(Object.assign(data, {slip_number: data.lost_slip_number}));
+							const red_slip2 = row2.querySelector('[slot="red_slip"]');
+							const apply_client2 = row2.querySelector('[slot="apply_client"]');
+							const manager2 = row2.querySelector('[slot="manager"]');
+							const checkbox2 = row2.querySelector('[slot="checkbox"] span');
+							const salses_detail2 = row2.querySelector('[slot="salses_detail"] show-dialog');
+							row2.classList.add("table-danger");
+							if(red_slip2 != null){
+								red_slip2.parentNode.removeChild(red_slip2);
+							}
+							if(checkbox2 != null){
+								checkbox2.parentNode.removeChild(checkbox2);
+							}
+							if(apply_client2 != null){
+								apply_client2.textContent = SinglePage.modal.apply_client.query(data.apply_client);
+							}
+							if(manager2 != null){
+								manager2.textContent = SinglePage.modal.manager.query(data.manager);
+							}
+							if(salses_detail2 != null){
+								salses_detail2.setAttribute("target", "red_salses_detail");
+							}
 						}
 					}
 				);

@@ -165,20 +165,21 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		SinglePage.modal.client      .querySelector('table-sticky').columns = dataTableQuery("/Modal/Client#list").setField("label,width,slot,part").apply();
 		SinglePage.modal.supplier    .querySelector('table-sticky').columns = dataTableQuery("/Modal/Supplier#list").setField("label,width,slot,part").apply();
 		
-		SinglePage.modal.salses_detail   .querySelector('table-sticky').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.purchases_detail.querySelector('table-sticky').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.request         .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.request         .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.withdraw        .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.withdraw        .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.delete_slip     .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.delete_slip     .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.approval        .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.approval        .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.disapproval     .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.disapproval     .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.red_slip        .querySelector('table-sticky').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.estimate        .querySelector('table-sticky').columns = [
+		SinglePage.modal.salses_detail    .querySelector('table-sticky').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.red_salses_detail.querySelector('table-sticky').columns = dataTableQuery("/Detail/RedSales#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.purchases_detail .querySelector('table-sticky').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.request          .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.request          .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.withdraw         .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.withdraw         .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.delete_slip      .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.delete_slip      .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.approval         .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.approval         .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.disapproval      .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.disapproval      .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.red_slip         .querySelector('table-sticky').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
+		SinglePage.modal.estimate         .querySelector('table-sticky').columns = [
 			{label: "フォーマット", width: "10rem", slot: "format", part: null},
 			{label: "件名", width: "10rem", slot: "subject", part: null},
 			{label: "納品先", width: "10rem", slot: "client", part: null},
@@ -186,16 +187,17 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 			{label: "出力", width: "3rem", slot: "export", part: null},
 			{label: "削除", width: "3rem", slot: "delete", part: null}
 		];
-		formTableInit(SinglePage.modal.salses_detail   .querySelector('div'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.purchases_detail.querySelector('div'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.request         .querySelector('div'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.withdraw        .querySelector('div'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.delete_slip     .querySelector('div'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.approval        .querySelector('div'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.disapproval     .querySelector('div'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.red_slip        .querySelector('div'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.payment         .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.payment         .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
+		formTableInit(SinglePage.modal.salses_detail    .querySelector('div'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.red_salses_detail.querySelector('div'), formTableQuery("#red_sales_slip").apply());
+		formTableInit(SinglePage.modal.purchases_detail .querySelector('div'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.request          .querySelector('div'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.withdraw         .querySelector('div'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.delete_slip      .querySelector('div'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.approval         .querySelector('div'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.disapproval      .querySelector('div'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.red_slip         .querySelector('div'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.payment          .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.payment          .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
 		
 		SinglePage.modal.leader.setQuery(v => master.select("ONE").setTable("leaders").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 			const keyword = e.detail;
@@ -332,6 +334,44 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 			}else{
 				stable.classList.add("h-circulation");
 			}
+		});
+		SinglePage.modal.red_salses_detail.addEventListener("modal-open", e => {
+			const db = SinglePage.currentPage.instance.transaction;
+			const res = db.select("ROW")
+				.setTable("sales_slips")
+				.addField("sales_slips.*")
+				.andWhere("ss=?", Number(e.detail))
+				.leftJoin("sales_workflow using(ss)")
+				.addField("sales_workflow.regist_datetime")
+				.addField("sales_workflow.approval_datetime")
+				.addField("sales_workflow.lost_slip_number")
+				.apply();
+			const formControls = SinglePage.modal.red_salses_detail.querySelectorAll('form-control[name]');
+			const n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("name");
+				formControls[i].value = res[name];
+			}
+			
+			const stable = SinglePage.modal.red_salses_detail.querySelector('table-sticky');
+			const attrs = db.select("ROW").setTable("sales_attributes").andWhere("ss=?", Number(e.detail)).apply();
+			const attrData = (attrs == null) ? {} : JSON.parse(attrs.data);
+			setDataTable(
+				stable,
+				dataTableQuery("/Detail/RedSales#list").apply(),
+				db.select("ALL")
+					.setTable("sales_slips")
+					.addField("-sales_slips.amount_exc AS amount_exc")
+					.addField("-sales_slips.amount_tax AS amount_tax")
+					.addField("-sales_slips.amount_inc AS amount_inc")
+					.andWhere("ss=?", Number(e.detail))
+					.leftJoin("sales_workflow using(ss)")
+					.addField("sales_workflow.lost_comment")
+					.apply(),
+				row => {
+					row.classList.add("table-danger");
+				}
+			);
 		});
 		SinglePage.modal.purchases_detail.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
@@ -827,7 +867,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const name = formControls[i].getAttribute("name");
 				formControls[i].value = res[name];
 			}
-			SinglePage.modal.red_slip.querySelector('[slot="footer"] input').value = "";
+			Object.assign(SinglePage.modal.red_slip.querySelector('[slot="footer"] input'), {value: ""}).setAttribute("data-target", e.detail);
 			
 			const stable = SinglePage.modal.red_slip.querySelector('table-sticky');
 			const attrs = db.select("ROW").setTable("sales_attributes").andWhere("ss=?", Number(e.detail)).apply();
@@ -923,8 +963,9 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 			}
 		});
 		SinglePage.modal.red_slip.querySelector('[data-proxy]').addEventListener("click", e => {
-			const result = SinglePage.modal.red_slip.querySelector('[slot="footer"] input').value;
-			if(result == ""){
+			const input = SinglePage.modal.red_slip.querySelector('[slot="footer"] input');
+			const result = {target: input.getAttribute("data-target"), value: input.value};
+			if(result.value == ""){
 				alert("コメントを入力してください。");
 			}else{
 				SinglePage.modal.red_slip.hide("submit", result);
@@ -1019,7 +1060,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		return new Promise((resolve, reject) => {
 			parent.innerHTML = "";
 			const text = document.createElement("span");
-			for(let row of data){
+			const insert = row => {
 				const elements = [];
 				for(let col of columns){
 					const div = document.createElement("div");
@@ -1046,9 +1087,12 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 					div.appendChild(dataElement);
 					elements.push(div);
 				}
-				const dataRow = parent.insertRow(...elements);
+				return parent.insertRow(...elements);
+			}
+			for(let row of data){
+				const dataRow = insert(row);
 				if(callback != null){
-					callback(dataRow, row);
+					callback(dataRow, row, insert);
 				}
 			}
 			setTimeout(() => { resolve(parent); }, 0);
@@ -1131,6 +1175,12 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
 	<modal-dialog name="salses_detail" label="売上明細">
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
+		<div slot="body" class="mt-3">売上明細</div>
+		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
+	</modal-dialog>
+	<modal-dialog name="red_salses_detail" label="売上明細">
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
 		<div slot="body" class="mt-3">売上明細</div>
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
