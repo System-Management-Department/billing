@@ -4,6 +4,12 @@ class SearchFormEvent extends Event{
 		this.formData = formData;
 	}
 }
+class ResetEvent extends Event{
+	constructor(type, form){
+		super(type);
+		this.form = form;
+	}
+}
 class ModalDialogEvent extends Event{
 	constructor(type, dialog, trigger, result){
 		super(type);
@@ -117,6 +123,10 @@ class SearchFormElement extends HTMLElement{
 		form.reset();
 		range.selectNodeContents(form);
 		this.appendChild(range.extractContents());
+		const formControlElements = this.querySelectorAll('form-control');
+		for(let i = formControlElements.length - 1; i >= 0; i--){
+			formControlElements[i].dispatchEvent(new ResetEvent("reset", this));
+		}
 	}
 	static observedAttributes = ["label"];
 }
@@ -502,6 +512,10 @@ class FormControlElement extends HTMLElement{
 		this.#setParts("label");
 		this.#setValue(this.#input.value);
 		this.#input.addEventListener("change", e => { this.#setValue(this.#input.value); });
+		this.addEventListener("reset", e => {
+			this.#input.dispatchEvent(new ResetEvent("reset", e.form));
+			this.#setValue(this.#input.value);
+		});
 	}
 	connectedCallback(){
 		this.innerHTML = this.#tempInnerHTML;
@@ -705,6 +719,7 @@ class FCTextElement extends HTMLElement{
 		this.#root.appendChild(this.#input);
 		this.#props = {};
 		this.#input.addEventListener("change", e => this.dispatchEvent(new CustomEvent("change", {bubbles: true, composed: true})));
+		this.addEventListener("reset", e => { this.value = ""; });
 	}
 	attributeChangedCallback(name, oldValue, newValue){}
 	get value(){
@@ -764,6 +779,7 @@ class FCDateElement extends HTMLElement{
 		this.#root.appendChild(this.#input);
 		this.#props = {};
 		this.#input.addEventListener("change", e => this.dispatchEvent(new CustomEvent("change", {bubbles: true, composed: true})));
+		this.addEventListener("reset", e => { this.value = ""; });
 	}
 	attributeChangedCallback(name, oldValue, newValue){}
 	get value(){
@@ -821,6 +837,7 @@ class FCTextareaElement extends HTMLElement{
 		this.#root.appendChild(this.#input);
 		this.#props = {};
 		this.#input.addEventListener("change", e => this.dispatchEvent(new CustomEvent("change", {bubbles: true, composed: true})));
+		this.addEventListener("reset", e => { this.value = ""; });
 	}
 	attributeChangedCallback(name, oldValue, newValue){}
 	get value(){
@@ -859,6 +876,7 @@ class FCSelectElement extends HTMLElement{
 			this.#value = this.#input.value;
 			this.dispatchEvent(new CustomEvent("change", {bubbles: true, composed: true}));
 		});
+		this.addEventListener("reset", e => { this.value = ""; });
 	}
 	attributeChangedCallback(name, oldValue, newValue){}
 	get value(){
@@ -933,6 +951,11 @@ class FCDateRangeElement extends HTMLElement{
 				this.#value.from = this.#inputTo.value;
 			}
 			this.dispatchEvent(new CustomEvent("change", {bubbles: true, composed: true}))
+		});
+		this.addEventListener("reset", e => {
+			this.#inputFrom.value = "";
+			this.#inputTo.value = "";
+			this.#value = {};
 		});
 	}
 	attributeChangedCallback(name, oldValue, newValue){}
@@ -1087,6 +1110,7 @@ class FCKeywordElement extends HTMLElement{
 			this.#result.textContent = "\u200B";
 			this.dispatchEvent(new CustomEvent("change", {bubbles: true, composed: true}));
 		});
+		this.addEventListener("reset", e => { this.value = ""; });
 	}
 	attributeChangedCallback(name, oldValue, newValue){}
 	get value(){
