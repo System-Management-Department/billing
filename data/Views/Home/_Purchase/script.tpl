@@ -48,7 +48,7 @@
 						const checkbox = row.querySelector('[slot="checkbox"] span');
 						if(data.request == 1){
 							if(edit != null){
-								edit.parentNode.removeChild(edit);
+								// edit.parentNode.removeChild(edit);
 							}
 						}
 						if(data.pu == null){
