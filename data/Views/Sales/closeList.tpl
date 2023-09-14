@@ -95,6 +95,26 @@ new VirtualPage("/", class{
 				csvData[row.invoice_format].push(rowData);
 			}
 		}
+		if("apiProxy" in opener){
+			let sendData = [];
+			for(let {key, label} of csvFormats){
+				if(csvData[key].length <= 0){
+					continue;
+				}
+				sendData.push({
+					json: {
+						reportTypeId: key,
+						isNewIssues: "1",
+						importProcessName: `${label} 取込`,
+						skipFirst: "1",
+						isImmApproval: "0"
+					},
+					csv: csvData[key],
+					filename: `${label}.csv`
+				});
+			}
+			opener.apiProxy(sendData);
+		}
 		const serializer = new CSVSerializer().setHeader(csvHeader).setConverter(text => SJISEncoder.createBlob(text, {type: "text/csv"}));
 		for(let {key, label} of csvFormats){
 			if(csvData[key].length <= 0){
