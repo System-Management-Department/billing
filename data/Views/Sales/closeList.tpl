@@ -95,7 +95,7 @@ new VirtualPage("/", class{
 				csvData[row.invoice_format].push(rowData);
 			}
 		}
-		if("apiProxy" in opener){
+		if("cacheOpen" in opener){
 			let sendData = [];
 			for(let {key, label} of csvFormats){
 				if(csvData[key].length <= 0){
@@ -113,7 +113,63 @@ new VirtualPage("/", class{
 					filename: `${label}.csv`
 				});
 			}
-			opener.apiProxy(sendData);
+			const fileReader = new FileReader();
+			const readerEvent = {
+				reader: fileReader,
+				resolve: null,
+				reject: null,
+				handleEvent(e){
+					this.resolve(this.reader.result);
+				}
+			};
+			fileReader.addEventListener("load", readerEvent);
+			new Blob([`export function run(config){
+	const importDatas = ${jsEncode(sendData)};
+	const serializer = new CSVSerializer().setConverter(text => SJISEncoder.createBlob(text, {type: "text/csv"}));
+	const requestHeaders = new Headers();
+	requestHeaders.append("X-WB-apitoken", config.apiToken);
+	return Promise.all(importDatas.map(importObj => {
+		const formData = new FormData();
+		formData.append("json", JSON.stringify(importObj.json));
+		formData.append("files[0]", serializer.serializeToString(importObj.csv), importObj.filename);
+		return fetch(\`\${config.endpoint}/reports/imports\`, {
+			method: "POST",
+			headers: requestHeaders,
+			body: formData
+		}).then(res => res.text());
+	})).then(res => \`[\${res.join(",")}]\`);
+}`], {type: "application/javascript"})
+				.arrayBuffer()
+				.then(buffer => {
+					let p = opener.cacheOpen();
+					const n = buffer.byteLength;
+					//1kBチャンクに分割
+					for(let i = 0; i < n; i += 1024){
+						const chunk = buffer.slice(i, i + 1024);
+						p = p.then(fd => {
+							return new Promise((resolve, reject) => {
+								readerEvent.resolve = resolve;
+								readerEvent.reject = reject;
+								fileReader.readAsDataURL(new Blob([chunk], {type: "text/plain"}));
+							}).then(data => opener.cacheWrite(fd, data));
+						});
+					}
+					p.then(fd => opener.cacheRun(fd, `${location.origin}/assets/common/CSVSerializer.js`, `${location.origin}/assets/common/SJISEncoder.js`)).then(json => { console.log(json); });
+				});
+			function jsEncode(value){
+				if(value == null){
+					return "null";
+				}else if(Array.isArray(value)){
+					return `[${value.map(v => jsEncode(v)).join(",")}]`;
+				}else if(typeof value == "object"){
+					let res = [];
+					for(let k in value){
+						res.push(`${k}:${jsEncode(value[k])}`);
+					}
+					return `{${res.join(",")}}`;
+				}
+				return JSON.stringify(value);
+			}
 		}
 		const serializer = new CSVSerializer().setHeader(csvHeader).setConverter(text => SJISEncoder.createBlob(text, {type: "text/csv"}));
 		for(let {key, label} of csvFormats){
