@@ -27,7 +27,6 @@ class EstimateController extends ControllerBase{
 		}
 		
 		$v = new View();
-		$v["id"] = $this->requestContext->id;
 		$v["sequence"] = $sequence;
 		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}

@@ -84,8 +84,7 @@ class ListButtonElement extends HTMLElement{
 	static get observedAttributes(){ return ["label"]; }
 }
 customElements.define("list-button", ListButtonElement);
-</script>{/literal}
-{jsiife id=$id}{literal}
+
 new VirtualPage("/1", class{
 	constructor(vp){
 	}
@@ -103,11 +102,20 @@ new VirtualPage("/4", class{
 	}
 });
 
+const search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
+	const found = t.match(/^(.*?)=(.*)$/);
+	if(found){
+		a[found[1]] = decodeURIComponent(found[2]);
+	}
+	return a;
+},{});
 let master = new SQLite();
+let cache = new SQLite();
 let transaction = new SQLite();
 const objectData = Symbol("objectData");
 Promise.all([
 	master.use("master").then(master => fetch("/Default/master")).then(res => res.arrayBuffer()),
+	cache.use("cache"),
 	new Promise((resolve, reject) => {
 		document.addEventListener("DOMContentLoaded", e => {
 			resolve();
@@ -188,6 +196,10 @@ Promise.all([
 	SinglePage.modal.number_format.setQuery(v => new Intl.NumberFormat().format(v));
 	SinglePage.modal.number_format2.setQuery(v => new Intl.NumberFormat(void(0), {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(v));
 	
+	const parser = new DOMParser();
+	const xmlDoc = parser.parseFromString(cache.select("ONE").setTable("estimate").setField("xml").andWhere("dt=?", Number(search.key)).apply(), "application/xml");
+	const id = xmlDoc.querySelector('info').getAttribute("type");
+	console.log(xmlDoc);
 	SinglePage.location = `/${id}`;
 	
 	const refDetail = Symbol("refDetail");
@@ -284,9 +296,9 @@ Promise.all([
 					}
 					if((refDetail in tableColumns[prop]) && (tableColumns[prop][refDetail] == "category")){
 						let found = null;
-						const search = target.category;
+						const searchC = target.category;
 						for(let category of categories){
-							if(search == category.code){
+							if(searchC == category.code){
 								found = category.name;
 							}
 						}
@@ -586,13 +598,6 @@ Promise.all([
 			body: formData
 		}).then(res => res.json()).then(result => {
 			if(result.success){
-				const search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
-					const found = t.match(/^(.*?)=(.*)$/);
-					if(found){
-						a[found[1]] = decodeURIComponent(found[2]);
-					}
-					return a;
-				},{});
 				new BroadcastChannel(search.channel).postMessage(JSON.stringify(result));
 				close();
 			}else{
@@ -717,7 +722,7 @@ function setDataTable(parent, columns, data, callback = null){
 		queueMicrotask(() => { resolve(parent); });
 	});
 }
-{/literal}{/jsiife}
+{/literal}</script>
 {/block}
 {block name="body"}
 	<form>
