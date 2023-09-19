@@ -1126,6 +1126,10 @@ function setDataTable(parent, columns, data, callback = null){
 			<template data-page-share="">
 				<div slot="table1" class="table d-contents"><div class="d-contents">
 					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">見積日付</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="estimate_date" type="date"></form-control><div class="invalid"></div></div>
+					</div>
+					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">案件番号</div>
 						<div class="d-table-cell"><form-control fc-class="col-10" name="project" type="text"></form-control><div class="invalid"></div></div>
 					</div>
