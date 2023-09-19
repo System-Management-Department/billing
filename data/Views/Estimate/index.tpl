@@ -561,7 +561,7 @@ Promise.all([
 		}
 		doc.deletePage(1);
 		//doc.save('output.pdf');
-		open(doc.output("bloburi"));
+		open(doc.output("bloburi"), "_blank", "left=0,top=0,width=1200,height=600");
 	});
 	
 	document.querySelector('[data-trigger="submit"]').addEventListener("click", e => {
