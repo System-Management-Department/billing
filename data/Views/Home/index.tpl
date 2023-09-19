@@ -188,14 +188,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		SinglePage.modal.disapproval      .querySelector('table-sticky[data-table="1"]').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
 		SinglePage.modal.disapproval      .querySelector('table-sticky[data-table="2"]').columns = dataTableQuery("/Detail/Purchase#list").setField("label,width,slot,part").apply();
 		SinglePage.modal.red_slip         .querySelector('table-sticky').columns = dataTableQuery("/Detail/Sales#list").setField("label,width,slot,part").apply();
-		SinglePage.modal.estimate         .querySelector('table-sticky').columns = [
-			{label: "フォーマット", width: "10rem", slot: "format", part: null},
-			{label: "件名", width: "10rem", slot: "subject", part: null},
-			{label: "納品先", width: "10rem", slot: "client", part: null},
-			{label: "更新日時", width: "10rem", slot: "datetime", part: null},
-			{label: "出力", width: "3rem", slot: "export", part: null},
-			{label: "削除", width: "3rem", slot: "delete", part: null}
-		];
+		SinglePage.modal.estimate         .querySelector('table-sticky').columns = dataTableQuery("/cache#estimate").setField("label,width,slot,part").apply();
 		formTableInit(SinglePage.modal.salses_detail    .querySelector('div'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.red_salses_detail.querySelector('div'), formTableQuery("#red_sales_slip").apply());
 		formTableInit(SinglePage.modal.purchases_detail .querySelector('div'), formTableQuery("#sales_slip").apply());
@@ -989,6 +982,47 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 			}
 		});
 		SinglePage.modal.number_format.setQuery(v => new Intl.NumberFormat().format(v));
+		SinglePage.modal.estimate.addEventListener("modal-open", e => {
+			cache.use("cache").then(() => {
+				const parser = new DOMParser();
+				const stable = SinglePage.modal.estimate.querySelector('table-sticky');
+				const res = cache.select("COL").setTable("estimate").setField("xml").apply().join("");
+				const xmlDoc = parser.parseFromString(`<root>${res}</root>`, "application/xml");
+				const dtf = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'short',timeStyle: 'medium'});
+				console.log(xmlDoc);
+				setDataTable(
+					stable,
+					dataTableQuery("/cache#estimate").apply(),
+					Array.from({
+						[Symbol.iterator]: function*(){
+							const n = this.estimates.length;
+							for(let i = 0; i < n; i++){
+								const info = this.estimates[i].querySelector('info');
+								yield Array.from(this.estimates[i].attributes).reduce((a, attr) => {
+									a[attr.name] = attr.value;
+									return a;
+								}, {
+									dt: info.getAttribute("dt"),
+									update: info.getAttribute("update"),
+									type: info.getAttribute("type"),
+								});
+							}
+						},
+						estimates: xmlDoc.querySelectorAll('estimate')
+					}),
+					(row, data) => {
+						const format = row.querySelector('[slot="format"] form-control');
+						const datetime = row.querySelector('[slot="datetime"]');
+						if(format != null){
+							format.value = data.type;
+						}
+						if(datetime != null){
+							datetime.textContent = dtf.format(new Date(Number(data.update)));
+						}
+					}
+				);
+			});
+		});
 		
 		master.select("ALL")
 			.setTable("categories")

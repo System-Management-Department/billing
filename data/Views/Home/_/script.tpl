@@ -1,6 +1,17 @@
 {literal}
 	new VirtualPage("/", class{
 		constructor(vp){
+			vp.addEventListener("modal-close", e => {
+				if(e.dialog == "estimate"){
+					if(e.trigger == "list"){
+						open(`/Estimate/?channel=${CreateWindowElement.channel}&key=${e.result}`, "_blank", "left=0,top=0,width=1200,height=600");
+					}
+					if(e.trigger == "delete"){
+						cache.delete("estimate").andWhere("dt=?", Number(e.result)).apply();
+						cache.commit();
+					}
+				}
+			});
 			const estimates = document.querySelectorAll('[data-estimate]');
 			const n = estimates.length;
 			for(let i = 0; i < n; i++){
