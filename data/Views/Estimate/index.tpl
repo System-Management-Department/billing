@@ -182,7 +182,6 @@ Promise.all([
 			option.textContent = row.name;
 			this.appendChild(option);
 		}, document.getElementById("division"));
-		console.log(master.tables);
 	master.select("ALL")
 		.setTable("specifications")
 		.apply()
@@ -198,9 +197,23 @@ Promise.all([
 	
 	const parser = new DOMParser();
 	const xmlDoc = parser.parseFromString(cache.select("ONE").setTable("estimate").setField("xml").andWhere("dt=?", Number(search.key)).apply(), "application/xml");
+	const root = xmlDoc.documentElement;
 	const id = xmlDoc.querySelector('info').getAttribute("type");
-	console.log(xmlDoc);
 	SinglePage.location = `/${id}`;
+	const inputElements = document.querySelectorAll('form-control[name]');
+	for(let i = inputElements.length - 1; i >= 0; i--){
+		const name = inputElements[i].getAttribute("name");
+		if(root.hasAttribute(name)){
+			inputElements[i].value = root.getAttribute(name);
+			inputElements[i].addEventListener("change", e => {
+				const target = e.currentTarget;
+				const value = (target.getAttribute("type") == "date") ? target.querySelector('input[name]').value : target.value;
+				root.setAttribute(name, value);
+				cache.updateSet("estimate", {xml: root.outerHTML}, {}).andWhere("dt=?", Number(search.key)).apply();
+				cache.commit();
+			});
+		}
+	}
 	
 	const refDetail = Symbol("refDetail");
 	const refAttr = Symbol("refAttr");
@@ -356,20 +369,69 @@ Promise.all([
 			toolbarDisplay(borderTop);
 		},
 		onchange: (el, cell, x, y, value, oldValue) => {
+			const fragment = xmlDoc.createDocumentFragment();
+			const info = xmlDoc.querySelector('info');
+			fragment.appendChild(info);
 			const total = obj.options.data.reduce((a, rowProxy) => {
 				const row = rowProxy[objectData];
+				const detail = xmlDoc.createElement("detail");
+				const attributes = ("attributes" in row) ? xmlDoc.createElement("attributes") : null;
+				if(attributes != null){
+					detail.appendChild(attributes);
+				}
+				for(let key in row){
+					if(key == "attributes"){
+						for(let key2 in row.attributes){
+							attributes.setAttribute(key2, `${row.attributes[key2]}`);
+						}
+					}else if(row[key] != null){
+						detail.setAttribute(key, `${row[key]}`);
+					}
+				}
+				a.fragment.appendChild(detail);
 				if(row.record == 1){
 					a.amount_exc += row.amount_exc;
 					a.amount_tax += row.amount_tax;
 					a.amount_inc += row.amount_inc;
 				}
 				return a; 
-			}, {amount_exc: 0, amount_inc: 0, amount_tax: 0});
+			}, {amount_exc: 0, amount_inc: 0, amount_tax: 0, fragment: fragment});
 			document.querySelector('form-control[name="amount_exc"]').value = total.amount_exc;
 			document.querySelector('form-control[name="amount_tax"]').value = total.amount_tax;
 			document.querySelector('form-control[name="amount_inc"]').value = total.amount_inc;
+			root.setAttribute("amount_exc", total.amount_exc);
+			root.setAttribute("amount_tax", total.amount_tax);
+			root.setAttribute("amount_inc", total.amount_inc);
+			info.setAttribute("update", Date.now());
+			root.innerHTML = "";
+			root.appendChild(fragment);
+			cache.updateSet("estimate", {xml: root.outerHTML}, {}).andWhere("dt=?", Number(search.key)).apply();
+			cache.commit();
 		}
 	});
+	obj.setData(
+		Array.from({
+			[Symbol.iterator]: function*(){
+				const n = this.details.length;
+				for(let i = 0; i < n; i++){
+					yield Array.from(this.details[i].attributes).reduce((a, attr) => {
+						if((attr.name == "record") || (attr.name == "taxable")){
+							a[attr.name] = (attr.value == "true");
+						}else{
+							a[attr.name] = attr.value;
+						}
+						return a;
+					}, {});
+				}
+			},
+			details: xmlDoc.querySelectorAll('detail')
+		}).map(row => {
+			const insert = obj.options.dataProxy();
+			Object.assign(insert[objectData], row);
+			return insert;
+		}),
+		true
+	);
 	obj.toolbar.querySelector('.toolbar-record').addEventListener("change", e => {
 		const selected = obj.selectedCell.map(Number);
 		const top = Math.min(selected[1], selected[3]);

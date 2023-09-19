@@ -8,7 +8,7 @@
 					const dt = Date.now();
 					const type = Number(e.currentTarget.getAttribute("data-estimate"));
 					cache.insertSet("estimate", {
-						xml: `<estimate estimate_date="" project="" subject="" division="" leader="" manager="" client_name="" apply_client="" payment_date="" specification="" note="" amount_exc="0" amount_tax="0" amount_inc="0"><info dt="${dt}" update="${dt}" type="${type}" /><detail /></estimate>`,
+						xml: `<estimate estimate_date="${new Intl.DateTimeFormat("ja-JP", {dateStyle: "short"}).format(new Date()).split("/").join("-")}" project="" subject="" division="" leader="" manager="" client_name="" apply_client="" payment_date="" specification="" note="" amount_exc="0" amount_tax="0" amount_inc="0"><info dt="${dt}" update="${dt}" type="${type}" /><detail detail="" record="false" taxable="false" category="" /></estimate>`,
 						dt: dt
 					}, {}).apply();
 					cache.commit();
