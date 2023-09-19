@@ -6,6 +6,13 @@
 					if(e.trigger == "list"){
 						open(`/Estimate/?channel=${CreateWindowElement.channel}&key=${e.result}`, "_blank", "left=0,top=0,width=1200,height=600");
 					}
+					if(e.trigger == "export"){
+						const xml = cache.select("ONE").setTable("estimate").setField("xml").andWhere("dt=?", Number(e.result)).apply();
+						const a = document.createElement("a");
+						a.setAttribute("href", URL.createObjectURL(new Blob([xml], {type: "application/xml"})));
+						a.setAttribute("download", `${e.result}.xml`);
+						a.click();
+					}
 					if(e.trigger == "delete"){
 						cache.delete("estimate").andWhere("dt=?", Number(e.result)).apply();
 						cache.commit();
