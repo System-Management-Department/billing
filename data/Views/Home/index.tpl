@@ -158,6 +158,10 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				update = true;
 				db.createTable("billing_data", ["selected", "slip_number", "dt"], []);
 			}
+			if(!("purchase_data" in db.tables)){
+				update = true;
+				db.createTable("purchase_data", ["selected", "slip_number", "dt"], []);
+			}
 			if(!("estimate" in db.tables)){
 				update = true;
 				db.createTable("estimate", ["xml", "dt"], []);

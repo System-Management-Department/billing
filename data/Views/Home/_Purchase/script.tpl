@@ -11,6 +11,36 @@
 			vp.addEventListener("modal-close", e => { console.log(e); });
 			document.querySelector('table-sticky').columns = dataTableQuery("/Purchase#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Purchase#search").apply()).then(form => { form.submit(); });
+			document.querySelector('[data-proc="export"]').addEventListener("click", e => {
+				const dt = Date.now();
+				let number = null;
+				fetch("/Purchase/genSlipNumber")
+					.then(res => res.json()).then(result => {
+						for(let message of result.messages){
+							if(message[2] == "no"){
+								number = message[0];
+							}
+						}
+						if(number != null){
+							const selected = [];
+							const checked = document.querySelectorAll('table-row [slot="checkbox"] [value]:checked');
+							const n = checked.length;
+							for(let i = 0; i < n; i++){
+								selected.push(checked[i].getAttribute("value"));
+							}
+							cache.insertSet("purchase_data", {
+								selected: JSON.stringify(selected),
+								slip_number: number,
+								dt: dt
+							}, {}).apply();
+							return cache.commit();
+						}else{
+							return Promise.reject(null);
+						}
+					}).then(() => {
+						open(`/Purchase/exportList?channel=${CreateWindowElement.channel}&key=${number}`, "_blank", "left=0,top=0,width=1200,height=600");
+					});
+			});
 		}
 		reload(){
 			fetch("/Purchase/search", {

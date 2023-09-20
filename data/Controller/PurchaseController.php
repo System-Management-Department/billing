@@ -32,6 +32,10 @@ class PurchaseController extends ControllerBase{
 			$query->andWhere("(EXISTS(SELECT 1 FROM sales_workflow WHERE sales_workflow.regist_user=? AND sales_workflow.ss=purchase_relations.ss) OR sales_slips.division=?)", $_SESSION["User.id"], $_SESSION["User.departmentCode"]);
 		}
 		if(!empty($_POST)){
+			if(!empty($_POST["pu_array"])){
+				$query->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(pu TEXT PATH '$')) AS t)", $_POST["pu_array"]);
+				$query->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchase_relations.pu)");
+			}
 			if(!empty($_POST["sd"])){
 				$query->andWhere("purchase_relations.sd=?", $_POST["sd"]);
 			}
@@ -87,6 +91,10 @@ class PurchaseController extends ControllerBase{
 			->addWith("find AS (SELECT DISTINCT * FROM JSON_TABLE(?,'$[*]' COLUMNS(pu INT PATH '$.pu')) AS t)", $searchTable)
 			->setTable("purchases")
 			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchases.pu)");
+		$query8 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT * FROM JSON_TABLE(?,'$[*]' COLUMNS(pu INT PATH '$.pu')) AS t)", $searchTable)
+			->setTable("purchase_workflow")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchase_workflow.pu)");
 		
 		return new FileView(SQLite::memoryData([
 			"sales_slips" => $query1(),
@@ -96,6 +104,7 @@ class PurchaseController extends ControllerBase{
 			"sales_details" => $query5(),
 			"sales_detail_attributes" => $query6(),
 			"purchases" => $query7(),
+			"purchase_workflow" => $query8(),
 			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt]]]
 		]), "application/vnd.sqlite3");
 	}
@@ -119,5 +128,55 @@ class PurchaseController extends ControllerBase{
 		}
 		
 		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function genSlipNumber(){
+		$db = Session::getDB();
+		$month = date("ym"); 
+		$result = new Result();
+		$db->beginTransaction();
+		try{
+			// 伝票番号生成
+			$sequence = $db->select("ONE")
+				->setTable("slip_sequence")
+				->setField("seq")
+				->andWhere("month=?", $month)
+				->andWhere("type=4");
+			$slipNumber = $sequence();
+			if(empty($slipNumber)){
+				$slipNumber = 1;
+				$insertQuery = $db->insertSet("slip_sequence", [
+					"seq" => 1,
+					"month" => $month,
+					"type" => 4,
+				],[]);
+				$insertQuery();
+				$db->commit();
+			}else{
+				$slipNumber++;
+				$updateQuery = $db->updateSet("slip_sequence", [],[
+					"seq" => "seq+1",
+				]);
+				$updateQuery->andWhere("month=?", $month);
+				$updateQuery->andWhere("type=4");
+				$updateQuery();
+				$db->commit();
+			}
+		}catch(Exception $ex){
+			$result->addMessage("伝票番号生成に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage(sprintf("%s%05d", $month, $slipNumber), "INFO", "no");
+		}
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function exportList(){
+		$v = new View();
+		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}
 }
