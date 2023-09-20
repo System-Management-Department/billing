@@ -43,19 +43,19 @@ print-page table td:nth-of-type(13){
 <script type="text/javascript">
 new VirtualPage("/", class{
 	constructor(vp){
+		const now = new Date();
+		document.querySelector('[data-slot="year"]').textContent = now.getFullYear();
+		document.querySelector('[data-slot="month"]').textContent = now.getMonth() + 1;
+		document.querySelector('[data-slot="date"]').textContent = now.getDate();
 		const tbody = document.querySelector('tbody');
 		const fragment = document.createDocumentFragment();
 		const query = transaction.select("ALL")
-			.addWith("relations AS (SELECT DISTINCT ss,sd FROM purchase_relations)")
-			.addWith("temppurchases AS (SELECT sd,sum(amount_inc) AS amount_inc FROM purchases LEFT JOIN purchase_relations USING(pu) GROUP BY sd)")
+			.addWith("temppurchases AS (SELECT ss,sum(amount_inc) AS amount_inc FROM purchases LEFT JOIN purchase_relations USING(pu) GROUP BY ss)")
 			.addTable("sales_slips")
-			.leftJoin("relations USING(ss)")
-			.leftJoin("sales_details USING(sd)")
 			.leftJoin("sales_workflow USING(ss)")
-			.leftJoin("temppurchases USING(sd)")
+			.leftJoin("temppurchases USING(ss)")
 			.leftJoin("master.system_apply_clients AS apply_clients ON sales_slips.apply_client=apply_clients.code")
-			.leftJoin("master.clients AS clients ON apply_clients.client=clients.code")
-			.andWhere("sales_details.record=1");
+			.leftJoin("master.clients AS clients ON apply_clients.client=clients.code");
 		const fields = [
 			"STRFTIME('%Y-%m',sales_workflow.approval_datetime)",
 			"sales_slips.project",
@@ -63,12 +63,10 @@ new VirtualPage("/", class{
 			"clients.name",
 			"sales_slips.subject",
 			"apply_clients.name",
-			"sales_details.quantity",
-			"sales_details.unit_price",
-			"sales_details.amount_inc",
-			"sales_details.amount_exc",
+			"sales_slips.amount_inc",
+			"sales_slips.amount_exc",
 			"ifnull(temppurchases.amount_inc, 0)",
-			"(sales_details.amount_inc - ifnull(temppurchases.amount_inc, 0))"
+			"(sales_slips.amount_inc - ifnull(temppurchases.amount_inc, 0))"
 		];
 		for(let i = 0; i < fields.length; i++){
 			query.addField(`${fields[i]} AS field${i}`);
@@ -258,12 +256,10 @@ Promise.all([
 			<template data-page="/">
 				<div slot="main" style="background-color: gray; padding:10px;" class="d-flex flex-column gap-2 overflow-auto">
 					<print-page size="A3" orientation="l" class="flex-shrink-0">
-						<div class="d-flex justify-content-between"><div style="font-size: 20px;">【 売上一覧表 】</div><div>日付           年　　月　　日</div></div>
+						<div class="d-flex justify-content-between"><div style="font-size: 20px;">【 売上一覧表 】</div><div>日付<div class="d-inline-block text-end" style="width: 6em;"><span data-slot="year"></span>年</div><div class="d-inline-block text-end" style="width: 3em;"><span data-slot="month"></span>月</div><div class="d-inline-block text-end" style="width: 3em;"><span data-slot="date"></span>日</div></div></div>
 						<div class="d-flex justify-content-end" style="margin-bottom: 20px;">株式会社ダイレクト・ホールディングス</div>
 						<table class="w-100" style="border: solid black calc(1rem / 6);white-space: pre;">
 							<colgroup data-page-clone="1">
-								<col />
-								<col />
 								<col />
 								<col />
 								<col />
@@ -285,8 +281,6 @@ Promise.all([
 									<th>得意先名</th>
 									<th>案件名称</th>
 									<th>請求先名</th>
-									<th>数量</th>
-									<th>売価</th>
 									<th>売上金額（税込）</th>
 									<th>売上金額（税抜）</th>
 									<th>仕入金額（税込）</th>
@@ -296,9 +290,7 @@ Promise.all([
 							<tbody></tbody>
 							<tbody class="tfoot">
 								<tr>
-									<td colspan="9" class="text-start">小計</td>
-									<td class="d-none"></td>
-									<td class="d-none"></td>
+									<td colspan="7" class="text-start">小計</td>
 									<td class="d-none"></td>
 									<td class="d-none"></td>
 									<td class="d-none"></td>
