@@ -989,7 +989,6 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const res = cache.select("COL").setTable("estimate").setField("xml").apply().join("");
 				const xmlDoc = parser.parseFromString(`<root>${res}</root>`, "application/xml");
 				const dtf = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'short',timeStyle: 'medium'});
-				console.log(xmlDoc);
 				setDataTable(
 					stable,
 					dataTableQuery("/cache#estimate").apply(),

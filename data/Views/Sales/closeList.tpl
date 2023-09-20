@@ -95,82 +95,7 @@ new VirtualPage("/", class{
 				csvData[row.invoice_format].push(rowData);
 			}
 		}
-		if("cacheOpen" in opener){
-			let sendData = [];
-			for(let {key, label} of csvFormats){
-				if(csvData[key].length <= 0){
-					continue;
-				}
-				sendData.push({
-					json: {
-						reportTypeId: key,
-						isNewIssues: "1",
-						importProcessName: `${label} 取込`,
-						skipFirst: "1",
-						isImmApproval: "0"
-					},
-					csv: csvData[key],
-					filename: `${label}.csv`
-				});
-			}
-			const fileReader = new FileReader();
-			const readerEvent = {
-				reader: fileReader,
-				resolve: null,
-				reject: null,
-				handleEvent(e){
-					this.resolve(this.reader.result);
-				}
-			};
-			fileReader.addEventListener("load", readerEvent);
-			new Blob([`export function run(config){
-	const importDatas = ${jsEncode(sendData)};
-	const serializer = new CSVSerializer().setConverter(text => SJISEncoder.createBlob(text, {type: "text/csv"}));
-	const requestHeaders = new Headers();
-	requestHeaders.append("X-WB-apitoken", config.apiToken);
-	return Promise.all(importDatas.map(importObj => {
-		const formData = new FormData();
-		formData.append("json", JSON.stringify(importObj.json));
-		formData.append("files[0]", serializer.serializeToString(importObj.csv), importObj.filename);
-		return fetch(\`\${config.endpoint}/reports/imports\`, {
-			method: "POST",
-			headers: requestHeaders,
-			body: formData
-		}).then(res => res.text());
-	})).then(res => \`[\${res.join(",")}]\`);
-}`], {type: "application/javascript"})
-				.arrayBuffer()
-				.then(buffer => {
-					let p = opener.cacheOpen();
-					const n = buffer.byteLength;
-					//1kBチャンクに分割
-					for(let i = 0; i < n; i += 1024){
-						const chunk = buffer.slice(i, i + 1024);
-						p = p.then(fd => {
-							return new Promise((resolve, reject) => {
-								readerEvent.resolve = resolve;
-								readerEvent.reject = reject;
-								fileReader.readAsDataURL(new Blob([chunk], {type: "text/plain"}));
-							}).then(data => opener.cacheWrite(fd, data));
-						});
-					}
-					p.then(fd => opener.cacheRun(fd, `${location.origin}/assets/common/CSVSerializer.js`, `${location.origin}/assets/common/SJISEncoder.js`)).then(json => { console.log(json); });
-				});
-			function jsEncode(value){
-				if(value == null){
-					return "null";
-				}else if(Array.isArray(value)){
-					return `[${value.map(v => jsEncode(v)).join(",")}]`;
-				}else if(typeof value == "object"){
-					let res = [];
-					for(let k in value){
-						res.push(`${k}:${jsEncode(value[k])}`);
-					}
-					return `{${res.join(",")}}`;
-				}
-				return JSON.stringify(value);
-			}
-		}
+
 		const serializer = new CSVSerializer().setHeader(csvHeader).setConverter(text => SJISEncoder.createBlob(text, {type: "text/csv"}));
 		for(let {key, label} of csvFormats){
 			if(csvData[key].length <= 0){
@@ -182,7 +107,49 @@ new VirtualPage("/", class{
 			a.className = "btn btn-success";
 			a.setAttribute("href", URL.createObjectURL(blob));
 			a.setAttribute("download", `請求データ（${label}）_${search.key}.csv`);
+			a.setAttribute("data-api-label", label);
+			a.setAttribute("data-api-key", key);
 			body.appendChild(a);
+		}
+		if("corsFetch" in opener){
+			const p = Array.from({
+				*[Symbol.iterator](){
+					const n = this.downloads.length;
+					for(let i = 0; i < n; i++){
+						const reader = new FileReader();
+						const label = this.downloads[i].getAttribute("data-api-label");
+						const key = this.downloads[i].getAttribute("data-api-key");
+						const blob = this.downloads[i].getAttribute("href");
+						yield fetch(this.downloads[i].getAttribute("href")).then(res => res.blob()).then(blob => new Promise((resolve, reject) => {
+							reader.addEventListener("load", e => {
+								const res = [
+									[{raw: ["", "/reports/imports"]}, "config.endpoint"],
+									{
+										method: "POST",
+										headers: [
+											["X-WB-apitoken", [{raw: ["", ""]}, "config.apiToken"]]
+										],
+										body: [
+											["json", JSON.stringify({
+												reportTypeId: key,
+												isNewIssues: "1",
+												importProcessName: `${label} 取込`,
+												skipFirst: "1",
+												isImmApproval: "0"
+											})],
+											["files[0]", reader.result, `${label}.csv`]
+										]
+									}
+								];
+								resolve(res);
+							});
+							reader.readAsDataURL(blob);
+						}));
+					}
+				},
+				downloads: body.querySelectorAll('a[href][download][data-api-label][data-api-key]')
+			});
+			Promise.all(p).then(args => { opener.corsFetch(...args); });
 		}
 		
 		const undoBtn = document.createElement("button");
