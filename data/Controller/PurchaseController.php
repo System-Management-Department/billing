@@ -179,4 +179,14 @@ class PurchaseController extends ControllerBase{
 		$v = new View();
 		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}
+	
+	#[\Attribute\AcceptRole("admin", "entry")]
+	public function payment(){
+		$db = Session::getDB();
+		$result = new Result();
+		
+		Purchase::payment($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
 }

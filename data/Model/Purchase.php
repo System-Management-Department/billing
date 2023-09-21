@@ -187,4 +187,28 @@ class Purchase{
 		$check["payment_date"]->required("支払日を入力してください。")
 			->date("支払日を正しく入力してください。");
 	}
+	
+	public static function payment($db, $q, $context, $result){
+		$month = date("ym"); 
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("purchase_workflow", [
+				"slip_number" => $q["comment"],
+				"payment_user" => $_SESSION["User.id"],
+			],[
+				"payment" => 1,
+				"payment_datetime" => "NOW()",
+			]);
+			$updateQuery->andWhere("pu=?", $q["id"]);
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("受領登録に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("受領登録が完了しました。", "INFO", "");
+		}
+	}
 }

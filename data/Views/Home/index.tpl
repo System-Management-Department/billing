@@ -958,7 +958,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const name = formControls[i].getAttribute("name");
 				formControls[i].value = res[name];
 			}
-			SinglePage.modal.payment.querySelector('[slot="footer"] input').value = "";
+			Object.assign(SinglePage.modal.payment.querySelector('[slot="footer"] input'), {value: ""}).setAttribute("data-target", e.detail);
 		});
 		SinglePage.modal.release.querySelector('[data-proxy]').addEventListener("click", e => {
 			const result = SinglePage.modal.release.querySelector('[slot="footer"] input').value;
@@ -978,7 +978,8 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 			}
 		});
 		SinglePage.modal.payment.querySelector('[data-proxy]').addEventListener("click", e => {
-			const result = SinglePage.modal.payment.querySelector('[slot="footer"] input').value;
+			const input = SinglePage.modal.payment.querySelector('[slot="footer"] input');
+			const result = {target: input.getAttribute("data-target"), value: input.value};
 			if(result == ""){
 				alert("コメントを入力してください。");
 			}else{
