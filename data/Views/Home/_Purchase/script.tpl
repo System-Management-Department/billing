@@ -106,10 +106,17 @@
 								// edit.parentNode.removeChild(edit);
 							}
 						}
+						if(data.payment == 1){
+							if(payment != null){
+								const slot = payment.parentNode;
+								slot.removeChild(payment);
+								slot.innerHTML = '<span class="text-danger">受領済</span>';
+								payment = null;
+							}
+						}
 						if(data.pu == null){
 							if(payment != null){
 								payment.parentNode.removeChild(payment);
-								payment = null;
 							}
 							if(checkbox != null){
 								checkbox.parentNode.removeChild(checkbox);
@@ -126,11 +133,6 @@
 						}
 						if(supplier != null){
 							supplier.textContent = SinglePage.modal.supplier.query(data.supplier);
-						}
-						if(data.payment == 1){
-							if(payment != null){
-								payment.parentNode.removeChild(payment);
-							}
 						}
 					}
 				);
