@@ -7,6 +7,9 @@
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jsuites.css" />
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jspreadsheet.css" />
 <style type="text/css">
+#spmain::part(nav2){
+	justify-content: space-between;
+}
 #spmain::part(d-table){
 	display: table;
 }
@@ -486,7 +489,7 @@ Promise.all([
 	});
 	
 	const template = document.querySelector('#spmain [slot="print"] print-page');
-	document.querySelector('[data-trigger="print"]').addEventListener("click", e => {
+	const getPdfDoc = () => {
 		const slotObj = {
 			today: new Intl.DateTimeFormat("ja-JP").format(new Date()),
 			subject: document.querySelector('form-control[name="subject"]').value,
@@ -647,8 +650,34 @@ Promise.all([
 			}
 		}
 		doc.deletePage(1);
-		//doc.save('output.pdf');
+		return doc;
+	};
+	document.querySelector('[data-trigger="preview"]').addEventListener("click", e => {
+		const doc = getPdfDoc();
 		open(doc.output("bloburi"), "_blank", "left=0,top=0,width=1200,height=600");
+	});
+	document.querySelector('[data-trigger="print"]').addEventListener("click", e => {
+		const doc = getPdfDoc();
+		const formData = new FormData();
+		const w = open("about:blank", "_blank", "left=0,top=0,width=1200,height=600");
+		formData.append("pdf", doc.output("blob"), "print.pdf");
+		fetch("/Upload/estimate", {
+			method: "POST",
+			body: formData
+		}).then(res => res.json()).then(result => {
+			if(result.success){
+				let path = "about:blank";
+				for(let meaasge of result.messages){
+					if(meaasge[2] == "path"){
+						path = meaasge[0];
+						break;
+					}
+				}
+				w.location = path;
+			}else{
+				alert(result.messages[0][0]);
+			}
+		});
 	});
 	
 	document.querySelector('[data-trigger="submit"]').addEventListener("click", e => {
@@ -814,6 +843,7 @@ function setDataTable(parent, columns, data, callback = null){
 						</nav>
 						<nav part="nav2">
 							<div part="tools"><slot name="tools"></slot></div>
+							<div part="tools"><slot name="tools2"></slot></div>
 						</nav>
 					</header>
 					<div>
@@ -1321,6 +1351,7 @@ function setDataTable(parent, columns, data, callback = null){
 			<template data-page-share="">
 				<span slot="tools" class="btn btn-primary my-2" data-trigger="print">見積書生成</span>
 				<span slot="tools"" class="btn btn-primary my-2" data-trigger="submit">確定登録</span>
+				<span slot="tools2" class="btn btn-primary my-2" data-trigger="preview">プレビュー</span>
 			</template>
 		</div>
 	</form>
