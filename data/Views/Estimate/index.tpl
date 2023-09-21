@@ -497,7 +497,10 @@ Promise.all([
 			amount_tax: document.querySelector('form-control[name="amount_tax"]').text,
 			amount_inc: document.querySelector('form-control[name="amount_inc"]').text,
 			specification: document.querySelector('form-control[name="specification"]').text,
-			note: document.querySelector('form-control[name="note"]').value
+			note: document.querySelector('form-control[name="note"]').value,
+			summary_header1: (e => (e == null) ? void(0) : e.value)(document.querySelector('form-control[name="summary_header1"]')),
+			summary_header2: (e => (e == null) ? void(0) : e.value)(document.querySelector('form-control[name="summary_header2"]')),
+			summary_header3: (e => (e == null) ? void(0) : e.value)(document.querySelector('form-control[name="summary_header3"]'))
 		};
 		const printArea = document.querySelector('#spmain [slot="print"]');
 		printArea.innerHTML = "";
@@ -1067,9 +1070,9 @@ function setDataTable(parent, columns, data, callback = null){
 									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
 										<tr>
 											<th>摘要</th>
-											<th style="border-left: solid black calc(1rem / 12);"><span data-slot=""></span></th>
-											<th style="border-left: solid black calc(1rem / 12);"><span data-slot=""></span></th>
-											<th style="border-left: solid black calc(1rem / 12);"><span data-slot=""></span></th>
+											<th style="border-left: solid black calc(1rem / 12);"><span data-slot="summary_header1"></span></th>
+											<th style="border-left: solid black calc(1rem / 12);"><span data-slot="summary_header2"></span></th>
+											<th style="border-left: solid black calc(1rem / 12);"><span data-slot="summary_header3"></span></th>
 											<th style="border-left: solid black calc(1rem / 12);">数量</th>
 											<th style="border-left: solid black calc(1rem / 12);">単位</th>
 											<th style="border-left: solid black calc(1rem / 12);">単価</th>
