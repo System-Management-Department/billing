@@ -73,7 +73,20 @@ new VirtualPage("/edit", class{
 				}
 				return res;
 			});
+			const detailAttributes = details.map(row => {
+				if(row.attributes == null){
+					return null;
+				}
+				if(("summary_data1" in row.attributes) && ("summary_data2" in row.attributes) && ("summary_data3" in row.attributes)){
+					row.attributes.summary_data = [row.attributes.summary_data1, row.attributes.summary_data2, row.attributes.summary_data3];
+					delete row.attributes.summary_data1;
+					delete row.attributes.summary_data2;
+					delete row.attributes.summary_data3;
+				}
+				return {data: JSON.stringify(row.attributes), sd: row.sd};
+			});
 			formData.append("detail", JSON.stringify(details));
+			formData.append("detail_attribute", JSON.stringify(detailAttributes));
 			fetch(`/Committed/update/${id}`, {
 				method: "POST",
 				body: formData
@@ -286,16 +299,19 @@ Promise.all([
 		{ [refDetail]: "amount_inc", type: 'numeric', title: '税込金額', width: 100, mask:'#,##' },
 		{ [refDetail]: "category",   type: 'dropdown', title: 'カテゴリー', width: 200, source: categories.map(r => r.name) }
 	];
+	let defaultAttributes = null;
 	if(salesSlip.invoice_format == "2"){
 		tableColumns.push(
 			{ [refAttr]: "circulation", type: 'numeric', title: '発行部数', width: 60, mask:'#,##' }
 		);
+		defaultAttributes = {circulation: null};
 	}else if(salesSlip.invoice_format == "3"){
 		tableColumns.push(
 			{ [refAttr]: "summary_data1", type: 'text', title: '摘要１', width: 200 },
 			{ [refAttr]: "summary_data2", type: 'text', title: '摘要２', width: 200 },
 			{ [refAttr]: "summary_data3", type: 'text', title: '摘要３', width: 200 }
 		);
+		defaultAttributes = {summary_data1: null, summary_data2: null, summary_data3: null};
 	}
 	const obj = jspreadsheet(jse, {
 		minDimensions: [1, 1],
@@ -450,6 +466,20 @@ Promise.all([
 			const insert = obj.options.dataProxy();
 			row.record = (row.record == 1);
 			row.taxable = (row.taxable == 1);
+			if((row.attributes == null) && (defaultAttributes != null)){
+				row.attributes = Object.assign({}, defaultAttributes);
+			}else{
+				row.attributes = JSON.parse(row.attributes);
+				for(k in row.attributes){
+					if(Array.isArray(row.attributes[k])){
+						const n = row.attributes[k].length;
+						for(let i = 0; i < n; i++){
+							row.attributes[`${k}${i + 1}`] = row.attributes[k][i];
+						}
+						delete row.attributes[k];
+					}
+				}
+			}
 			Object.assign(insert[objectData], row);
 			return insert;
 		}),

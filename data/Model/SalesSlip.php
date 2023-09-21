@@ -241,7 +241,7 @@ class SalesSlip{
 			if(!empty($detail)){
 				$len = count($detail);
 				for($i = 0; $i < $len; $i++){
-					$updateQuery = $db->updateSet("sales_attributes", [
+					$updateQuery = $db->updateSet("sales_detail_attributes", [
 						"data" => $detail[$i]["data"],
 					],[]);
 					$updateQuery->andWhere("sd=?", $detail[$i]["sd"]);
