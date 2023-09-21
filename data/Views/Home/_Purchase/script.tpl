@@ -82,6 +82,8 @@
 						.addField("purchase_relations.sd")
 						.leftJoin("purchases using(pu)")
 						.addField("purchases.*")
+						.leftJoin("purchase_workflow using(pu)")
+						.addField("purchase_workflow.payment")
 						.leftJoin("sales_slips using(ss)")
 						.addField("sales_slips.apply_client")
 						.addField("sales_slips.client_name")
@@ -95,7 +97,7 @@
 						.apply(),
 					(row, data) => {
 						const edit = row.querySelector('[slot="edit"]');
-						const payment = row.querySelector('[slot="payment"] show-dialog');
+						let payment = row.querySelector('[slot="payment"] show-dialog');
 						const manager = row.querySelector('[slot="manager"]');
 						const supplier = row.querySelector('[slot="supplier"]');
 						const checkbox = row.querySelector('[slot="checkbox"] span');
@@ -107,6 +109,7 @@
 						if(data.pu == null){
 							if(payment != null){
 								payment.parentNode.removeChild(payment);
+								payment = null;
 							}
 							if(checkbox != null){
 								checkbox.parentNode.removeChild(checkbox);
@@ -123,6 +126,11 @@
 						}
 						if(supplier != null){
 							supplier.textContent = SinglePage.modal.supplier.query(data.supplier);
+						}
+						if(data.payment == 1){
+							if(payment != null){
+								payment.parentNode.removeChild(payment);
+							}
 						}
 					}
 				);
