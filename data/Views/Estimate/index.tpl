@@ -414,7 +414,7 @@ Promise.all([
 			[Symbol.iterator]: function*(){
 				const n = this.details.length;
 				for(let i = 0; i < n; i++){
-					yield Array.from(this.details[i].attributes).reduce((a, attr) => {
+					const row = Array.from(this.details[i].attributes).reduce((a, attr) => {
 						if((attr.name == "record") || (attr.name == "taxable")){
 							a[attr.name] = (attr.value == "true");
 						}else{
@@ -422,6 +422,16 @@ Promise.all([
 						}
 						return a;
 					}, {});
+					const attrElement = this.details[i].querySelector('attributes');
+					if(attrElement == null){
+						row.attributes = null;
+					}else{
+						row.attributes = Array.from(attrElement.attributes).reduce((a, attr) => {
+							a[attr.name] = attr.value;
+							return a;
+						}, {});
+					}
+					yield row;
 				}
 			},
 			details: xmlDoc.querySelectorAll('detail')
