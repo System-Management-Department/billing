@@ -98,6 +98,7 @@
 					(row, data) => {
 						const edit = row.querySelector('[slot="edit"]');
 						let payment = row.querySelector('[slot="payment"] show-dialog');
+						const delete1 = row.querySelector('[slot="delete"] show-dialog');
 						const manager = row.querySelector('[slot="manager"]');
 						const supplier = row.querySelector('[slot="supplier"]');
 						const checkbox = row.querySelector('[slot="checkbox"] span');
@@ -117,6 +118,9 @@
 						if(data.pu == null){
 							if(payment != null){
 								payment.parentNode.removeChild(payment);
+							}
+							if(delete1 != null){
+								delete1.parentNode.removeChild(delete1);
 							}
 							if(checkbox != null){
 								checkbox.parentNode.removeChild(checkbox);
