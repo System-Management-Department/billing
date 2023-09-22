@@ -23,7 +23,8 @@ class PurchaseController extends ControllerBase{
 			->setLimit(1000)
 			->leftJoin("sales_slips using(ss)")
 			->leftJoin("sales_details using(sd)")
-			->andWhere("sales_details.record=1");
+			->andWhere("sales_details.record=1")
+			->leftJoin("purchases using(pu)");
 		if($_SESSION["User.role"] == "manager"){
 			// 担当者　自身の所有するすべて
 			$query->andWhere("EXISTS(SELECT 1 FROM sales_workflow WHERE sales_workflow.regist_user=? AND sales_workflow.ss=purchase_relations.ss)", $_SESSION["User.id"]);
@@ -41,6 +42,9 @@ class PurchaseController extends ControllerBase{
 			}
 			if(!empty($_POST["slip_number"])){
 				$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
+			}
+			if(!empty($_POST["supplier"])){
+				$query->andWhere("purchases.supplier=?", $_POST["supplier"]);
 			}
 			/*
 			if(!empty($_POST["accounting_date"])){
@@ -79,6 +83,11 @@ class PurchaseController extends ControllerBase{
 			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_workflow.ss)");
 		$query4 = $db->select("EXPORT")
 			->setTable("JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$.ss',sd INT PATH '$.sd',pu INT PATH '$.pu')) AS t", $searchTable);
+		if(!empty($_POST["supplier"])){
+			$query4->setField("t.*")
+				->leftJoin("purchases using(pu)")
+				->andWhere("purchases.supplier=?", $_POST["supplier"]);
+		}
 		$query5 = $db->select("EXPORT")
 			->addWith("find AS (SELECT DISTINCT * FROM JSON_TABLE(?,'$[*]' COLUMNS(sd INT PATH '$.sd')) AS t)", $searchTable)
 			->setTable("sales_details")
