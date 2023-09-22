@@ -126,6 +126,16 @@ Promise.all([
 	})
 ]).then(response => {
 	master.import(response[0], "master");
+	master.create_function("has", {
+		length: 2,
+		apply(thisObj, args){
+			const [array, search] = args;
+			if(search == ""){
+				return 1;
+			}
+			return array.indexOf(JSON.stringify(search).replace(/^"|"$/g, "")) > 0 ? 1 : 0;
+		}
+	});
 	SinglePage.modal.leader      .querySelector('table-sticky').columns = dataTableQuery("/Modal/Leader#list").setField("label,width,slot,part").apply();
 	SinglePage.modal.manager     .querySelector('table-sticky').columns = dataTableQuery("/Modal/Manager#list").setField("label,width,slot,part").apply();
 	SinglePage.modal.apply_client.querySelector('table-sticky').columns = dataTableQuery("/Modal/ApplyClient#list").setField("label,width,slot,part").apply();
@@ -137,6 +147,7 @@ Promise.all([
 			dataTableQuery("/Modal/Leader#list").apply(),
 			master.select("ALL")
 				.setTable("leaders")
+				.andWhere("has(json_array(code,name),?)", keyword)
 				.apply(),
 			row => {}
 		);
@@ -148,6 +159,7 @@ Promise.all([
 			dataTableQuery("/Modal/Manager#list").apply(),
 			master.select("ALL")
 				.setTable("managers")
+				.andWhere("has(json_array(code,name),?)", keyword)
 				.apply(),
 			row => {}
 		);
@@ -162,6 +174,7 @@ Promise.all([
 				.setField("system_apply_clients.code,system_apply_clients.unique_name as name,system_apply_clients.kana")
 				.leftJoin("clients on system_apply_clients.client=clients.code")
 				.addField("clients.name as client")
+				.andWhere("has(json_array(system_apply_clients.code,system_apply_clients.unique_name,system_apply_clients.name),?)", keyword)
 				.apply(),
 			row => {}
 		);

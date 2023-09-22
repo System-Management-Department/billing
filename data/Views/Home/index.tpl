@@ -139,6 +139,16 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				master.use("master").then(master => {
 					fetch("/Default/master").then(res => res.arrayBuffer()).then(buffer => {
 						master.import(buffer, "master");
+						master.create_function("has", {
+							length: 2,
+							apply(thisObj, args){
+								const [array, search] = args;
+								if(search == ""){
+									return 1;
+								}
+								return array.indexOf(JSON.stringify(search).replace(/^"|"$/g, "")) > 0 ? 1 : 0;
+							}
+						});
 						resolve();
 					});
 				});
@@ -215,6 +225,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				dataTableQuery("/Modal/Leader#list").apply(),
 				master.select("ALL")
 					.setTable("leaders")
+					.andWhere("has(json_array(code,name),?)", keyword)
 					.apply(),
 				row => {}
 			);
@@ -227,6 +238,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				dataTableQuery("/Modal/Manager#list").apply(),
 				master.select("ALL")
 					.setTable("managers")
+					.andWhere("has(json_array(code,name),?)", keyword)
 					.apply(),
 				row => {}
 			);
@@ -242,6 +254,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 					.setField("system_apply_clients.code,system_apply_clients.unique_name as name,system_apply_clients.kana")
 					.leftJoin("clients on system_apply_clients.client=clients.code")
 					.addField("clients.name as client")
+					.andWhere("has(json_array(system_apply_clients.code,system_apply_clients.unique_name,system_apply_clients.name),?)", keyword)
 					.apply(),
 				row => {}
 			);
@@ -254,6 +267,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				dataTableQuery("/Modal/Client#list").apply(),
 				master.select("ALL")
 					.setTable("clients")
+					.andWhere("has(json_array(code,name),?)", keyword)
 					.apply(),
 				row => {}
 			);
@@ -266,6 +280,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				dataTableQuery("/Modal/Supplier#list").apply(),
 				master.select("ALL")
 					.setTable("suppliers")
+					.andWhere("has(json_array(code,name),?)", keyword)
 					.apply(),
 				row => {}
 			);

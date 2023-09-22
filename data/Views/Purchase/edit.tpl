@@ -148,17 +148,28 @@ Promise.all([
 	})
 ]).then(response => {
 	master.import(response[0], "master");
+	master.create_function("has", {
+		length: 2,
+		apply(thisObj, args){
+			const [array, search] = args;
+			if(search == ""){
+				return 1;
+			}
+			return array.indexOf(JSON.stringify(search).replace(/^"|"$/g, "")) > 0 ? 1 : 0;
+		}
+	});
 	transaction.import(response[1], "transaction");
 	transaction.attach(master, "master");
 	
 	SinglePage.modal.supplier.querySelector('table-sticky').columns = dataTableQuery("/Modal/Supplier#list").setField("label,width,slot,part").apply();
 	SinglePage.modal.supplier.setQuery(v => master.select("ONE").setTable("suppliers").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
-		const keyword = e.detail;
+		//const keyword = e.detail;
 		setDataTable(
 			SinglePage.modal.supplier.querySelector('table-sticky'),
 			dataTableQuery("/Modal/Supplier#list").apply(),
 			master.select("ALL")
 				.setTable("suppliers")
+				//.andWhere("has(json_array(code,name),?)", keyword)
 				.apply(),
 			row => {}
 		);
