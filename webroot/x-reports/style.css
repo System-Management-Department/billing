@@ -2,3 +2,9 @@
 @import url("/assets/bootstrap/font/bootstrap-icons.css");
 @import url("/assets/boxicons/css/boxicons.min.css");
 @import url("/assets/common/layout.css");
+main{
+	padding: 1.5rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.5rem;
+}
