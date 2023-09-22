@@ -9,7 +9,17 @@ use App\MySQL;
 class HomeController extends ControllerBase{
 	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function index(){
-		return new View();
+		$v = new View();
+		$includeDir = [];
+		$dirName = dirname(__DIR__) . DIRECTORY_SEPARATOR . "Views" . DIRECTORY_SEPARATOR . "Home" . DIRECTORY_SEPARATOR;
+		$dh = opendir($dirName);
+		while(($fileName = readdir($dh)) !== false){
+			if((substr($fileName, 0, 1) == "_") && is_dir($dirName . $fileName)){
+				$includeDir[] = $dirName . $fileName;
+			}
+		}
+		$v["includeDir"] = $includeDir;
+		return $v;
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry")]

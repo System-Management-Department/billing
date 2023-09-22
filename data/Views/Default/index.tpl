@@ -57,60 +57,50 @@ body {
 
 {block name="scripts" append}
 <script type="text/javascript" src="/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script type="text/javascript">{literal}
-document.addEventListener("DOMContentLoaded", function(){
-	const form = document.querySelector('form');
-	form.addEventListener("submit", e => {
-		e.stopPropagation();
-		e.preventDefault();
-		let formData = new FormData(form);
-		let expires = new Date();
-		
-		if(document.querySelector('form input[type="checkbox"]:checked') == null){
-			expires.setFullYear(expires.getFullYear() - 1);
-			document.cookie = `session=0;expires=${expires.toUTCString()}`;
-		}else{
-			expires.setFullYear(expires.getFullYear() + 1);
-			document.cookie = `session=1;expires=${expires.toUTCString()}`;
+{jsiife token=$token}{literal}
+const search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
+	const found = t.match(/^(.*?)=(.*)$/);
+	if(found){
+		a[found[1]] = decodeURIComponent(found[2]);
+	}
+	return a;
+},{});
+if("code" in search){
+	formData = new FormData();
+	for(k in token.body){
+		formData.append(k, token.body[k]);
+	}
+	formData.append("code", search.code);
+	fetch(token.url, {
+		method: "POST",
+		body: formData
+	}).then(res => res.json())
+	.then(data => fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+		method: "GET",
+		headers: {
+			Authorization: `Bearer ${data.access_token}`
 		}
-		fetch(form.getAttribute("action"), {
-			method: form.getAttribute("method"),
-			body: formData,
-		}).then(res => res.json()).then(json => {
-			if(json.success){
-				location.reload();
-			}else{
-				alert(json.messages.reduce((a, msg) => {
-					a.push(msg[0]);
-					return a;
-				}, []).join("\n"));
-			}
+	})).then(res => res.json())
+	.then(data => {
+		formData = new FormData();
+		formData.append("email", data.email);
+		return fetch("/Default/login", {
+			method: "POST",
+			body: formData
 		});
-	});
-	new bootstrap.Tooltip(document.querySelector('[data-bs-toggle="tooltip"]'));
-});
-{/literal}</script>
+	}).then(res => res.json())
+	.then(v => {location.reload();});
+}
+console.log(search);
+{/literal}{/jsiife}
 {/block}
 
 {block name="body"}
 <main class="form-signin">
-	<form action="{url action="login"}" method="POST" class="text-center">
-		<img class="mb-4" src="img/signin_logo.png" alt="" width="72" height="57">
+	<form class="text-center">
+		<img class="mb-4" src="/assets/common/image/signin_logo.png" alt="" width="72" height="57">
 		<h1 class="h3 mb-3 fw-normal">販売管理システム</h1>
-		<div class="form-floating">
-			<input type="email" name="email" class="form-control" placeholder="name@example.com">
-			<label for="floatingInput">Email address</label>
-		</div>
-		<div class="form-floating">
-		  <input type="password" name="password" class="form-control" placeholder="Password">
-		  <label for="floatingPassword">Password</label>
-		</div>
-		<div class="checkbox mb-3">
-			<label>
-				<input type="checkbox" id="checkbox" /> Remember me
-			</label>
-		</div>
-		<button type="submit" class="btn btn-success">ログイン</button>
+		<a href="{$oauth}" class="btn btn-success">ログイン</a>
 		<p class="mt-5 mb-3 text-muted">&copy; Direct-holdings 2023</p>
 	</form>
 </main>

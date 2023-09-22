@@ -14,30 +14,90 @@ use Model\SalesSlip;
 use Model\SQLite;
 
 class CommittedController extends ControllerBase{
-	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
-	public function index(){
-		return new View();
-	}
-	
-	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	#[\Attribute\AcceptRole("admin", "manager", "leader")]
 	public function edit(){
 		$v = new View();
+		$v["id"] = $this->requestContext->id;
 		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}
 	
 	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function search(){
 		$db = Session::getDB();
-		$query1 = $db->select("EXPORT")
+		$query = $db->select("COL")
 			->setTable("sales_slips")
-			->andWhere("close_processed=0")
-			->andWhere("approval=0");
+			->setField("sales_slips.ss")
+			->setLimit(1000)
+			->leftJoin("sales_workflow using(ss)")
+			->andWhere("approval=0")
+			->andWhere("close=0");
+		if($_SESSION["User.role"] == "manager"){
+			// 担当者　自身の所有するすべて
+			$query->andWhere("sales_workflow.regist_user=?", $_SESSION["User.id"]);
+		}else if($_SESSION["User.role"] == "leader"){
+			// 責任者　自身の所有するすべてと、自身の部署の申請中のもの
+			$query->andWhere("(sales_workflow.regist_user=? OR (sales_slips.division=? AND sales_workflow.request=1))", $_SESSION["User.id"], $_SESSION["User.departmentCode"]);
+		}else if($_SESSION["User.role"] == "entry"){
+			// 経理　自身の所有するすべてと、申請中のすべて
+			$query->andWhere("(sales_workflow.regist_user=? OR sales_workflow.request=1)", $_SESSION["User.id"]);
+		}
+		if(!empty($_POST)){
+			if(!empty($_POST["slip_number"])){
+				$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
+			}
+			if(!empty($_POST["accounting_date"])){
+				if(!empty($_POST["accounting_date"]["from"])){
+					$query->andWhere("DATEDIFF(regist_datetime,?) >= 0", $_POST["accounting_date"]["from"]);
+				}
+				if(!empty($_POST["accounting_date"]["to"])){
+					$query->andWhere("DATEDIFF(regist_datetime,?) <= 0", $_POST["accounting_date"]["to"]);
+				}
+			}
+			if(!empty($_POST["division"])){
+				$query->andWhere("division=?", $_POST["division"]);
+			}
+			if(!empty($_POST["manager"])){
+				$query->andWhere("manager=?", $_POST["manager"]);
+			}
+			if(!empty($_POST["apply_client"])){
+				$query->andWhere("apply_client=?", $_POST["apply_client"]);
+			}
+			if(!empty($_POST["status"])){
+				$query->andWhere("sales_workflow.request=1");
+			}
+		}
+		$searchIds = json_encode($query($cnt));
+		
+		
+		$query1 = $db->select("EXPORT")
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
+			->setTable("sales_slips")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_slips.ss)");
 		$query2 = $db->select("EXPORT")
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
+			->setTable("sales_attributes")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_attributes.ss)");
+		$query3 = $db->select("EXPORT")
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
+			->setTable("sales_workflow")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_workflow.ss)");
+		$query4 = $db->select("EXPORT")
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
+			->setTable("purchase_relations")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=purchase_relations.ss)");
+		$query5 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT purchase_relations.sd FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t LEFT JOIN purchase_relations using(ss))", $searchIds)
+			->setTable("sales_details")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.sd=sales_details.sd)");
+		$query6 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT purchase_relations.sd FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t LEFT JOIN purchase_relations using(ss))", $searchIds)
+			->setTable("sales_detail_attributes")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.sd=sales_detail_attributes.sd)");
+		$query7 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT purchase_relations.pu FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t LEFT JOIN purchase_relations using(ss))", $searchIds)
 			->setTable("purchases")
-			->addField("purchases.*")
-			->leftJoin("sales_slips on purchases.spreadsheet=sales_slips.spreadsheet")
-			->andWhere("sales_slips.close_processed=0")
-			->andWhere("sales_slips.approval=0");
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchases.pu)");
+			/*
 		if(($_SESSION["User.role"] == "admin") || ($_SESSION["User.role"] == "entry")){
 		}else if($_SESSION["User.role"] == "leader"){
 			$divisionQuery = $db->select("ONE")
@@ -51,50 +111,60 @@ class CommittedController extends ControllerBase{
 			$query1->andWhere("manager=@manager");
 			$query2->andWhere("sales_slips.manager=@manager");
 		}
-		
-		$parameter = false;
-		if(!empty($_POST)){
-			if(!empty($_POST["slip_number"])){
-				$parameter = true;
-				$query1->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
-				$query2->andWhere("sales_slips.slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
-			}
-			if(!empty($_POST["accounting_date"])){
-				if(!empty($_POST["accounting_date"]["from"])){
-					$parameter = true;
-					$query1->andWhere("DATEDIFF(created,?) BETWEEN 0 AND 365", $_POST["accounting_date"]["from"]);
-					$query2->andWhere("DATEDIFF(sales_slips.created,?) BETWEEN 0 AND 365", $_POST["accounting_date"]["from"]);
-				}
-				if(!empty($_POST["accounting_date"]["to"])){
-					$parameter = true;
-					$query1->andWhere("DATEDIFF(created,?) BETWEEN -365 AND 0", $_POST["accounting_date"]["to"]);
-					$query2->andWhere("DATEDIFF(sales_slips.created,?) BETWEEN -365 AND 0", $_POST["accounting_date"]["to"]);
-				}
-			}
-			if(!empty($_POST["division"])){
-				$parameter = true;
-				$query1->andWhere("division=?", $_POST["division"]);
-				$query2->andWhere("sales_slips.division=?", $_POST["division"]);
-			}
-			if(!empty($_POST["manager"])){
-				$parameter = true;
-				$query1->andWhere("manager=?", $_POST["manager"]);
-				$query2->andWhere("sales_slips.manager=?", $_POST["manager"]);
-			}
-			if(!empty($_POST["billing_destination"])){
-				$parameter = true;
-				$query1->andWhere("billing_destination=?", $_POST["billing_destination"]);
-				$query2->andWhere("sales_slips.billing_destination=?", $_POST["billing_destination"]);
-			}
-		}
-		
-		if(!$parameter){
-			$query->setLimit(0);
-		}
+		*/
 		
 		return new FileView(SQLite::memoryData([
 			"sales_slips" => $query1(),
-			"purchases" => $query2()
+			"sales_attributes" => $query2(),
+			"sales_workflow" => $query3(),
+			"purchase_relations" => $query4(),
+			"sales_details" => $query5(),
+			"sales_detail_attributes" => $query6(),
+			"purchases" => $query7(),
+			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt]]]
+		]), "application/vnd.sqlite3");
+	}
+	
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function detail(){
+		$db = Session::getDB();
+		$id = $this->requestContext->id;
+		
+		$query1 = $db->select("EXPORT")
+			->setTable("sales_slips")
+			->andWhere("ss=?", $id);
+		$query2 = $db->select("EXPORT")
+			->setTable("sales_attributes")
+			->andWhere("ss=?", $id);
+		$query3 = $db->select("EXPORT")
+			->setTable("sales_workflow")
+			->andWhere("ss=?", $id);
+		$query4 = $db->select("EXPORT")
+			->setTable("purchase_relations")
+			->andWhere("ss=?", $id);
+		$query5 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT sd FROM purchase_relations WHERE ss=?)", $id)
+			->setTable("sales_details")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.sd=sales_details.sd)");
+		$query6 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT sd FROM purchase_relations WHERE ss=?)", $id)
+			->setTable("sales_detail_attributes")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.sd=sales_detail_attributes.sd)");
+		$query7 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT pu FROM purchase_relations WHERE ss=?)", $id)
+			->setTable("purchases")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchases.pu)");
+		
+		return new FileView(SQLite::memoryData([
+			"sales_slips" => $query1(),
+			"sales_attributes" => $query2(),
+			"sales_workflow" => $query3(),
+			"purchase_relations" => $query4(),
+			"sales_details" => $query5(),
+			"sales_detail_attributes" => $query6(),
+			"purchases" => $query7(),
+			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt]]]
 		]), "application/vnd.sqlite3");
 	}
 	
@@ -103,11 +173,41 @@ class CommittedController extends ControllerBase{
 		$db = Session::getDB();
 		
 		// 検証
-		$result = SalesSlip::checkUpdate3($db, $_POST, [], $this->requestContext);
+		$result = SalesSlip::checkUpdate($db, $_POST, [], $this->requestContext);
 		
 		if(!$result->hasError()){
-			SalesSlip::execUpdate3($db, $_POST, $this->requestContext, $result);
+			SalesSlip::execUpdate($db, $_POST, $this->requestContext, $result);
 		}
+		
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "manager", "leader")]
+	public function request(){
+		$db = Session::getDB();
+		
+		$result = new Result();
+		SalesSlip::request($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "manager", "leader")]
+	public function withdraw(){
+		$db = Session::getDB();
+		
+		$result = new Result();
+		SalesSlip::withdraw($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "manager", "leader")]
+	public function deleteSlip(){
+		$db = Session::getDB();
+		
+		$result = new Result();
+		SalesSlip::deleteSlip($db, $_POST, $this->requestContext, $result);
 		
 		return new JsonView($result);
 	}

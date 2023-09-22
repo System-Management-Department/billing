@@ -1,4 +1,0 @@
-[data-search-output="container"]:has([data-search-output="result"] input[type="hidden"]:not([value=""])) [data-search-output="form"],
-[data-search-output="container"] [data-search-output="result"]:has(input[type="hidden"][value=""]){
-	display: none;
-}
