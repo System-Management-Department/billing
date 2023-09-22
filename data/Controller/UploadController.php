@@ -59,4 +59,46 @@ class UploadController extends ControllerBase{
 		}
 		return new JsonView($result);
 	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function billing(){
+		$now = new DateTime();
+		$result = new Result();
+		$path = sprintf("/x-reports/billing/%s/%s/%09d.pdf", $now->format("Y"), $now->format("m"), $_POST["name"]);
+		$updir = $_SERVER["DOCUMENT_ROOT"] . $path;
+		if(!is_dir(dirname($updir))){
+			mkdir(dirname($updir), '0777', true);
+		}
+		move_uploaded_file($_FILES["pdf"]["tmp_name"], $updir);
+		$result->addMessage($path, "INFO", "path");
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function purchase(){
+		$now = new DateTime();
+		$result = new Result();
+		$path = sprintf("/x-reports/purchase/%s/%s/%09d.pdf", $now->format("Y"), $now->format("m"), $_POST["name"]);
+		$updir = $_SERVER["DOCUMENT_ROOT"] . $path;
+		if(!is_dir(dirname($updir))){
+			mkdir(dirname($updir), '0777', true);
+		}
+		move_uploaded_file($_FILES["pdf"]["tmp_name"], $updir);
+		$result->addMessage($path, "INFO", "path");
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function sales(){
+		$now = new DateTime();
+		$result = new Result();
+		$path = sprintf("/x-reports/sales/%s/%s/%09d.pdf", $now->format("Y"), $now->format("m"), $_POST["name"]);
+		$updir = $_SERVER["DOCUMENT_ROOT"] . $path;
+		if(!is_dir(dirname($updir))){
+			mkdir(dirname($updir), '0777', true);
+		}
+		move_uploaded_file($_FILES["pdf"]["tmp_name"], $updir);
+		$result->addMessage($path, "INFO", "path");
+		return new JsonView($result);
+	}
 }

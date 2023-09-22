@@ -188,7 +188,27 @@ new VirtualPage("/", class{
 				}
 			}
 			doc.deletePage(1);
-			doc.save('売上一覧表.pdf');
+			const formData = new FormData();
+			const w = open("about:blank", "_blank", "left=0,top=0,width=1200,height=600");
+			formData.append("pdf", doc.output("blob"), "print.pdf");
+			formData.append("name", search.key);
+			fetch("/Upload/sales", {
+				method: "POST",
+				body: formData
+			}).then(res => res.json()).then(result => {
+				if(result.success){
+					let path = "about:blank";
+					for(let meaasge of result.messages){
+						if(meaasge[2] == "path"){
+							path = meaasge[0];
+							break;
+						}
+					}
+					w.location = path;
+				}else{
+					alert(result.messages[0][0]);
+				}
+			});
 		});
 	}
 });
@@ -196,6 +216,13 @@ new VirtualPage("/", class{
 let master = new SQLite();
 let cache = new SQLite();
 let transaction = new SQLite();
+const search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
+	const found = t.match(/^(.*?)=(.*)$/);
+	if(found){
+		a[found[1]] = decodeURIComponent(found[2]);
+	}
+	return a;
+},{});
 Promise.all([
 	master.use("master").then(master => fetch("/Default/master")).then(res => res.arrayBuffer()),
 	cache.use("cache"),
@@ -207,13 +234,6 @@ Promise.all([
 	})
 ]).then(response => {
 	master.import(response[0], "master");
-	const search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
-		const found = t.match(/^(.*?)=(.*)$/);
-		if(found){
-			a[found[1]] = decodeURIComponent(found[2]);
-		}
-		return a;
-	},{});
 	try{
 		const data = cache.select("ONE").setTable("sales_data").setField("selected").andWhere("slip_number=?", search.key).apply();
 		const formData = new FormData();
