@@ -42,6 +42,9 @@ class RedSlipController extends ControllerBase{
 					$query->andWhere("DATEDIFF(regist_datetime,?) <= 0", $_POST["accounting_date"]["to"]);
 				}
 			}
+			if(!empty($_POST["project"])){
+				$query->andWhere("project like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["project"]));
+			}
 			if(!empty($_POST["division"])){
 				$query->andWhere("division=?", $_POST["division"]);
 			}

@@ -26,13 +26,6 @@
 						<show-dialog label="一時保存された見積一覧" target="estimate" class="btn btn-success"></show-dialog>
 					</div>
 				</div>
-				<div class="card">
-					<div class="card-header">赤伝票登録</div>
-					<div class="card-body d-flex flex-column gap-3">
-						<span>売上伝票</span>
-						<span>仕入伝票</span>
-					</div>
-				</div>
 			</div>
 			<div class="card flex-grow-1">
 				<div class="card-header">売上・請求管理</div>

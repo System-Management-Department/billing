@@ -43,6 +43,9 @@ class PurchaseController extends ControllerBase{
 			if(!empty($_POST["slip_number"])){
 				$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
 			}
+			if(!empty($_POST["project"])){
+				$query->andWhere("project like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["project"]));
+			}
 			if(!empty($_POST["supplier"])){
 				$query->andWhere("purchases.supplier=?", $_POST["supplier"]);
 			}
