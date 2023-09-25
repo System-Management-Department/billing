@@ -198,4 +198,14 @@ class PurchaseController extends ControllerBase{
 		
 		return new JsonView($result);
 	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function delete(){
+		$db = Session::getDB();
+		$result = new Result();
+		
+		Purchase::delete($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
 }

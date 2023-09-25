@@ -211,4 +211,39 @@ class Purchase{
 			$result->addMessage("受領登録が完了しました。", "INFO", "");
 		}
 	}
+	
+	public static function delete($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$countQuery = $db->select("ONE")
+				->setWith("search AS (SELECT DISTINCT sd FROM purchase_relations WHERE pu=?)", $q["id"])
+				->setTable("search")
+				->leftJoin("purchase_relations using(sd)")
+				->setField("COUNT(1)");
+			$size = $countQuery();
+			if($size == 1){
+				$updateQuery = $db->updateSet("purchase_relations", [
+					"pu" => NULL,
+				],[])->andWhere("pu=?", $q["id"]);
+				$updateQuery();
+			}else{
+				$deleteQuery = $db->delete("purchase_relations")->andWhere("pu=?", $q["id"]);
+				$deleteQuery();
+			}
+			$deleteQuery = $db->delete("purchases")->andWhere("pu=?", $q["id"]);
+			$deleteQuery();
+			$deleteQuery = $db->delete("purchase_workflow")->andWhere("pu=?", $q["id"]);
+			$deleteQuery();
+			$deleteQuery = $db->delete("purchases_attributes")->andWhere("pu=?", $q["id"]);
+			$deleteQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("削除に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("削除が完了しました。", "INFO", "");
+		}
+	}
 }
