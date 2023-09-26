@@ -66,19 +66,28 @@ const search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
 	return a;
 },{});
 if("code" in search){
+	let modal = null;
 	formData = new FormData();
 	for(k in token.body){
 		formData.append(k, token.body[k]);
 	}
 	formData.append("code", search.code);
-	fetch(token.url, {
-		method: "POST",
-		body: formData
-	}).then(res => res.json())
-	.then(data => fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+	Promise.all([
+		new Promise((resolve, reject) => {
+			document.addEventListener("DOMContentLoaded", e => {
+				modal = new bootstrap.Modal(document.querySelector('.modal'), {});
+				modal.show();
+				resolve(null);
+			})
+		}),
+		fetch(token.url, {
+			method: "POST",
+			body: formData
+		}).then(res => res.json())
+	]).then(data => fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
 		method: "GET",
 		headers: {
-			Authorization: `Bearer ${data.access_token}`
+			Authorization: `Bearer ${data[1].access_token}`
 		}
 	})).then(res => res.json())
 	.then(data => {
@@ -104,4 +113,17 @@ console.log(search);
 		<p class="mt-5 mb-3 text-muted">&copy; Direct-holdings 2023</p>
 	</form>
 </main>
+<div class="modal" tabindex="-1">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">ログイン</h5>
+			</div>
+			<div class="modal-body">
+				<div>ログイン処理を行っています。</div>
+				<div>画面が切り替わるまでお待ちください。</div>
+			</div>
+		</div>
+	</div>
+</div>
 {/block}
