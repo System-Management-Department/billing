@@ -31,6 +31,9 @@ class BillingController extends ControllerBase{
 			$query->andWhere("(sales_workflow.regist_user=? OR sales_slips.division=?)", $_SESSION["User.id"], $_SESSION["User.departmentCode"]);
 		}
 		if(!empty($_POST)){
+			if(!empty($_POST["version_keyword"])){
+				$query->andWhere("sales_workflow.close_version like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["version_keyword"]));
+			}
 			if(!empty($_POST["version"])){
 				$query->andWhere("sales_workflow.close_version=?", $_POST["version"]);
 			}
