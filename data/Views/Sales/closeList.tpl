@@ -16,7 +16,8 @@
 <script type="text/javascript">
 new VirtualPage("/", class{
 	constructor(vp){
-		const body = document.querySelector('[slot="main"]');
+		document.getElementById("version").textContent = search.key;
+		const body = document.querySelector('[slot="main"] .btnarea');
 		const query = transaction.select("ALL")
 			.addWith("relations AS (SELECT DISTINCT ss,sd FROM purchase_relations)")
 			.addTable("sales_slips")
@@ -152,6 +153,7 @@ new VirtualPage("/", class{
 			Promise.all(p).then(args => { opener.corsFetch(...args); });
 		}
 		
+		/*
 		const undoBtn = document.createElement("button");
 		undoBtn.textContent = `取り消し`;
 		undoBtn.className = "btn btn-warning";
@@ -169,6 +171,7 @@ new VirtualPage("/", class{
 				}
 			});
 		});
+		*/
 	}
 });
 
@@ -240,7 +243,9 @@ Promise.all([
 				</div>
 			</template>
 			<template data-page="/">
-				<div slot="main" class="d-flex flex-row gap-3 mx-3">
+				<div slot="main" class="mx-3">
+					<div class="mb-3">請求締め完了しました。（請求ID：<span id="version"></span>）</div>
+					<div class="d-flex flex-row gap-3 btnarea"></div>
 				</div>
 			</template>
 		</div>

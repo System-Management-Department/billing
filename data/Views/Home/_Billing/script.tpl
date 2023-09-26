@@ -129,6 +129,7 @@
 						.addField("sales_workflow.lost")
 						.addField("sales_workflow.lost_slip_number")
 						.addField("sales_workflow.lost_comment")
+						.addField("sales_workflow.close_version")
 						.apply(),
 					(row, data, insert) => {
 						const red_slip = row.querySelector('[slot="red_slip"]');
