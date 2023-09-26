@@ -52,7 +52,7 @@ class UploadController extends ControllerBase{
 			$path = sprintf("/x-reports/estimate/%s/%s/%08d.pdf", $now->format("Y"), $now->format("m"), $slipNumber);
 			$updir = $_SERVER["DOCUMENT_ROOT"] . $path;
 			if(!is_dir(dirname($updir))){
-				mkdir(dirname($updir), '0777', true);
+				mkdir(dirname($updir), 0777, true);
 			}
 			move_uploaded_file($_FILES["pdf"]["tmp_name"], $updir);
 			$result->addMessage($path, "INFO", "path");
@@ -67,7 +67,7 @@ class UploadController extends ControllerBase{
 		$path = sprintf("/x-reports/billing/%s/%s/%09d.pdf", $now->format("Y"), $now->format("m"), $_POST["name"]);
 		$updir = $_SERVER["DOCUMENT_ROOT"] . $path;
 		if(!is_dir(dirname($updir))){
-			mkdir(dirname($updir), '0777', true);
+			mkdir(dirname($updir), 0777, true);
 		}
 		move_uploaded_file($_FILES["pdf"]["tmp_name"], $updir);
 		$result->addMessage($path, "INFO", "path");
@@ -81,7 +81,7 @@ class UploadController extends ControllerBase{
 		$path = sprintf("/x-reports/purchase/%s/%s/%09d.pdf", $now->format("Y"), $now->format("m"), $_POST["name"]);
 		$updir = $_SERVER["DOCUMENT_ROOT"] . $path;
 		if(!is_dir(dirname($updir))){
-			mkdir(dirname($updir), '0777', true);
+			mkdir(dirname($updir), 0777, true);
 		}
 		move_uploaded_file($_FILES["pdf"]["tmp_name"], $updir);
 		$result->addMessage($path, "INFO", "path");
@@ -95,7 +95,7 @@ class UploadController extends ControllerBase{
 		$path = sprintf("/x-reports/sales/%s/%s/%09d.pdf", $now->format("Y"), $now->format("m"), $_POST["name"]);
 		$updir = $_SERVER["DOCUMENT_ROOT"] . $path;
 		if(!is_dir(dirname($updir))){
-			mkdir(dirname($updir), '0777', true);
+			mkdir(dirname($updir), 0777, true);
 		}
 		move_uploaded_file($_FILES["pdf"]["tmp_name"], $updir);
 		$result->addMessage($path, "INFO", "path");
