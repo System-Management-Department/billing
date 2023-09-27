@@ -113,14 +113,14 @@ class BillingController extends ControllerBase{
 		*/
 		
 		return new FileView(SQLite::memoryData([
-			"sales_slips" => $query1(),
+			"sales_slips" => $query1($cnt2),
 			"sales_attributes" => $query2(),
 			"sales_workflow" => $query3(),
 			"purchase_relations" => $query4(),
 			"sales_details" => $query5(),
 			"sales_detail_attributes" => $query6(),
 			"purchases" => $query7(),
-			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt]]]
+			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt], ["key" => "display", "value" => $cnt2]]]
 		]), "application/vnd.sqlite3");
 	}
 	

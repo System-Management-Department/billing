@@ -91,7 +91,7 @@
 				this.transaction = new SQLite();
 				this.transaction.import(buffer, "transaction");
 				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
-				console.log(info);
+				document.querySelector('search-form').setAttribute("result", `${info.count}件中${info.display}件を表示`);
 				
 				setDataTable(
 					document.querySelector('table-sticky'),

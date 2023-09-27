@@ -237,7 +237,13 @@ search-form::part(footer){
 	color: var(--bs-card-cap-color);
 	background-color: var(--bs-card-cap-bg);
 	border-top: var(--bs-card-border-width) solid var(--bs-card-border-color);
-	text-align: center;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+}
+search-form::part(result){
+	display: flex;
+	align-items: center;
 }
 search-form::part(toggle){
 	appearance: none;

@@ -67,6 +67,8 @@ class SearchFormElement extends HTMLElement{
 		if(this.#root == null){
 		}else if(name == "label"){
 			this.#root.querySelector('.label').textContent = `${newValue}`;
+		}else if(name == "result"){
+			this.#root.querySelector('[part="result"]').textContent = `${newValue}`;
 		}
 	}
 	connectedCallback(){
@@ -75,10 +77,12 @@ class SearchFormElement extends HTMLElement{
 				<label part="header"><input type="checkbox" part="toggle" /><span class="label"></span></label>
 				<div part="body"><slot name="body"></slot></div>
 				<div part="footer">
-					<div part="col-12 text-center">
+					<div></div>
+					<div>
 						<span part="submit">検　索</span>
 						<span part="reset">リセット</span>
 					</div>
+					<div part="result"></div>
 				</div>
 			`});
 			if(this.hasAttribute("label")){
@@ -128,7 +132,7 @@ class SearchFormElement extends HTMLElement{
 			formControlElements[i].dispatchEvent(new ResetEvent("reset", this));
 		}
 	}
-	static observedAttributes = ["label"];
+	static observedAttributes = ["label", "result"];
 }
 customElements.define("search-form", SearchFormElement);
 
