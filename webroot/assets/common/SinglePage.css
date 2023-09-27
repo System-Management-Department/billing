@@ -333,6 +333,7 @@ search-form.search-form-hide::part(body),search-form.search-form-hide::part(foot
 table-sticky{
 	position: relative;
 	--bs-table-border-color: var(--bs-border-color);
+	--bs-table-border-width: 1px;
 }
 table-sticky::part(container){
 	height: 100%;
@@ -390,16 +391,21 @@ table-sticky::part(row){
 table-sticky::part(cell){
 	display: table-cell;
 	position: sticky;
-	top: 0;
+	top: -1px;
 	z-index: 1;
 	background: #009EA7;
-	border-top: #dedede;
 	color: #fff;
-	text-align: center;padding: 0.5rem 0.5rem;
+	text-align: center;
+	padding: 0.5rem 0.5rem;
 	box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
-	border-color: inherit;
+	border-left-color: var(--bs-table-border-color);
+	border-right-color: var(--bs-table-border-color);
+	border-top-color: #dedede;
+	border-bottom-color: inherit;
 	border-style: solid;
-	border-width: 0;
+	border-left-width: var(--bs-table-border-width);
+	border-right-width: var(--bs-table-border-width);
+	border-top-width: 1px;
 	border-bottom-width: 1px;
 }
 
@@ -416,7 +422,9 @@ table-row>[slot],table-row::part(empty){
 	box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
 	border-color: var(--bs-table-border-color);
 	border-style: solid;
-	border-width: 0;
+	border-left-width: var(--bs-table-border-width);
+	border-right-width: var(--bs-table-border-width);
+	border-top-width: 0;
 	border-bottom-width: 1px;
 }
 
