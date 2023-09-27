@@ -128,6 +128,18 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 });
 
 (function(){
+	const fetchArrayBuffer = res => {
+		if(res.redirected){
+			location.reload();
+		}
+		return res.arrayBuffer();
+	};
+	const fetchJson = res => {
+		if(res.redirected){
+			location.reload();
+		}
+		return res.json();
+	};
 	let master = new SQLite();
 	let cache = new SQLite();
 {/literal}{foreach from=$includeDir item="path"}{if file_exists("`$path``$smarty.const.DIRECTORY_SEPARATOR`script.tpl")}
@@ -137,7 +149,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		new Promise((resolve, reject) => {
 			document.addEventListener("DOMContentLoaded", e => {
 				master.use("master").then(master => {
-					fetch("/Default/master").then(res => res.arrayBuffer()).then(buffer => {
+					fetch("/Default/master").then(fetchArrayBuffer).then(buffer => {
 						master.import(buffer, "master");
 						master.create_function("has", {
 							length: 2,

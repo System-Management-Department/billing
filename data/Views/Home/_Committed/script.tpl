@@ -12,7 +12,7 @@
 				if((e.dialog == "approval") && (e.trigger == "submit")){
 					// 承認
 					fetch(`/Committed/approval/${e.result}`)
-						.then(res => res.json()).then(result => {
+						.then(fetchJson).then(result => {
 							if(result.success){
 								this.reload();
 							}
@@ -27,7 +27,7 @@
 				}else if((e.dialog == "request") && (e.trigger == "submit")){
 					// 申請
 					fetch(`/Committed/request/${e.result}`)
-						.then(res => res.json()).then(result => {
+						.then(fetchJson).then(result => {
 							if(result.success){
 								this.reload();
 							}
@@ -42,7 +42,7 @@
 				}else if((e.dialog == "withdraw") && (e.trigger == "submit")){
 					// 申請取下
 					fetch(`/Committed/withdraw/${e.result}`)
-						.then(res => res.json()).then(result => {
+						.then(fetchJson).then(result => {
 							if(result.success){
 								this.reload();
 							}
@@ -57,7 +57,7 @@
 				}else if((e.dialog == "delete_slip") && (e.trigger == "submit")){
 					// 案件削除
 					fetch(`/Committed/deleteSlip/${e.result}`)
-						.then(res => res.json()).then(result => {
+						.then(fetchJson).then(result => {
 							if(result.success){
 								this.reload();
 							}
@@ -78,7 +78,7 @@
 			fetch("/Committed/search", {
 				method: "POST",
 				body: this.#lastFormData
-			}).then(res => res.arrayBuffer()).then(buffer => {
+			}).then(fetchArrayBuffer).then(buffer => {
 				this.transaction = new SQLite();
 				this.transaction.import(buffer, "transaction");
 				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});

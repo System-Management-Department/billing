@@ -17,7 +17,7 @@
 			fetch("/RedSlip/search", {
 				method: "POST",
 				body: this.#lastFormData
-			}).then(res => res.arrayBuffer()).then(buffer => {
+			}).then(fetchArrayBuffer).then(buffer => {
 				this.transaction = new SQLite();
 				this.transaction.import(buffer, "transaction");
 				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
