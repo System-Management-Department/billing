@@ -613,6 +613,11 @@ Promise.all([
 			const textLen = printData.text.length;
 			let ctx = {};
 			doc.addPage(printData.page.size, printData.page.orientation);
+			for(let fill of printData.fill){
+				const colorParts = fill.color.match(/\d+/g);
+				doc.setFillColor(parseInt(colorParts[0]), parseInt(colorParts[1]), parseInt(colorParts[2]));
+				doc.rect(fill.x1 * pxPt, fill.y1 * pxPt, (fill.x2 - fill.x1) * pxPt, (fill.y2 - fill.y1) * pxPt, "F");
+			}
 			for(let line of printData.line){
 				const colorParts = line.color.match(/\d+/g);
 				doc.setDrawColor(parseInt(colorParts[0]), parseInt(colorParts[1]), parseInt(colorParts[2]));
@@ -907,7 +912,7 @@ function setDataTable(parent, columns, data, callback = null){
 									<div><span data-slot="subject"></span></div>
 								</div>
 								<div style="border: solid black calc(1rem / 12);">
-									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);">仕様</div>
+									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);background: #CCCCCC;">仕様</div>
 									<div class="border-xs border-bd" style="border-bottom: dashed black calc(1rem / 12);">&#8203;<span data-slot="specification"></span></div>
 									<div class="border-xs border-bs">&#8203;</div>
 								</div>
@@ -928,7 +933,7 @@ function setDataTable(parent, columns, data, callback = null){
 										<col class="tw4" style="width: 80px;" />
 										<col class="tw5" style="width: 130px;" />
 									</colgroup>
-									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
+									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);background: #CCCCCC;">
 										<tr class="text-center">
 											<th>摘要</th>
 											<th style="border-left: solid black calc(1rem / 12);">数量</th>
@@ -995,7 +1000,7 @@ function setDataTable(parent, columns, data, callback = null){
 									<div><span data-slot="subject"></span></div>
 								</div>
 								<div style="border: solid black calc(1rem / 12);">
-									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);">仕様</div>
+									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);background: #CCCCCC;">仕様</div>
 									<div class="border-xs border-bd" style="border-bottom: dashed black calc(1rem / 12);">&#8203;<span data-slot="specification"></span></div>
 									<div class="border-xs border-bs">&#8203;</div>
 								</div>
@@ -1017,7 +1022,7 @@ function setDataTable(parent, columns, data, callback = null){
 										<col class="tw5" style="width: 80px;" />
 										<col class="tw6" style="width: 130px;" />
 									</colgroup>
-									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
+									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);background: #CCCCCC;">
 										<tr class="text-center">
 											<th>摘要</th>
 											<th style="border-left: solid black calc(1rem / 12);">発行部数</th>
@@ -1086,7 +1091,7 @@ function setDataTable(parent, columns, data, callback = null){
 									<div><span data-slot="subject"></span></div>
 								</div>
 								<div style="border: solid black calc(1rem / 12);">
-									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);">仕様</div>
+									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);background: #CCCCCC;">仕様</div>
 									<div class="border-xs border-bd" style="border-bottom: dashed black calc(1rem / 12);">&#8203;<span data-slot="specification"></span></div>
 									<div class="border-xs border-bs">&#8203;</div>
 								</div>
@@ -1110,7 +1115,7 @@ function setDataTable(parent, columns, data, callback = null){
 										<col class="tw7" style="width: 80px;" />
 										<col class="tw8" style="width: 130px;" />
 									</colgroup>
-									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
+									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);background: #CCCCCC;">
 										<tr class="text-center">
 											<th>摘要</th>
 											<th style="border-left: solid black calc(1rem / 12);"><span data-slot="summary_header1"></span></th>
@@ -1183,7 +1188,7 @@ function setDataTable(parent, columns, data, callback = null){
 									<div><span data-slot="subject"></span></div>
 								</div>
 								<div style="border: solid black calc(1rem / 12);">
-									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);">仕様</div>
+									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);background: #CCCCCC;">仕様</div>
 									<div class="border-xs border-bd" style="border-bottom: dashed black calc(1rem / 12);">&#8203;<span data-slot="specification"></span></div>
 									<div class="border-xs border-bs">&#8203;</div>
 								</div>
@@ -1206,7 +1211,7 @@ function setDataTable(parent, columns, data, callback = null){
 										<col class="tw6" style="width: 130px;" />
 										<col class="tw7" style="width: 130px;" />
 									</colgroup>
-									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
+									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);background: #CCCCCC;">
 										<tr class="text-center">
 											<th>摘要</th>
 											<th style="border-left: solid black calc(1rem / 12);">数量</th>

@@ -135,6 +135,11 @@ new VirtualPage("/", class{
 				const textLen = printData.text.length;
 				let ctx = {};
 				doc.addPage(printData.page.size, printData.page.orientation);
+				for(let fill of printData.fill){
+					const colorParts = fill.color.match(/\d+/g);
+					doc.setFillColor(parseInt(colorParts[0]), parseInt(colorParts[1]), parseInt(colorParts[2]));
+					doc.rect(fill.x1 * pxPt, fill.y1 * pxPt, (fill.x2 - fill.x1) * pxPt, (fill.y2 - fill.y1) * pxPt, "F");
+				}
 				for(let line of printData.line){
 					const colorParts = line.color.match(/\d+/g);
 					doc.setDrawColor(parseInt(colorParts[0]), parseInt(colorParts[1]), parseInt(colorParts[2]));
