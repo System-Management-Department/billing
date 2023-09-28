@@ -931,10 +931,10 @@ function setDataTable(parent, columns, data, callback = null){
 									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
 										<tr>
 											<th>摘要</th>
-											<th style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">数量</th>
 											<th style="border-left: solid black calc(1rem / 12);">単位</th>
-											<th style="border-left: solid black calc(1rem / 12);">単価</th>
-											<th style="border-left: solid black calc(1rem / 12);">金額</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">金額</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -1020,11 +1020,11 @@ function setDataTable(parent, columns, data, callback = null){
 									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
 										<tr>
 											<th>摘要</th>
-											<th style="border-left: solid black calc(1rem / 12);">発行部数</th>
-											<th style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">発行部数</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">数量</th>
 											<th style="border-left: solid black calc(1rem / 12);">単位</th>
-											<th style="border-left: solid black calc(1rem / 12);">単価</th>
-											<th style="border-left: solid black calc(1rem / 12);">金額</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">金額</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -1116,10 +1116,10 @@ function setDataTable(parent, columns, data, callback = null){
 											<th style="border-left: solid black calc(1rem / 12);"><span data-slot="summary_header1"></span></th>
 											<th style="border-left: solid black calc(1rem / 12);"><span data-slot="summary_header2"></span></th>
 											<th style="border-left: solid black calc(1rem / 12);"><span data-slot="summary_header3"></span></th>
-											<th style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">数量</th>
 											<th style="border-left: solid black calc(1rem / 12);">単位</th>
-											<th style="border-left: solid black calc(1rem / 12);">単価</th>
-											<th style="border-left: solid black calc(1rem / 12);">金額</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">金額</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -1209,12 +1209,12 @@ function setDataTable(parent, columns, data, callback = null){
 									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
 										<tr>
 											<th>摘要</th>
-											<th style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">数量</th>
 											<th style="border-left: solid black calc(1rem / 12);">単位</th>
-											<th style="border-left: solid black calc(1rem / 12);">単価</th>
-											<th style="border-left: solid black calc(1rem / 12);">金額（税抜）</th>
-											<th style="border-left: solid black calc(1rem / 12);">消費税（10％）</th>
-											<th style="border-left: solid black calc(1rem / 12);">金額（税込）</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">金額（税抜）</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">消費税（10％）</th>
+											<th class="text-end" style="border-left: solid black calc(1rem / 12);">金額（税込）</th>
 										</tr>
 									</thead>
 									<tbody>
