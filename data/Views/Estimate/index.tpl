@@ -929,19 +929,19 @@ function setDataTable(parent, columns, data, callback = null){
 										<col class="tw5" style="width: 130px;" />
 									</colgroup>
 									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
-										<tr>
+										<tr class="text-center">
 											<th>摘要</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th style="border-left: solid black calc(1rem / 12);">数量</th>
 											<th style="border-left: solid black calc(1rem / 12);">単位</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">単価</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">金額</th>
+											<th style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th style="border-left: solid black calc(1rem / 12);">金額</th>
 										</tr>
 									</thead>
 									<tbody>
 										<tr data-page-break="detail" style="border-bottom: dashed black calc(1rem / 12);">
 											<td><span data-table-slot="detail">DATA</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="quantity">0,000.00</span></td>
-											<td style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
+											<td class="text-center" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit_price">0,000.00</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_exc">0,000,000</span></td>
 										</tr>
@@ -1018,13 +1018,13 @@ function setDataTable(parent, columns, data, callback = null){
 										<col class="tw6" style="width: 130px;" />
 									</colgroup>
 									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
-										<tr>
+										<tr class="text-center">
 											<th>摘要</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">発行部数</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th style="border-left: solid black calc(1rem / 12);">発行部数</th>
+											<th style="border-left: solid black calc(1rem / 12);">数量</th>
 											<th style="border-left: solid black calc(1rem / 12);">単位</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">単価</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">金額</th>
+											<th style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th style="border-left: solid black calc(1rem / 12);">金額</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -1032,7 +1032,7 @@ function setDataTable(parent, columns, data, callback = null){
 											<td><span data-table-slot="detail">DATA</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot-attribute="circulation">0,000,000</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="quantity">0,000.00</span></td>
-											<td style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
+											<td class="text-center" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit_price">0,000.00</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_exc">0,000,000</span></td>
 										</tr>
@@ -1111,15 +1111,15 @@ function setDataTable(parent, columns, data, callback = null){
 										<col class="tw8" style="width: 130px;" />
 									</colgroup>
 									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
-										<tr>
+										<tr class="text-center">
 											<th>摘要</th>
 											<th style="border-left: solid black calc(1rem / 12);"><span data-slot="summary_header1"></span></th>
 											<th style="border-left: solid black calc(1rem / 12);"><span data-slot="summary_header2"></span></th>
 											<th style="border-left: solid black calc(1rem / 12);"><span data-slot="summary_header3"></span></th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th style="border-left: solid black calc(1rem / 12);">数量</th>
 											<th style="border-left: solid black calc(1rem / 12);">単位</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">単価</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">金額</th>
+											<th style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th style="border-left: solid black calc(1rem / 12);">金額</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -1129,7 +1129,7 @@ function setDataTable(parent, columns, data, callback = null){
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot-attribute="summary_data2"></span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot-attribute="summary_data3"></span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="quantity">0,000.00</span></td>
-											<td style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
+											<td class="text-center" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit_price">0,000.00</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_exc">0,000,000</span></td>
 										</tr>
@@ -1207,21 +1207,21 @@ function setDataTable(parent, columns, data, callback = null){
 										<col class="tw7" style="width: 130px;" />
 									</colgroup>
 									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);">
-										<tr>
+										<tr class="text-center">
 											<th>摘要</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th style="border-left: solid black calc(1rem / 12);">数量</th>
 											<th style="border-left: solid black calc(1rem / 12);">単位</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">単価</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">金額（税抜）</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">消費税（10％）</th>
-											<th class="text-end" style="border-left: solid black calc(1rem / 12);">金額（税込）</th>
+											<th style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th style="border-left: solid black calc(1rem / 12);">金額（税抜）</th>
+											<th style="border-left: solid black calc(1rem / 12);">消費税（10％）</th>
+											<th style="border-left: solid black calc(1rem / 12);">金額（税込）</th>
 										</tr>
 									</thead>
 									<tbody>
 										<tr data-page-break="detail" style="border-bottom: dashed black calc(1rem / 12);">
 											<td><span data-table-slot="detail">DATA</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="quantity">0,000.00</span></td>
-											<td style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
+											<td class="text-center" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit_price">0,000.00</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_exc">0,000,000</span></td>
 											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_tax">0,000,000</span></td>
