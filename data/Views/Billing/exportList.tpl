@@ -32,7 +32,7 @@ new VirtualPage("/", class{
 		const fields = [
 			{header: "対象日付",           query: "STRFTIME('%Y/%m/%d', sales_workflow.approval_datetime)"},
 			{header: "帳票No",             query: "sales_slips.slip_number"},
-			{header: "顧客コード",         query: "sales_slips.apply_client"},
+			{header: "顧客コード",         query: "apply_clients.apply_client"},
 			{header: "顧客名",             query: "apply_clients.name"},
 			{header: "税抜金額",           query: "sales_slips.amount_exc"},
 			{header: "消費税",             query: "sales_slips.amount_tax"},
