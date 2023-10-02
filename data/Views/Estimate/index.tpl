@@ -907,7 +907,7 @@ function setDataTable(parent, columns, data, callback = null){
 											<div>東京都新宿区西新宿3丁目20番2号</div>
 											<div>東京オペラシティタワー39階</div>
 											<div>TEL：03-6416-4822</div>
-											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 60px;" />
+											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 90px;" />
 										</div>
 									</div></div>
 								</div>
@@ -996,7 +996,7 @@ function setDataTable(parent, columns, data, callback = null){
 											<div>東京都新宿区西新宿3丁目20番2号</div>
 											<div>東京オペラシティタワー39階</div>
 											<div>TEL：03-6416-4822</div>
-											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 60px;" />
+											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 90px;" />
 										</div>
 									</div></div>
 								</div>
@@ -1088,7 +1088,7 @@ function setDataTable(parent, columns, data, callback = null){
 											<div>東京都新宿区西新宿3丁目20番2号</div>
 											<div>東京オペラシティタワー39階</div>
 											<div>TEL：03-6416-4822</div>
-											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 60px;" />
+											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 90px;" />
 										</div>
 									</div></div>
 								</div>
@@ -1186,7 +1186,7 @@ function setDataTable(parent, columns, data, callback = null){
 											<div>東京都新宿区西新宿3丁目20番2号</div>
 											<div>東京オペラシティタワー39階</div>
 											<div>TEL：03-6416-4822</div>
-											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 60px;" />
+											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 90px;" />
 										</div>
 									</div></div>
 								</div>
