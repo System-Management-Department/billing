@@ -632,6 +632,9 @@ Promise.all([
 				}
 				doc.line(line.x1 * pxPt, line.y1 * pxPt, line.x2 * pxPt, line.y2 * pxPt);
 			}
+			for(let img of printData.img){
+				doc.addImage(img.src, "PNG", img.x1 * pxPt, img.y1 * pxPt, (img.x2 - img.x1) * pxPt, (img.y2 - img.y1) * pxPt);
+			}
 			doc.setLineDashPattern([], 0);
 			for(let pos = 0; pos < textLen; pos++){
 				if(pos in printData.style){
@@ -898,12 +901,13 @@ function setDataTable(parent, columns, data, callback = null){
 									<div class="text-decoration-underline client"><span data-slot="client_name"></span>御中</div>
 									<div class="d-flex flex-row"><div class="flex-grow-1"></div><div>
 										<div class="co">株式会社ダイレクト・ホールディングス</div>
-										<div class="ab">
+										<div class="ab" style="position: relative;">
 											<div><span data-slot="leader"></span>・<span data-slot="manager"></span></div>
 											<div>〒163-1439</div>
 											<div>東京都新宿区西新宿3丁目20番2号</div>
 											<div>東京オペラシティタワー39階</div>
 											<div>TEL：03-6416-4822</div>
+											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 60px;" />
 										</div>
 									</div></div>
 								</div>
@@ -986,12 +990,13 @@ function setDataTable(parent, columns, data, callback = null){
 									<div class="text-decoration-underline client"><span data-slot="client_name"></span>御中</div>
 									<div class="d-flex flex-row"><div class="flex-grow-1"></div><div>
 										<div class="co">株式会社ダイレクト・ホールディングス</div>
-										<div class="ab">
+										<div class="ab" style="position: relative;">
 											<div><span data-slot="leader"></span>・<span data-slot="manager"></span></div>
 											<div>〒163-1439</div>
 											<div>東京都新宿区西新宿3丁目20番2号</div>
 											<div>東京オペラシティタワー39階</div>
 											<div>TEL：03-6416-4822</div>
+											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 60px;" />
 										</div>
 									</div></div>
 								</div>
@@ -1077,12 +1082,13 @@ function setDataTable(parent, columns, data, callback = null){
 									<div class="text-decoration-underline client"><span data-slot="client_name"></span>御中</div>
 									<div class="d-flex flex-row"><div class="flex-grow-1"></div><div>
 										<div class="co">株式会社ダイレクト・ホールディングス</div>
-										<div class="ab">
+										<div class="ab" style="position: relative;">
 											<div><span data-slot="leader"></span>・<span data-slot="manager"></span></div>
 											<div>〒163-1439</div>
 											<div>東京都新宿区西新宿3丁目20番2号</div>
 											<div>東京オペラシティタワー39階</div>
 											<div>TEL：03-6416-4822</div>
+											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 60px;" />
 										</div>
 									</div></div>
 								</div>
@@ -1174,12 +1180,13 @@ function setDataTable(parent, columns, data, callback = null){
 									<div class="text-decoration-underline client"><span data-slot="client_name"></span>御中</div>
 									<div class="d-flex flex-row"><div class="flex-grow-1"></div><div>
 										<div class="co">株式会社ダイレクト・ホールディングス</div>
-										<div class="ab">
+										<div class="ab" style="position: relative;">
 											<div><span data-slot="leader"></span>・<span data-slot="manager"></span></div>
 											<div>〒163-1439</div>
 											<div>東京都新宿区西新宿3丁目20番2号</div>
 											<div>東京オペラシティタワー39階</div>
 											<div>TEL：03-6416-4822</div>
+											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 60px;" />
 										</div>
 									</div></div>
 								</div>
