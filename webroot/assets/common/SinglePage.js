@@ -1213,6 +1213,16 @@ class SinglePage{
 	}
 }
 document.addEventListener("DOMContentLoaded", function(){
+for (const template of document.querySelectorAll('template[shadowroot]')) {
+  try {
+    const mode = template.getAttribute('shadowroot');
+    const root = template.parentElement.attachShadow({mode});
+    template.remove();
+    root.appendChild(template.content);
+  } catch (e) {
+    console.error(e);
+  }
+}
 	let templates = document.querySelectorAll('template[data-page]');
 	for(let i = templates.length - 1; i >= 0; i--){
 		const page = templates[i].getAttribute("data-page");
