@@ -1384,7 +1384,7 @@ function setDataTable(parent, columns, data, callback = null){
 	<datalist id="category"></datalist>
 	<datalist id="division"></datalist>
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>
-	<datalist id="specification"></datalist>
+	<datalist id="specification"><option value=""></option></datalist>
 	<modal-dialog name="leader" label="部門長選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
