@@ -112,6 +112,7 @@
 						.addField("sales_slips.slip_number")
 						.addField("sales_slips.subject")
 						.leftJoin("sales_workflow using(ss)")
+						.addField("sales_workflow.regist_datetime")
 						.addField("sales_workflow.request")
 						.apply(),
 					(row, data) => {

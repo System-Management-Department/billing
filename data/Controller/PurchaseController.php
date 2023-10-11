@@ -22,6 +22,7 @@ class PurchaseController extends ControllerBase{
 			->setField("purchase_relations.*")
 			->setLimit(1000)
 			->leftJoin("sales_slips using(ss)")
+			->leftJoin("sales_workflow using(ss)")
 			->leftJoin("sales_details using(sd)")
 			->andWhere("sales_details.record=1")
 			->leftJoin("purchases using(pu)");
@@ -49,16 +50,14 @@ class PurchaseController extends ControllerBase{
 			if(!empty($_POST["supplier"])){
 				$query->andWhere("purchases.supplier=?", $_POST["supplier"]);
 			}
-			/*
 			if(!empty($_POST["accounting_date"])){
 				if(!empty($_POST["accounting_date"]["from"])){
-					$query->andWhere("DATEDIFF(regist_datetime,?) >= 0", $_POST["accounting_date"]["from"]);
+					$query->andWhere("DATEDIFF(sales_workflow.regist_datetime,?) >= 0", $_POST["accounting_date"]["from"]);
 				}
 				if(!empty($_POST["accounting_date"]["to"])){
-					$query->andWhere("DATEDIFF(regist_datetime,?) <= 0", $_POST["accounting_date"]["to"]);
+					$query->andWhere("DATEDIFF(sales_workflow.regist_datetime,?) <= 0", $_POST["accounting_date"]["to"]);
 				}
 			}
-			*/
 			if(!empty($_POST["division"])){
 				$query->andWhere("division=?", $_POST["division"]);
 			}
