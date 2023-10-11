@@ -4,7 +4,7 @@
 			vp.addEventListener("modal-close", e => {
 				if(e.dialog == "estimate"){
 					if(e.trigger == "list"){
-						open(`/Estimate/?channel=${CreateWindowElement.channel}&key=${e.result}`, "_blank", "left=0,top=0,width=1200,height=600");
+						open(`/Estimate/?channel=${CreateWindowElement.channel}&key=${e.result}`, "_blank", "left=0,top=0,width=1200,height=700");
 					}
 					if(e.trigger == "export"){
 						const xml = cache.select("ONE").setTable("estimate").setField("xml").andWhere("dt=?", Number(e.result)).apply();
