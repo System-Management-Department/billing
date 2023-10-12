@@ -31,7 +31,7 @@ class EstimateController extends ControllerBase{
 		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}
 	
-	#[\Attribute\AcceptRole("admin", "manager", "leader")]
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function regist(){
 		$db = Session::getDB();
 		
