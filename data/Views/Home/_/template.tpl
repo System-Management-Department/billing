@@ -77,6 +77,14 @@
 							</div></td>
 							<td></td>
 						</tr>
+						<tr class="table-primary">
+							<td><page-link href="/Unbilling" class="btn btn-primary shadow">未請求一覧表</page-link></td>
+							<td><div class="flex-grow-1 text-center">
+								<div>未請求案件の確認</div>
+								<div>合算請求書の登録</div>
+							</div></td>
+							<td></td>
+						</tr>
 					</tbody></table>
 				</div>
 			</div>
