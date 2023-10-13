@@ -1293,7 +1293,7 @@ function setDataTable(parent, columns, data, callback = null){
 			<template data-page-share="/3">
 				<div slot="table2" class="table d-contents"><div class="d-contents">
 					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">納品先</div>
+						<div class="d-table-cell th align-middle ps-4">得意先</div>
 						<div class="d-table-cell"><form-control fc-class="col-10" name="client_name" type="text"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
@@ -1329,7 +1329,7 @@ function setDataTable(parent, columns, data, callback = null){
 			<template data-page="/3">
 				<div slot="table2" class="table d-contents"><div class="d-contents">
 					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">納品先</div>
+						<div class="d-table-cell th align-middle ps-4">得意先</div>
 						<div class="d-table-cell"><form-control fc-class="col-10" name="client_name" type="text"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
