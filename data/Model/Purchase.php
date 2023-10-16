@@ -73,6 +73,12 @@ class Purchase{
 			->andWhere("purchases.pu=detail.pu");
 			$updateQuery();
 			
+			$updateQuery = $db->updateSet("purchase_workflow`,`detail", [], [
+				"update_datetime" => "NOW()",
+			])->addWith("detail AS (SELECT * FROM {$detailTable})", $q["detail"])
+			->andWhere("purchase_workflow.pu=detail.pu");
+			$updateQuery();
+			
 			$purchaseRelations = [];
 			$selectQuery = $db->select("ALL")
 				->setWith("rel AS (SELECT DISTINCT ss FROM purchase_relations WHERE sd=?)", $q["sd"])
@@ -107,6 +113,7 @@ class Purchase{
 								"regist_user" => $_SESSION["User.id"],
 							], [
 								"regist_datetime" => "NOW()",
+								"update_datetime" => "NOW()",
 							]);
 							$insertQuery();
 						}

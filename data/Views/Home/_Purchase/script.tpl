@@ -103,6 +103,7 @@
 						.addField("purchases.*")
 						.leftJoin("purchase_workflow using(pu)")
 						.addField("purchase_workflow.payment")
+						.addField("purchase_workflow.update_datetime")
 						.leftJoin("sales_slips using(ss)")
 						.addField("sales_slips.apply_client")
 						.addField("sales_slips.client_name")
