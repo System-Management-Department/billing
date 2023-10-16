@@ -4,6 +4,11 @@
 <link rel="stylesheet" type="text/css" href="/assets/common/SinglePage.css" />
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jsuites.css" />
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jspreadsheet.css" />
+<style type="text/css">
+.jcalendar-header .jcalendar-year::after{
+	content: "年";
+}
+</style>
 {/literal}{/block}
 {block name="scripts"}
 <script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
@@ -238,7 +243,15 @@ Promise.all([
 		{ [refDetail]: "amount_tax",   type: 'numeric', title: '消費税金額', width: 100, mask:'#,##' },
 		{ [refDetail]: "amount_inc",   type: 'numeric', title: '税込金額', width: 100, mask:'#,##' },
 		{ [refDetail]: "note",         type: 'text', title: '備考', width: 200 },
-		{ [refDetail]: "payment_date", type: 'calendar', title: '支払日', width: 100, options: { format: 'YYYY-MM-DD' } }
+		{ [refDetail]: "payment_date", type: 'calendar', title: '支払日', width: 100, options: {
+			format: 'YYYY-MM-DD',
+			months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+			monthsFull: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+			weekdays: [ '日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日' ],
+			textDone: '完了',
+			textReset: '取消',
+			textUpdate: '更新'
+		} }
 	];
 	
 	const obj = jspreadsheet(document.getElementById("detail"), {
