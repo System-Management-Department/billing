@@ -9,7 +9,7 @@ table-sticky.h-circulation::part(d-circulation),table-sticky.h-circulation table
 	display: none;
 }
 {/literal}
-{if !(($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "manager"))}{literal}#spmain *::part(d-manager){ display: none; }{/literal}{/if}
+{if !(($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "manager") or ($smarty.session["User.role"] eq "entry"))}{literal}#spmain *::part(d-manager){ display: none; }{/literal}{/if}
 {if !(($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "leader"))}{literal}#spmain *::part(d-leader){ display: none; }{/literal}{/if}
 {if !(($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "entry"))}{literal}#spmain *::part(d-entry){ display: none; }{/literal}{/if}
 {if !($smarty.session["User.role"] eq "admin")}{literal}#spmain *::part(d-admin){ display: none; }{/literal}{/if}

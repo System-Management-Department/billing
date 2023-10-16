@@ -115,14 +115,25 @@
 						.leftJoin("sales_workflow using(ss)")
 						.addField("sales_workflow.regist_datetime")
 						.addField("sales_workflow.request")
+						.addField("sales_workflow.close")
 						.apply(),
 					(row, data) => {
-						const edit = row.querySelector('[slot="edit"]');
+						let edit = row.querySelector('[slot="edit"]');
 						let payment = row.querySelector('[slot="payment"] show-dialog');
-						const delete1 = row.querySelector('[slot="delete"] show-dialog');
+						let delete1 = row.querySelector('[slot="delete"] show-dialog');
 						const manager = row.querySelector('[slot="manager"]');
 						const supplier = row.querySelector('[slot="supplier"]');
 						const checkbox = row.querySelector('[slot="checkbox"] span');
+						if(data.close == 1){
+							if(edit != null){
+								edit.parentNode.removeChild(edit);
+								edit = null;
+							}
+							if(delete1 != null){
+								delete1.parentNode.removeChild(delete1);
+								delete1 = null;
+							}
+						}
 						if(data.request == 1){
 							if(edit != null){
 								// edit.parentNode.removeChild(edit);
