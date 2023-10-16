@@ -198,8 +198,12 @@
 						.addField("sales_slips.*")
 						.leftJoin("sales_workflow using(ss)")
 						.addField("sales_workflow.regist_datetime")
+						.addField("sales_workflow.hide")
 						.apply(),
 					(row, data) => {
+						if(data.hide == 1){
+							row.classList.add("table-secondary");
+						}
 						const apply_client = row.querySelector('[slot="apply_client"]');
 						const manager = row.querySelector('[slot="manager"]');
 						const checkbox = row.querySelector('[slot="checkbox"] span');

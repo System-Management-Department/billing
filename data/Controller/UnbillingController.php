@@ -23,6 +23,10 @@ class UnbillingController extends ControllerBase{
 			->setLimit(1000)
 			->leftJoin("sales_workflow using(ss)")
 			->andWhere("close=0");
+		if($_SESSION["User.role"] != "admin"){
+			// 管理者以外非表示
+			$query->andWhere("sales_workflow.hide=0");
+		}
 		if($_SESSION["User.role"] == "manager"){
 			// 担当者　自身の所有するすべて
 			$query->andWhere("sales_workflow.regist_user=?", $_SESSION["User.id"]);

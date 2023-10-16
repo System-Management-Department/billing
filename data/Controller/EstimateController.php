@@ -41,6 +41,9 @@ class EstimateController extends ControllerBase{
 		if(!$result->hasError()){
 			SalesSlip::execInsert($db, $_POST, $this->requestContext, $result);
 		}
+		if(!$result->hasError()){
+			SalesSlip::hide($db, $_POST, $this->requestContext, $result);
+		}
 		
 		return new JsonView($result);
 	}

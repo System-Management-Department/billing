@@ -594,4 +594,20 @@ class SalesSlip{
 			$result->addMessage("赤伝登録が完了しました。", "INFO", "");
 		}
 	}
+	
+	public static function hide($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("sales_workflow", [], [
+				"hide" => 1,
+			]);
+			$updateQuery->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $q["hide"]);
+			$updateQuery->andWhere("close=0");
+			$updateQuery->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_workflow.ss)");
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$db->rollback();
+		}
+	}
 }

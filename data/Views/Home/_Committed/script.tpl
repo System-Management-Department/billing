@@ -94,8 +94,12 @@
 						.addField("sales_workflow.regist_datetime")
 						.addField("sales_workflow.request")
 						.addField("sales_workflow.release_datetime")
+						.addField("sales_workflow.hide")
 						.apply(),
 					(row, data) => {
+						if(data.hide == 1){
+							row.classList.add("table-secondary");
+						}
 						const apply_client = row.querySelector('[slot="apply_client"]');
 						const manager = row.querySelector('[slot="manager"]');
 						const request = row.querySelector('[slot="request"] show-dialog');

@@ -702,6 +702,7 @@ Promise.all([
 	});
 	
 	document.querySelector('[data-trigger="submit"]').addEventListener("click", e => {
+		const info = xmlDoc.querySelector('info');
 		const form = document.querySelector('form');
 		const formData = new FormData(form);
 		const details = document.getElementById("detail").jspreadsheet.options.data.map(rowProxy => {
@@ -718,6 +719,9 @@ Promise.all([
 		});
 		formData.append("invoice_format",id);
 		formData.append("detail", JSON.stringify(details));
+		if(info.hasAttribute("ss")){
+			formData.append("hide", `[${info.getAttribute("ss")}]`);
+		}
 		fetch(`/Estimate/regist`, {
 			method: "POST",
 			body: formData

@@ -31,6 +31,10 @@ class CommittedController extends ControllerBase{
 			->leftJoin("sales_workflow using(ss)")
 			->andWhere("approval=0")
 			->andWhere("close=0");
+		if($_SESSION["User.role"] != "admin"){
+			// 管理者以外非表示
+			$query->andWhere("sales_workflow.hide=0");
+		}
 		if($_SESSION["User.role"] == "manager"){
 			// 担当者　自身の所有するすべて
 			$query->andWhere("sales_workflow.regist_user=?", $_SESSION["User.id"]);
