@@ -1375,5 +1375,50 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
+	<modal-dialog name="request2" label="仕入変更申請">
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="1"></div>
+		<div slot="body" class="mt-3">売上明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
+		<div slot="body" class="mt-3">仕入明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
+		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">申請</button>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
+	</modal-dialog>
+	<modal-dialog name="withdraw2" label="仕入変更申請取下">
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="1"></div>
+		<div slot="body" class="mt-3">売上明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
+		<div slot="body" class="mt-3">仕入明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
+		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">取下</button>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
+	</modal-dialog>
+	<modal-dialog name="approval2" label="仕入変更承認">
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="1"></div>
+		<div slot="body" class="mt-3">売上明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
+		<div slot="body" class="mt-3">仕入明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
+		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">承認</button>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
+	</modal-dialog>
+	<modal-dialog name="disapproval2" label="仕入変更承認解除">
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="1"></div>
+		<div slot="body" class="mt-3">売上明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
+		<div slot="body" class="mt-3">仕入明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
+		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">承認解除</button>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
+	</modal-dialog>
+	<modal-dialog name="reflection2" label="仕入変更反映">
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="1"></div>
+		<div slot="body" class="mt-3">売上明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
+		<div slot="body" class="mt-3">仕入明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
+		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">反映</button>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
+	</modal-dialog>
 	<modal-dialog name="number_format"></modal-dialog>
 {/block}

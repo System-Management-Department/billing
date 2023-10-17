@@ -172,10 +172,21 @@
 							input.checked = true;
 							checkbox.parentNode.replaceChild(input, checkbox);
 						}
-						if(data.reflection == 1){
+						if((data.pu == null) || (data.close != 1)){
 							if(request != null){
 								request.parentNode.removeChild(request);
 							}
+							if(approval != null){
+								approval.parentNode.removeChild(approval);
+							}
+							if(reflection != null){
+								reflection.parentNode.removeChild(reflection);
+							}
+							if(status != null){
+								status.textContent = "";
+							}
+							
+						}else if(data.reflection == 1){
 							if(approval != null){
 								approval.parentNode.removeChild(approval);
 							}
@@ -190,20 +201,20 @@
 								request.parentNode.removeChild(request);
 							}
 							if(approval != null){
-								approval.parentNode.removeChild(approval);
-							}
-							if(reflection != null){
-								reflection.parentNode.removeChild(reflection);
+								approval.setAttribute("label", "承認解除");
+								approval.setAttribute("target", "disapproval2");
+								approval.classList.remove("btn-primary");
+								approval.classList.add("btn-warning");
 							}
 							if(status != null){
 								status.textContent = "承認済み";
 							}
 						}else if(data.prequest){
 							if(request != null){
-								request.parentNode.removeChild(request);
-							}
-							if(approval != null){
-								approval.parentNode.removeChild(approval);
+								request.setAttribute("label", "取下");
+								request.setAttribute("target", "withdraw2");
+								request.classList.remove("btn-primary");
+								request.classList.add("btn-warning");
 							}
 							if(reflection != null){
 								reflection.parentNode.removeChild(reflection);
@@ -212,9 +223,6 @@
 								status.textContent = "申請中";
 							}
 						}else{
-							if(request != null){
-								request.parentNode.removeChild(request);
-							}
 							if(approval != null){
 								approval.parentNode.removeChild(approval);
 							}
