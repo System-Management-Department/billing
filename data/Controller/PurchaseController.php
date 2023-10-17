@@ -25,7 +25,8 @@ class PurchaseController extends ControllerBase{
 			->leftJoin("sales_workflow using(ss)")
 			->leftJoin("sales_details using(sd)")
 			->andWhere("sales_details.record=1")
-			->leftJoin("purchases using(pu)");
+			->leftJoin("purchases using(pu)")
+			->leftJoin("purchase_workflow using(pu)");
 		if($_SESSION["User.role"] == "manager"){
 			// 担当者　自身の所有するすべて
 			$query->andWhere("EXISTS(SELECT 1 FROM sales_workflow WHERE sales_workflow.regist_user=? AND sales_workflow.ss=purchase_relations.ss)", $_SESSION["User.id"]);
@@ -56,6 +57,22 @@ class PurchaseController extends ControllerBase{
 				}
 				if(!empty($_POST["accounting_date"]["to"])){
 					$query->andWhere("DATEDIFF(sales_workflow.regist_datetime,?) <= 0", $_POST["accounting_date"]["to"]);
+				}
+			}
+			if(!empty($_POST["update_date"])){
+				if(!empty($_POST["update_date"]["from"])){
+					$query->andWhere("DATEDIFF(purchase_workflow.update_datetime,?) >= 0", $_POST["update_date"]["from"]);
+				}
+				if(!empty($_POST["update_date"]["to"])){
+					$query->andWhere("DATEDIFF(purchase_workflow.update_datetime,?) <= 0", $_POST["update_date"]["to"]);
+				}
+			}
+			if(!empty($_POST["execution_date"])){
+				if(!empty($_POST["execution_date"]["from"])){
+					$query->andWhere("DATEDIFF(purchases.execution_date,?) >= 0", $_POST["execution_date"]["from"]);
+				}
+				if(!empty($_POST["execution_date"]["to"])){
+					$query->andWhere("DATEDIFF(purchases.execution_date,?) <= 0", $_POST["execution_date"]["to"]);
 				}
 			}
 			if(!empty($_POST["division"])){
@@ -106,6 +123,10 @@ class PurchaseController extends ControllerBase{
 			->addWith("find AS (SELECT DISTINCT * FROM JSON_TABLE(?,'$[*]' COLUMNS(pu INT PATH '$.pu')) AS t)", $searchTable)
 			->setTable("purchase_workflow")
 			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchase_workflow.pu)");
+		$query9 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT * FROM JSON_TABLE(?,'$[*]' COLUMNS(pu INT PATH '$.pu')) AS t)", $searchTable)
+			->setTable("purchase_correction_workflow")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchase_correction_workflow.pu)");
 		
 		return new FileView(SQLite::memoryData([
 			"sales_slips" => $query1(),
@@ -116,6 +137,7 @@ class PurchaseController extends ControllerBase{
 			"sales_detail_attributes" => $query6(),
 			"purchases" => $query7(),
 			"purchase_workflow" => $query8(),
+			"purchase_correction_workflow" => $query9(),
 			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt], ["key" => "display", "value" => $cnt2]]]
 		]), "application/vnd.sqlite3");
 	}

@@ -104,6 +104,10 @@
 						.leftJoin("purchase_workflow using(pu)")
 						.addField("purchase_workflow.payment")
 						.addField("purchase_workflow.update_datetime")
+						.leftJoin("purchase_correction_workflow using(pu)")
+						.addField("(purchase_correction_workflow.pu IS NOT NULL) AS prequest")
+						.addField("purchase_correction_workflow.approval")
+						.addField("purchase_correction_workflow.reflection")
 						.leftJoin("sales_slips using(ss)")
 						.addField("sales_slips.apply_client")
 						.addField("sales_slips.client_name")
@@ -124,6 +128,10 @@
 						const manager = row.querySelector('[slot="manager"]');
 						const supplier = row.querySelector('[slot="supplier"]');
 						const checkbox = row.querySelector('[slot="checkbox"] span');
+						const status = row.querySelector('[slot="status"]');
+						const request = row.querySelector('[slot="request"] show-dialog');
+						const approval = row.querySelector('[slot="approval"] show-dialog');
+						const reflection = row.querySelector('[slot="reflection"] show-dialog');
 						if(data.close == 1){
 							if(edit != null){
 								edit.parentNode.removeChild(edit);
@@ -163,6 +171,59 @@
 							input.setAttribute("value", data.pu);
 							input.checked = true;
 							checkbox.parentNode.replaceChild(input, checkbox);
+						}
+						if(data.reflection == 1){
+							if(request != null){
+								request.parentNode.removeChild(request);
+							}
+							if(approval != null){
+								approval.parentNode.removeChild(approval);
+							}
+							if(reflection != null){
+								reflection.parentNode.removeChild(reflection);
+							}
+							if(status != null){
+								status.textContent = "反映済み";
+							}
+						}else if(data.approval == 1){
+							if(request != null){
+								request.parentNode.removeChild(request);
+							}
+							if(approval != null){
+								approval.parentNode.removeChild(approval);
+							}
+							if(reflection != null){
+								reflection.parentNode.removeChild(reflection);
+							}
+							if(status != null){
+								status.textContent = "承認済み";
+							}
+						}else if(data.prequest){
+							if(request != null){
+								request.parentNode.removeChild(request);
+							}
+							if(approval != null){
+								approval.parentNode.removeChild(approval);
+							}
+							if(reflection != null){
+								reflection.parentNode.removeChild(reflection);
+							}
+							if(status != null){
+								status.textContent = "申請中";
+							}
+						}else{
+							if(request != null){
+								request.parentNode.removeChild(request);
+							}
+							if(approval != null){
+								approval.parentNode.removeChild(approval);
+							}
+							if(reflection != null){
+								reflection.parentNode.removeChild(reflection);
+							}
+							if(status != null){
+								status.textContent = "";
+							}
 						}
 						if(manager != null){
 							manager.textContent = SinglePage.modal.manager.query(data.manager);
