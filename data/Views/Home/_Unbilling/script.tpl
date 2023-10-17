@@ -13,6 +13,35 @@
 			vp.addEventListener("reload", e => { this.reload(); });
 			vp.addEventListener("modal-close", e => {
 			});
+			document.querySelector('table-sticky').addEventListener("click", e => {
+				if(e.target.nodeType == Node.ELEMENT_NODE){
+					if(e.target.hasAttribute("data-row-hide")){
+						const btn = e.target;
+						const row = btn.closest('table-row');
+						const value = btn.getAttribute("data-row-hide");
+						fetch(`/Unbilling/hide/${value}`).then(fetchJson).then(result => {
+							if(result.success){
+								btn.setAttribute("data-row-show", value);
+								btn.removeAttribute("data-row-hide");
+								btn.textContent = "表示";
+								row.classList.add("table-secondary");
+							}
+						});
+					}else if(e.target.hasAttribute("data-row-show")){
+						const btn = e.target;
+						const row = btn.closest('table-row');
+						const value = btn.getAttribute("data-row-show");
+						fetch(`/Unbilling/show/${value}`).then(fetchJson).then(result => {
+							if(result.success){
+								btn.setAttribute("data-row-hide", value);
+								btn.removeAttribute("data-row-show");
+								btn.textContent = "非表示";
+								row.classList.remove("table-secondary");
+							}
+						});
+					}
+				}
+			}, {useCapture: true});
 			document.querySelector('table-sticky').columns = dataTableQuery("/Unbilling#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Unbilling#search").apply()).then(form => { form.submit(); });
 			document.querySelector('[data-proc="marge"]').addEventListener("click", e => {
@@ -201,12 +230,22 @@
 						.addField("sales_workflow.hide")
 						.apply(),
 					(row, data) => {
-						if(data.hide == 1){
-							row.classList.add("table-secondary");
-						}
 						const apply_client = row.querySelector('[slot="apply_client"]');
 						const manager = row.querySelector('[slot="manager"]');
 						const checkbox = row.querySelector('[slot="checkbox"] span');
+						const hide = row.querySelector('[slot="hide"] span');
+						if(data.hide == 1){
+							row.classList.add("table-secondary");
+							if(hide != null){
+								hide.textContent = "表示";
+								hide.setAttribute("data-row-show", data.ss);
+							}
+						}else{
+							if(hide != null){
+								hide.textContent = "非表示";
+								hide.setAttribute("data-row-hide", data.ss);
+							}
+						}
 						if(apply_client != null){
 							apply_client.textContent = SinglePage.modal.apply_client.query(data.apply_client);
 						}

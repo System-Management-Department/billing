@@ -112,4 +112,20 @@ class UnbillingController extends ControllerBase{
 			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt], ["key" => "display", "value" => $cnt2]]]
 		]), "application/vnd.sqlite3");
 	}
+	
+	#[\Attribute\AcceptRole("admin")]
+	public function hide(){
+		$db = Session::getDB();
+		$result = new Result();
+		SalesSlip::hide($db, ["hide" => "[{$this->requestContext->id}]"], $this->requestContext, $result);
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin")]
+	public function show(){
+		$db = Session::getDB();
+		$result = new Result();
+		SalesSlip::show($db, ["show" => "[{$this->requestContext->id}]"], $this->requestContext, $result);
+		return new JsonView($result);
+	}
 }

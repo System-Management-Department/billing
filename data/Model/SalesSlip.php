@@ -610,4 +610,20 @@ class SalesSlip{
 			$db->rollback();
 		}
 	}
+	
+	public static function show($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("sales_workflow", [], [
+				"hide" => 0,
+			]);
+			$updateQuery->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $q["show"]);
+			$updateQuery->andWhere("close=0");
+			$updateQuery->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_workflow.ss)");
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$db->rollback();
+		}
+	}
 }
