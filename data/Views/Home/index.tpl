@@ -226,6 +226,8 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		formTableInit(SinglePage.modal.red_slip         .querySelector('div'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.payment          .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.payment          .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
+		formTableInit(SinglePage.modal.payment_execution.querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
+		formTableInit(SinglePage.modal.payment_execution.querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
 		formTableInit(SinglePage.modal.delete_purchase  .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.delete_purchase  .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
 		formTableInit(SinglePage.modal.request2         .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
@@ -1004,6 +1006,35 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 			}
 			Object.assign(SinglePage.modal.payment.querySelector('[slot="footer"] input'), {value: ""}).setAttribute("data-target", e.detail);
 		});
+		SinglePage.modal.payment_execution.addEventListener("modal-open", e => {
+			const db = SinglePage.currentPage.instance.transaction;
+			let res = db.select("ROW")
+				.setTable("purchase_relations")
+				.andWhere("purchase_relations.pu=?", Number(e.detail))
+				.leftJoin("sales_slips using(ss)")
+				.addField("sales_slips.*")
+				.leftJoin("sales_workflow using(ss)")
+				.addField("sales_workflow.regist_datetime")
+				.addField("sales_workflow.approval_datetime")
+				.apply();
+			let formControls = SinglePage.modal.payment_execution.querySelectorAll('[data-table="1"] form-control[name]');
+			let n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("name");
+				formControls[i].value = res[name];
+			}
+			res = db.select("ROW")
+				.setTable("purchases")
+				.andWhere("pu=?", Number(e.detail))
+				.apply();
+			formControls = SinglePage.modal.payment_execution.querySelectorAll('[data-table="2"] form-control[name]');
+			n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("name");
+				formControls[i].value = res[name];
+			}
+			Object.assign(SinglePage.modal.payment_execution.querySelector('[slot="footer"] input'), {value: res.execution_date}).setAttribute("data-target", e.detail);
+		});
 		SinglePage.modal.delete_purchase.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
 			let res = db.select("ROW")
@@ -1389,6 +1420,11 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				SinglePage.modal.payment.hide("submit", result);
 			}
 		});
+		SinglePage.modal.payment_execution.querySelector('[data-proxy]').addEventListener("click", e => {
+			const input = SinglePage.modal.payment_execution.querySelector('[slot="footer"] input');
+			const result = {target: input.getAttribute("data-target"), value: input.value};
+			SinglePage.modal.payment_execution.hide("submit", result);
+		});
 		SinglePage.modal.number_format.setQuery(v => new Intl.NumberFormat().format(v));
 		SinglePage.modal.estimate.addEventListener("modal-open", e => {
 			cache.use("cache").then(() => {
@@ -1757,6 +1793,14 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
 		<label slot="footer" class="d-contents"><span>コメント<span class="text-danger">（必須入力）</span></span><input class="flex-grow-1 w-auto form-control" /></label>
 		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">請求書受領</button>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
+	</modal-dialog>
+	<modal-dialog name="payment_execution" label="支払実行日">
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="1"></div>
+		<div slot="body" class="mt-3">仕入明細</div>
+		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
+		<label slot="footer" class="d-contents"><span>実行日</span><input type="date" class="w-auto form-control" /></label>
+		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">更新</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="estimate" label="見積選択">

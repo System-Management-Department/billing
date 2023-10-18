@@ -225,6 +225,7 @@
 						const request = row.querySelector('[slot="request"] show-dialog');
 						const approval = row.querySelector('[slot="approval"] show-dialog');
 						const reflection = row.querySelector('[slot="reflection"] show-dialog');
+						const execution_date = row.querySelector('[slot="execution_date"]');
 						if(data.close == 1){
 							if(edit != null){
 								edit.parentNode.removeChild(edit);
@@ -258,12 +259,18 @@
 							if(checkbox != null){
 								checkbox.parentNode.removeChild(checkbox);
 							}
+							if(execution_date != null){
+								execution_date.parentNode.removeChild(execution_date);
+							}
 						}else if(checkbox != null){
 							const input = document.createElement("input");
 							input.setAttribute("type", "checkbox");
 							input.setAttribute("value", data.pu);
 							input.checked = true;
 							checkbox.parentNode.replaceChild(input, checkbox);
+						}
+						if(data.execution_date != null){
+							execution_date.appendChild(Object.assign(document.createElement("span"), {textContent: data.execution_date}));
 						}
 						if((data.pu == null) || (data.close != 1)){
 							if(request != null){
