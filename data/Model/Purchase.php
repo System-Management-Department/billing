@@ -219,6 +219,25 @@ class Purchase{
 		}
 	}
 	
+	public static function paymentExecution($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("purchases", [
+				"execution_date" => empty($q["execution_date"]) ? null : $q["execution_date"],
+			],[]);
+			$updateQuery->andWhere("pu=?", $q["id"]);
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("支払実行日登録に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("支払実行日登録が完了しました。", "INFO", "");
+		}
+	}
+	
 	public static function delete($db, $q, $context, $result){
 		$db->beginTransaction();
 		try{

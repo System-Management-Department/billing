@@ -141,6 +141,26 @@
 							};
 						}));
 					});
+				}else if((e.dialog == "payment_execution") && (e.trigger == "submit")){
+					// 支払実行日
+					const formData = new FormData();
+					formData.append("id", e.result.target);
+					formData.append("execution_date", e.result.value);
+					fetch(`/Purchase/paymentExecution/`,{
+						method: "POST",
+						body: formData
+					}).then(fetchJson).then(result => {
+						if(result.success){
+							this.reload();
+						}
+						Toaster.show(result.messages.map(m => {
+							return {
+								"class": m[1],
+								message: m[0],
+								title: "支払実行日"
+							};
+						}));
+					});
 				}
 			});
 			document.querySelector('table-sticky').columns = dataTableQuery("/Purchase#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
