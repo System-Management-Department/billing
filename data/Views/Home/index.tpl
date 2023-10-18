@@ -1133,10 +1133,10 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				query.addField(`purchases.${key} as __${key}`);
 			}
 			res = query.apply();
-			formControls = Object.assign(SinglePage.modal.withdraw2.querySelectorAll('[data-table="3"] [data-name]'), {innerHTML: ""});
+			formControls = SinglePage.modal.withdraw2.querySelectorAll('[data-table="3"] [data-name]');
 			n = formControls.length;
 			for(let i = 0; i < n; i++){
-				const name = formControls[i].getAttribute("data-name");
+				const name = Object.assign(formControls[i], {innerHTML: ""}).getAttribute("data-name");
 				const prop = `__${name}`;
 				const newValue = document.createElement("form-control");
 				const nvc = document.createElement("div");
@@ -1200,10 +1200,10 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				query.addField(`purchases.${key} as __${key}`);
 			}
 			res = query.apply();
-			formControls = Object.assign(SinglePage.modal.approval2.querySelectorAll('[data-table="3"] [data-name]'), {innerHTML: ""});
+			formControls = SinglePage.modal.approval2.querySelectorAll('[data-table="3"] [data-name]');
 			n = formControls.length;
 			for(let i = 0; i < n; i++){
-				const name = formControls[i].getAttribute("data-name");
+				const name = Object.assign(formControls[i], {innerHTML: ""}).getAttribute("data-name");
 				const prop = `__${name}`;
 				const newValue = document.createElement("form-control");
 				const nvc = document.createElement("div");
@@ -1267,10 +1267,10 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				query.addField(`purchases.${key} as __${key}`);
 			}
 			res = query.apply();
-			formControls = Object.assign(SinglePage.modal.disapproval2.querySelectorAll('[data-table="3"] [data-name]'), {innerHTML: ""});
+			formControls = SinglePage.modal.disapproval2.querySelectorAll('[data-table="3"] [data-name]');
 			n = formControls.length;
 			for(let i = 0; i < n; i++){
-				const name = formControls[i].getAttribute("data-name");
+				const name = Object.assign(formControls[i], {innerHTML: ""}).getAttribute("data-name");
 				const prop = `__${name}`;
 				const newValue = document.createElement("form-control");
 				const nvc = document.createElement("div");
@@ -1334,10 +1334,10 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				query.addField(`purchases.${key} as __${key}`);
 			}
 			res = query.apply();
-			formControls = Object.assign(SinglePage.modal.reflection2.querySelectorAll('[data-table="3"] [data-name]'), {innerHTML: ""});
+			formControls = SinglePage.modal.reflection2.querySelectorAll('[data-table="3"] [data-name]');
 			n = formControls.length;
 			for(let i = 0; i < n; i++){
-				const name = formControls[i].getAttribute("data-name");
+				const name = Object.assign(formControls[i], {innerHTML: ""}).getAttribute("data-name");
 				const prop = `__${name}`;
 				const newValue = document.createElement("form-control");
 				const nvc = document.createElement("div");

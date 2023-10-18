@@ -242,4 +242,14 @@ class PurchaseController extends ControllerBase{
 		
 		return new JsonView($result);
 	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function withdraw(){
+		$db = Session::getDB();
+		$result = new Result();
+		
+		Purchase::withdraw($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
 }

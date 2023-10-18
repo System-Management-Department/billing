@@ -283,4 +283,22 @@ class Purchase{
 			$result->addMessage("仕入変更申請が完了しました。", "INFO", "");
 		}
 	}
+	
+	public static function withdraw($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$deleteQuery = $db->delete("purchase_correction_workflow")
+				->andWhere("pu=?", $q["id"])
+				->andWhere("approval=0");
+			$deleteQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("仕入変更申請取下に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("仕入変更申請取下が完了しました。", "INFO", "");
+		}
+	}
 }
