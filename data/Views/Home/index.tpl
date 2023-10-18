@@ -1426,6 +1426,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 			SinglePage.modal.payment_execution.hide("submit", result);
 		});
 		SinglePage.modal.number_format.setQuery(v => new Intl.NumberFormat().format(v));
+		SinglePage.modal.percentage.setQuery(v => `${v * 100}％`);
 		SinglePage.modal.estimate.addEventListener("modal-open", e => {
 			cache.use("cache").then(() => {
 				const parser = new DOMParser();
@@ -1559,7 +1560,9 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				th.className = "align-middle ps-4";
 				formControl.setAttribute("class", `d-flex flex-row col-${row.width}`);
 				formControl.setAttribute("data-name", row.name);
-				if((row.list != null) && (row.list != "")){
+				if(row.type == "percentage"){
+					formControl.setAttribute("data-list", "percentage");
+				}else if((row.list != null) && (row.list != "")){
 					formControl.setAttribute("data-list", row.list);
 				}
 				
@@ -1853,4 +1856,5 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="number_format"></modal-dialog>
+	<modal-dialog name="percentage"></modal-dialog>
 {/block}

@@ -1158,6 +1158,75 @@ class FCKeywordElement extends HTMLElement{
 FormControlElement.append("keyword", FCKeywordElement, ["fc-keyword", "fc-text-icon", "fc-btn-icon", "fc-btn-icon-search", "fc-btn-icon-reset", "input-group-search", "input-group-result", "fc-text", "fc-text-invalid"], FormControlElement.gridColumnParts, ["input-group"]);
 
 
+class FCPercentageElement extends HTMLElement{
+	#root; #input; #props; #inputArea;
+	constructor(){
+		super();
+		this.#root = this.attachShadow({mode: "closed"});
+		this.#input = document.createElement("input");
+		this.#inputArea = document.createElement("label");
+		this.#input.setAttribute("type", "number");
+		const percentageBtn = document.createElement("button");
+		percentageBtn.setAttribute("type", "button");
+		percentageBtn.setAttribute("part", "fc-btn-icon fc-btn-icon-percentage");
+		this.#inputArea.appendChild(this.#input);
+		this.#inputArea.appendChild(percentageBtn);
+		this.#root.appendChild(this.#inputArea);
+		this.#props = {};
+		this.#input.addEventListener("change", e => this.dispatchEvent(new CustomEvent("change", {bubbles: true, composed: true})));
+		this.addEventListener("reset", e => { this.value = ""; });
+	}
+	attributeChangedCallback(name, oldValue, newValue){}
+	get value(){
+		return Number(this.#input.value) / 100;
+	}
+	set value(value){
+		this.#input.value = Number((typeof value == "string") ? value : JSON.stringify(value)) * 100;
+		this.#setList();
+	}
+	set props(value){
+		this.#props = value;
+		this.#setList();
+		if("placeholder" in this.#props){
+			this.#input.setAttribute("placeholder", this.#props.placeholder);
+		}else{
+			this.#input.removeAttribute("placeholder");
+		}
+	}
+	#setList(){
+		let found = false;
+		let dataListElement = this.#root.getElementById(this.#props.list.fc);
+		if(dataListElement != null){
+			this.#root.removeChild(dataListElement);
+		}
+		if("id" in this.#props.list){
+			const dataList = document.getElementById(this.#props.list.id);
+			if(dataList != null){
+				dataListElement = dataList.cloneNode(true);
+				dataListElement.setAttribute("id", this.#props.list.fc);
+				this.#root.appendChild(dataListElement);
+				this.#input.setAttribute("list", this.#props.list.fc);
+				found = true;
+			}
+		}
+		if(!found){
+			this.#input.removeAttribute("list");
+		}
+		let classList = ("fc-class" in this.#props) ? this.#props["fc-class"].split(/\s+/).filter(v => v != "") : [];
+		classList.push("input-group");
+		let innerClassList = [];
+		innerClassList.push("fc-text", "fc-text-icon-sm");
+		if(this.#props.invalid){
+			innerClassList.push("fc-text-invalid");
+		}
+		this.#inputArea.setAttribute("part", classList.join(" "));
+		this.#input.setAttribute("part", innerClassList.join(" "));
+	}
+	static get observedAttributes(){ return []; }
+}
+FormControlElement.append("percentage", FCPercentageElement, ["fc-text", "fc-text-invalid", "fc-text-icon-sm", "fc-btn-icon", "fc-btn-icon-percentage"], FormControlElement.gridColumnParts, ["input-group"]);
+
+
 
 
 
