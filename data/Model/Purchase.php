@@ -301,4 +301,96 @@ class Purchase{
 			$result->addMessage("仕入変更申請取下が完了しました。", "INFO", "");
 		}
 	}
+	
+	public static function approval($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("purchase_correction_workflow`,`find", [
+				"purchase_correction_workflow`.`approval" => 1,
+				"purchase_correction_workflow`.`approval_user" => $_SESSION["User.id"],
+			],[
+				"purchase_correction_workflow`.`approval_datetime" => "NOW()",
+			])->addWith("find AS (SELECT MAX(request_datetime) AS request_datetime FROM purchase_correction_workflow WHERE pu=?)", $q["id"])
+				->andWhere("purchase_correction_workflow.pu=?", $q["id"])
+				->andWhere("purchase_correction_workflow.approval=0")
+				->andWhere("purchase_correction_workflow.request_datetime=find.request_datetime");
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("仕入変更承認に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("仕入変更承認が完了しました。", "INFO", "");
+		}
+	}
+	
+	public static function disapproval($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("purchase_correction_workflow`,`find", [
+				"purchase_correction_workflow`.`approval" => 0,
+				"purchase_correction_workflow`.`approval_user" => null,
+				"purchase_correction_workflow`.`approval_datetime" => null,
+			],[])->addWith("find AS (SELECT MAX(request_datetime) AS request_datetime FROM purchase_correction_workflow WHERE pu=?)", $q["id"])
+				->andWhere("purchase_correction_workflow.pu=?", $q["id"])
+				->andWhere("purchase_correction_workflow.approval=1")
+				->andWhere("purchase_correction_workflow.request_datetime=find.request_datetime");
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("仕入変更承認解除に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("仕入変更承認解除が完了しました。", "INFO", "");
+		}
+	}
+	
+	public static function reflection($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$updateQuery = $db->updateSet("purchase_correction_workflow`,`find`,`purchase", [
+				"purchase_correction_workflow`.`reflection" => 1,
+				"purchase_correction_workflow`.`reflection_user" => $_SESSION["User.id"],
+			],[
+				"purchase_correction_workflow`.`reflection_datetime" => "NOW()",
+				"purchase_correction_workflow`.`old" => "purchase.old",
+			])->addWith("find AS (SELECT MAX(request_datetime) AS request_datetime FROM purchase_correction_workflow WHERE pu=?)", $q["id"])
+				->addWith("purchase AS (SELECT JSON_OBJECT('quantity',quantity,'unit',unit,'unit_price',unit_price,'amount_exc',amount_exc,'amount_tax',amount_tax,'amount_inc',amount_inc,'taxable',taxable,'tax_rate',tax_rate) AS old FROM purchases WHERE pu=?)", $q["id"])
+				->andWhere("purchase_correction_workflow.pu=?", $q["id"])
+				->andWhere("purchase_correction_workflow.reflection=0")
+				->andWhere("purchase_correction_workflow.request_datetime=find.request_datetime");
+			$updateQuery();
+			
+			$updateQuery = $db->updateSet("purchases`,`find", [],[
+				"purchases`.`quantity" => "find.quantity",
+				"purchases`.`unit" => "find.unit",
+				"purchases`.`unit_price" => "find.unit_price",
+				"purchases`.`amount_exc" => "find.amount_exc",
+				"purchases`.`amount_tax" => "find.amount_tax",
+				"purchases`.`amount_inc" => "find.amount_inc",
+				"purchases`.`taxable" => "find.taxable",
+				"purchases`.`tax_rate" => "find.tax_rate",
+			])->addWith("temp AS (SELECT pu,MAX(request_datetime) AS request_datetime FROM purchase_correction_workflow WHERE pu=? GROUP BY pu)", $q["id"])
+				->addWith("find AS (SELECT purchase_correction_workflow.* FROM temp LEFT JOIN purchase_correction_workflow USING(pu, request_datetime))")
+				->andWhere("purchases.pu=?", $q["id"]);
+			$updateQuery();
+			
+			$updateQuery = $db->updateSet("purchase_workflow", [],[
+				"update_datetime" => "NOW()",
+			])->andWhere("pu=?", $q["id"]);
+			$updateQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("仕入変更反映に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("仕入変更反映が完了しました。", "INFO", "");
+		}
+	}
 }

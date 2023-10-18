@@ -252,4 +252,34 @@ class PurchaseController extends ControllerBase{
 		
 		return new JsonView($result);
 	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "leader")]
+	public function approval(){
+		$db = Session::getDB();
+		$result = new Result();
+		
+		Purchase::approval($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "leader")]
+	public function disapproval(){
+		$db = Session::getDB();
+		$result = new Result();
+		
+		Purchase::disapproval($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry")]
+	public function reflection(){
+		$db = Session::getDB();
+		$result = new Result();
+		
+		Purchase::reflection($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
 }

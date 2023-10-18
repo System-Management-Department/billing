@@ -84,6 +84,63 @@
 							};
 						}));
 					});
+				}else if((e.dialog == "approval2") && (e.trigger == "submit")){
+					// 仕入変更承認
+					const formData = new FormData();
+					formData.append("id", e.result);
+					fetch(`/Purchase/approval/`,{
+						method: "POST",
+						body: formData
+					}).then(fetchJson).then(result => {
+						if(result.success){
+							this.reload();
+						}
+						Toaster.show(result.messages.map(m => {
+							return {
+								"class": m[1],
+								message: m[0],
+								title: "仕入変更承認"
+							};
+						}));
+					});
+				}else if((e.dialog == "disapproval2") && (e.trigger == "submit")){
+					// 仕入変更承認解除
+					const formData = new FormData();
+					formData.append("id", e.result);
+					fetch(`/Purchase/disapproval/`,{
+						method: "POST",
+						body: formData
+					}).then(fetchJson).then(result => {
+						if(result.success){
+							this.reload();
+						}
+						Toaster.show(result.messages.map(m => {
+							return {
+								"class": m[1],
+								message: m[0],
+								title: "仕入変更承認解除"
+							};
+						}));
+					});
+				}else if((e.dialog == "reflection2") && (e.trigger == "submit")){
+					// 仕入変更反映
+					const formData = new FormData();
+					formData.append("id", e.result);
+					fetch(`/Purchase/reflection/`,{
+						method: "POST",
+						body: formData
+					}).then(fetchJson).then(result => {
+						if(result.success){
+							this.reload();
+						}
+						Toaster.show(result.messages.map(m => {
+							return {
+								"class": m[1],
+								message: m[0],
+								title: "仕入変更反映"
+							};
+						}));
+					});
 				}
 			});
 			document.querySelector('table-sticky').columns = dataTableQuery("/Purchase#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
