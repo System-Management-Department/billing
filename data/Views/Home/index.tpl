@@ -229,19 +229,19 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		formTableInit(SinglePage.modal.delete_purchase  .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.delete_purchase  .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
 		formTableInit(SinglePage.modal.request2         .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.request2         .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
+		formTableInit(SinglePage.modal.request2         .querySelector('div[data-table="2"]'), formTableQuery("#sales_detail").apply());
 		formTableInit(SinglePage.modal.request2         .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
 		formTableInit(SinglePage.modal.withdraw2        .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.withdraw2        .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
+		formTableInit(SinglePage.modal.withdraw2        .querySelector('div[data-table="2"]'), formTableQuery("#sales_detail").apply());
 		formTableInit(SinglePage.modal.withdraw2        .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
 		formTableInit(SinglePage.modal.approval2        .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.approval2        .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
+		formTableInit(SinglePage.modal.approval2        .querySelector('div[data-table="2"]'), formTableQuery("#sales_detail").apply());
 		formTableInit(SinglePage.modal.approval2        .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
 		formTableInit(SinglePage.modal.disapproval2     .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.disapproval2     .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
+		formTableInit(SinglePage.modal.disapproval2     .querySelector('div[data-table="2"]'), formTableQuery("#sales_detail").apply());
 		formTableInit(SinglePage.modal.disapproval2     .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
 		formTableInit(SinglePage.modal.reflection2      .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
-		formTableInit(SinglePage.modal.reflection2      .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
+		formTableInit(SinglePage.modal.reflection2      .querySelector('div[data-table="2"]'), formTableQuery("#sales_detail").apply());
 		formTableInit(SinglePage.modal.reflection2      .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
 		
 		SinglePage.modal.leader.setQuery(v => master.select("ONE").setTable("leaders").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
@@ -1053,8 +1053,10 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				formControls[i].value = res[name];
 			}
 			res = db.select("ROW")
-				.setTable("purchases")
-				.andWhere("pu=?", Number(e.detail))
+				.setTable("purchase_relations")
+				.leftJoin("sales_details using(sd)")
+				.setField("sales_details.*")
+				.andWhere("purchase_relations.pu=?", Number(e.detail))
 				.apply();
 			formControls = SinglePage.modal.request2.querySelectorAll('[data-table="2"] form-control[name]');
 			n = formControls.length;
@@ -1063,6 +1065,18 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				formControls[i].value = res[name];
 			}
 			/** TODO */
+			res = db.select("ROW")
+				.setTable("purchases")
+				.addField("purchases.*")
+				.addField("? as comment", "")
+				.andWhere("pu=?", Number(e.detail))
+				.apply();
+			formControls = SinglePage.modal.request2.querySelectorAll('[data-table="3"] form-control[name]');
+			n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("name");
+				formControls[i].value = res[name];
+			}
 		});
 		SinglePage.modal.withdraw2.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
@@ -1082,8 +1096,10 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				formControls[i].value = res[name];
 			}
 			res = db.select("ROW")
-				.setTable("purchases")
-				.andWhere("pu=?", Number(e.detail))
+				.setTable("purchase_relations")
+				.leftJoin("sales_details using(sd)")
+				.setField("sales_details.*")
+				.andWhere("purchase_relations.pu=?", Number(e.detail))
 				.apply();
 			formControls = SinglePage.modal.withdraw2.querySelectorAll('[data-table="2"] form-control[name]');
 			n = formControls.length;
@@ -1111,8 +1127,10 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				formControls[i].value = res[name];
 			}
 			res = db.select("ROW")
-				.setTable("purchases")
-				.andWhere("pu=?", Number(e.detail))
+				.setTable("purchase_relations")
+				.leftJoin("sales_details using(sd)")
+				.setField("sales_details.*")
+				.andWhere("purchase_relations.pu=?", Number(e.detail))
 				.apply();
 			formControls = SinglePage.modal.approval2.querySelectorAll('[data-table="2"] form-control[name]');
 			n = formControls.length;
@@ -1140,8 +1158,10 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				formControls[i].value = res[name];
 			}
 			res = db.select("ROW")
-				.setTable("purchases")
-				.andWhere("pu=?", Number(e.detail))
+				.setTable("purchase_relations")
+				.leftJoin("sales_details using(sd)")
+				.setField("sales_details.*")
+				.andWhere("purchase_relations.pu=?", Number(e.detail))
 				.apply();
 			formControls = SinglePage.modal.disapproval2.querySelectorAll('[data-table="2"] form-control[name]');
 			n = formControls.length;
@@ -1169,8 +1189,10 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				formControls[i].value = res[name];
 			}
 			res = db.select("ROW")
-				.setTable("purchases")
-				.andWhere("pu=?", Number(e.detail))
+				.setTable("purchase_relations")
+				.leftJoin("sales_details using(sd)")
+				.setField("sales_details.*")
+				.andWhere("purchase_relations.pu=?", Number(e.detail))
 				.apply();
 			formControls = SinglePage.modal.reflection2.querySelectorAll('[data-table="2"] form-control[name]');
 			n = formControls.length;
@@ -1428,6 +1450,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 	<datalist id="category"></datalist>
 	<datalist id="division"></datalist>
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>
+	<datalist id="taxable"><option value="1">課税</option><option value="0">非課税</option></datalist>
 	<modal-dialog name="leader" label="部門長選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
