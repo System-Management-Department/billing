@@ -48,6 +48,23 @@
 							};
 						}));
 					});
+				}else if((e.dialog == "request2") && (e.trigger == "submit")){
+					// 仕入変更申請
+					fetch(`/Purchase/request/`,{
+						method: "POST",
+						body: e.result
+					}).then(fetchJson).then(result => {
+						if(result.success){
+							this.reload();
+						}
+						Toaster.show(result.messages.map(m => {
+							return {
+								"class": m[1],
+								message: m[0],
+								title: "仕入変更申請"
+							};
+						}));
+					});
 				}
 			});
 			document.querySelector('table-sticky').columns = dataTableQuery("/Purchase#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });

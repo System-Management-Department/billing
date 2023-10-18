@@ -232,4 +232,14 @@ class PurchaseController extends ControllerBase{
 		
 		return new JsonView($result);
 	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function request(){
+		$db = Session::getDB();
+		$result = new Result();
+		
+		Purchase::request($db, $_POST, $this->requestContext, $result);
+		
+		return new JsonView($result);
+	}
 }

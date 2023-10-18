@@ -253,4 +253,34 @@ class Purchase{
 			$result->addMessage("削除が完了しました。", "INFO", "");
 		}
 	}
+	
+	public static function request($db, $q, $context, $result){
+		$db->beginTransaction();
+		try{
+			$insertQuery = $db->insertSet("purchase_correction_workflow", [
+				"pu"         => $q["pu"],
+				"quantity"   => $q["quantity"],
+				"unit"       => $q["unit"],
+				"unit_price" => $q["unit_price"],
+				"amount_exc" => $q["amount_exc"],
+				"amount_tax" => $q["amount_tax"],
+				"amount_inc" => $q["amount_inc"],
+				"taxable"    => $q["taxable"],
+				"tax_rate"   => ($q["taxable"] != "1") ? null : $q["tax_rate"],
+				"comment"    => $q["comment"],
+				"request_user" => $_SESSION["User.id"],
+			],[
+				"request_datetime" => "NOW()",
+			]);
+			$insertQuery();
+			$db->commit();
+		}catch(Exception $ex){
+			$result->addMessage("仕入変更申請に失敗しました。", "ERROR", "");
+			$result->setData($ex);
+			$db->rollback();
+		}
+		if(!$result->hasError()){
+			$result->addMessage("仕入変更申請が完了しました。", "INFO", "");
+		}
+	}
 }

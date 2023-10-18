@@ -230,19 +230,19 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		formTableInit(SinglePage.modal.delete_purchase  .querySelector('div[data-table="2"]'), formTableQuery("#payment").apply());
 		formTableInit(SinglePage.modal.request2         .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.request2         .querySelector('div[data-table="2"]'), formTableQuery("#sales_detail").apply());
-		formTableInit(SinglePage.modal.request2         .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
+		formTableInit(SinglePage.modal.request2         .querySelector('form[data-table="3"]'), formTableQuery("#purchase_correction").apply());
 		formTableInit(SinglePage.modal.withdraw2        .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.withdraw2        .querySelector('div[data-table="2"]'), formTableQuery("#sales_detail").apply());
-		formTableInit(SinglePage.modal.withdraw2        .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
+		formTableInit2(SinglePage.modal.withdraw2        .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
 		formTableInit(SinglePage.modal.approval2        .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.approval2        .querySelector('div[data-table="2"]'), formTableQuery("#sales_detail").apply());
-		formTableInit(SinglePage.modal.approval2        .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
+		formTableInit2(SinglePage.modal.approval2        .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
 		formTableInit(SinglePage.modal.disapproval2     .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.disapproval2     .querySelector('div[data-table="2"]'), formTableQuery("#sales_detail").apply());
-		formTableInit(SinglePage.modal.disapproval2     .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
+		formTableInit2(SinglePage.modal.disapproval2     .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
 		formTableInit(SinglePage.modal.reflection2      .querySelector('div[data-table="1"]'), formTableQuery("#sales_slip").apply());
 		formTableInit(SinglePage.modal.reflection2      .querySelector('div[data-table="2"]'), formTableQuery("#sales_detail").apply());
-		formTableInit(SinglePage.modal.reflection2      .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
+		formTableInit2(SinglePage.modal.reflection2      .querySelector('div[data-table="3"]'), formTableQuery("#purchase_correction").apply());
 		
 		SinglePage.modal.leader.setQuery(v => master.select("ONE").setTable("leaders").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 			const keyword = e.detail;
@@ -1033,8 +1033,6 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 			}
 			SinglePage.modal.delete_purchase.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
 		});
-		
-		/** */
 		SinglePage.modal.request2.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
 			let res = db.select("ROW")
@@ -1064,7 +1062,6 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const name = formControls[i].getAttribute("name");
 				formControls[i].value = res[name];
 			}
-			/** TODO */
 			res = db.select("ROW")
 				.setTable("purchases")
 				.addField("purchases.*")
@@ -1077,6 +1074,26 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const name = formControls[i].getAttribute("name");
 				formControls[i].value = res[name];
 			}
+			SinglePage.modal.request2.querySelector('[data-proxy]').setAttribute("data-target", e.detail);
+		});
+		Array.from(SinglePage.modal.request2.querySelectorAll('[data-table="3"] form-control')).forEach(input => {
+			input.addEventListener("change", e => {
+				const quantity = Number(SinglePage.modal.request2.querySelector('[data-table="3"] form-control[name="quantity"]').value);
+				const unit_price = Number(SinglePage.modal.request2.querySelector('[data-table="3"] form-control[name="unit_price"]').value);
+				const taxable = SinglePage.modal.request2.querySelector('[data-table="3"] form-control[name="taxable"]').value;
+				const tax_rate = Number(SinglePage.modal.request2.querySelector('[data-table="3"] form-control[name="tax_rate"]').value);
+				const amount_exc = SinglePage.modal.request2.querySelector('[data-table="3"] form-control[name="amount_exc"]');
+				const amount_tax = SinglePage.modal.request2.querySelector('[data-table="3"] form-control[name="amount_tax"]');
+				const amount_inc = SinglePage.modal.request2.querySelector('[data-table="3"] form-control[name="amount_inc"]');
+				amount_exc.value = Math.floor(quantity * unit_price);
+				amount_tax.value = (taxable == 0) ? 0 : Math.floor(Number(amount_exc.value) * tax_rate);
+				amount_inc.value = Number(amount_exc.value) + Number(amount_tax.value);
+			});
+		});
+		SinglePage.modal.request2.querySelector('[data-proxy]').addEventListener("click", e => {
+			const formData = new FormData(SinglePage.modal.request2.querySelector('form[data-table="3"]'));
+			formData.append("pu", e.target.getAttribute("data-target"));
+			SinglePage.modal.request2.hide("submit", formData);
 		});
 		SinglePage.modal.withdraw2.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
@@ -1107,7 +1124,43 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const name = formControls[i].getAttribute("name");
 				formControls[i].value = res[name];
 			}
-			/** TODO */
+			const query = db.select("ROW")
+				.setTable("purchases")
+				.leftJoin("purchase_correction_workflow using(pu)")
+				.setField("purchase_correction_workflow.*")
+				.andWhere("pu=?", Number(e.detail));
+			for(let key in db.tables.purchases){
+				query.addField(`purchases.${key} as __${key}`);
+			}
+			res = query.apply();
+			formControls = Object.assign(SinglePage.modal.withdraw2.querySelectorAll('[data-table="3"] [data-name]'), {innerHTML: ""});
+			n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("data-name");
+				const prop = `__${name}`;
+				const newValue = document.createElement("form-control");
+				const nvc = document.createElement("div");
+				if(formControls[i].hasAttribute("data-list")){
+					newValue.setAttribute("list", formControls[i].getAttribute("data-list"));
+				}
+				newValue.value = res[name];
+				if(prop in res){
+					const oldValue = document.createElement("form-control");
+					const ovc = document.createElement("div");
+					if(formControls[i].hasAttribute("data-list")){
+						oldValue.setAttribute("list", formControls[i].getAttribute("data-list"));
+					}
+					oldValue.value = res[prop];
+					ovc.classList.add("flex-grow-1");
+					ovc.appendChild(oldValue);
+					formControls[i].appendChild(ovc);
+					formControls[i].insertAdjacentHTML("beforeend", '<i class="bi bi-arrow-right"></i>');
+				}
+				nvc.classList.add("flex-grow-1");
+				nvc.appendChild(newValue);
+				formControls[i].appendChild(nvc);
+			}
+			SinglePage.modal.withdraw2.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
 		});
 		SinglePage.modal.approval2.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
@@ -1138,7 +1191,43 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const name = formControls[i].getAttribute("name");
 				formControls[i].value = res[name];
 			}
-			/** TODO */
+			const query = db.select("ROW")
+				.setTable("purchases")
+				.leftJoin("purchase_correction_workflow using(pu)")
+				.setField("purchase_correction_workflow.*")
+				.andWhere("pu=?", Number(e.detail));
+			for(let key in db.tables.purchases){
+				query.addField(`purchases.${key} as __${key}`);
+			}
+			res = query.apply();
+			formControls = Object.assign(SinglePage.modal.approval2.querySelectorAll('[data-table="3"] [data-name]'), {innerHTML: ""});
+			n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("data-name");
+				const prop = `__${name}`;
+				const newValue = document.createElement("form-control");
+				const nvc = document.createElement("div");
+				if(formControls[i].hasAttribute("data-list")){
+					newValue.setAttribute("list", formControls[i].getAttribute("data-list"));
+				}
+				newValue.value = res[name];
+				if(prop in res){
+					const oldValue = document.createElement("form-control");
+					const ovc = document.createElement("div");
+					if(formControls[i].hasAttribute("data-list")){
+						oldValue.setAttribute("list", formControls[i].getAttribute("data-list"));
+					}
+					oldValue.value = res[prop];
+					ovc.classList.add("flex-grow-1");
+					ovc.appendChild(oldValue);
+					formControls[i].appendChild(ovc);
+					formControls[i].insertAdjacentHTML("beforeend", '<i class="bi bi-arrow-right"></i>');
+				}
+				nvc.classList.add("flex-grow-1");
+				nvc.appendChild(newValue);
+				formControls[i].appendChild(nvc);
+			}
+			SinglePage.modal.approval2.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
 		});
 		SinglePage.modal.disapproval2.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
@@ -1169,7 +1258,43 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const name = formControls[i].getAttribute("name");
 				formControls[i].value = res[name];
 			}
-			/** TODO */
+			const query = db.select("ROW")
+				.setTable("purchases")
+				.leftJoin("purchase_correction_workflow using(pu)")
+				.setField("purchase_correction_workflow.*")
+				.andWhere("pu=?", Number(e.detail));
+			for(let key in db.tables.purchases){
+				query.addField(`purchases.${key} as __${key}`);
+			}
+			res = query.apply();
+			formControls = Object.assign(SinglePage.modal.disapproval2.querySelectorAll('[data-table="3"] [data-name]'), {innerHTML: ""});
+			n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("data-name");
+				const prop = `__${name}`;
+				const newValue = document.createElement("form-control");
+				const nvc = document.createElement("div");
+				if(formControls[i].hasAttribute("data-list")){
+					newValue.setAttribute("list", formControls[i].getAttribute("data-list"));
+				}
+				newValue.value = res[name];
+				if(prop in res){
+					const oldValue = document.createElement("form-control");
+					const ovc = document.createElement("div");
+					if(formControls[i].hasAttribute("data-list")){
+						oldValue.setAttribute("list", formControls[i].getAttribute("data-list"));
+					}
+					oldValue.value = res[prop];
+					ovc.classList.add("flex-grow-1");
+					ovc.appendChild(oldValue);
+					formControls[i].appendChild(ovc);
+					formControls[i].insertAdjacentHTML("beforeend", '<i class="bi bi-arrow-right"></i>');
+				}
+				nvc.classList.add("flex-grow-1");
+				nvc.appendChild(newValue);
+				formControls[i].appendChild(nvc);
+			}
+			SinglePage.modal.disapproval2.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
 		});
 		SinglePage.modal.reflection2.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
@@ -1200,10 +1325,44 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const name = formControls[i].getAttribute("name");
 				formControls[i].value = res[name];
 			}
-			/** TODO */
+			const query = db.select("ROW")
+				.setTable("purchases")
+				.leftJoin("purchase_correction_workflow using(pu)")
+				.setField("purchase_correction_workflow.*")
+				.andWhere("pu=?", Number(e.detail));
+			for(let key in db.tables.purchases){
+				query.addField(`purchases.${key} as __${key}`);
+			}
+			res = query.apply();
+			formControls = Object.assign(SinglePage.modal.reflection2.querySelectorAll('[data-table="3"] [data-name]'), {innerHTML: ""});
+			n = formControls.length;
+			for(let i = 0; i < n; i++){
+				const name = formControls[i].getAttribute("data-name");
+				const prop = `__${name}`;
+				const newValue = document.createElement("form-control");
+				const nvc = document.createElement("div");
+				if(formControls[i].hasAttribute("data-list")){
+					newValue.setAttribute("list", formControls[i].getAttribute("data-list"));
+				}
+				newValue.value = res[name];
+				if(prop in res){
+					const oldValue = document.createElement("form-control");
+					const ovc = document.createElement("div");
+					if(formControls[i].hasAttribute("data-list")){
+						oldValue.setAttribute("list", formControls[i].getAttribute("data-list"));
+					}
+					oldValue.value = res[prop];
+					ovc.classList.add("flex-grow-1");
+					ovc.appendChild(oldValue);
+					formControls[i].appendChild(ovc);
+					formControls[i].insertAdjacentHTML("beforeend", '<i class="bi bi-arrow-right"></i>');
+				}
+				nvc.classList.add("flex-grow-1");
+				nvc.appendChild(newValue);
+				formControls[i].appendChild(nvc);
+			}
+			SinglePage.modal.reflection2.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
 		});
-		/** */
-		
 		SinglePage.modal.release.querySelector('[data-proxy]').addEventListener("click", e => {
 			const result = SinglePage.modal.release.querySelector('[slot="footer"] input').value;
 			if(result == ""){
@@ -1324,6 +1483,48 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				}
 				if((row.placeholder != null) && (row.placeholder != "")){
 					formControl.setAttribute("placeholder", row.placeholder);
+				}
+				
+				td.appendChild(formControl);
+				tr.appendChild(th);
+				tr.appendChild(td);
+				tableList[row.column].tbody.appendChild(tr);
+			}
+			const tableColumns = Object.keys(tableList).sort();
+			for(let tableNo of tableColumns){
+				if(parent.tagName == "SEARCH-FORM"){
+					tableList[tableNo].table.setAttribute("slot", "body");
+				}
+				parent.appendChild(tableList[tableNo].table);
+			}
+			setTimeout(() => { resolve(parent); }, 0);
+		});
+	}
+	function formTableInit2(parent, data){
+		return new Promise((resolve, reject) => {
+			let tableList = {};
+			for(let row of data){
+				if(!(row.column in tableList)){
+					tableList[row.column] = {
+						table: Object.assign(document.createElement("table"), {className: "table my-0"}),
+						tbody: document.createElement("tbody")
+					};
+					const colgroup = document.createElement("colgroup");
+					colgroup.appendChild(Object.assign(document.createElement("col"), {className: "bg-light"}));
+					colgroup.appendChild(document.createElement("col"));
+					tableList[row.column].table.appendChild(colgroup)
+					tableList[row.column].table.appendChild(tableList[row.column].tbody);
+				}
+				const tr = document.createElement("tr");
+				const th = document.createElement("th");
+				const td = document.createElement("td");
+				const formControl = document.createElement("div");
+				th.textContent = row.label;
+				th.className = "align-middle ps-4";
+				formControl.setAttribute("class", `d-flex flex-row col-${row.width}`);
+				formControl.setAttribute("data-name", row.name);
+				if((row.list != null) && (row.list != "")){
+					formControl.setAttribute("data-list", row.list);
 				}
 				
 				td.appendChild(formControl);
@@ -1567,7 +1768,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<div slot="body" class="mt-3">売上明細</div>
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
 		<div slot="body" class="mt-3">仕入明細</div>
-		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
+		<form slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></form>
 		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">申請</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
@@ -1577,7 +1778,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
 		<div slot="body" class="mt-3">仕入明細</div>
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
-		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">取下</button>
+		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success">取下</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="approval2" label="仕入変更承認">
@@ -1586,7 +1787,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
 		<div slot="body" class="mt-3">仕入明細</div>
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
-		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">承認</button>
+		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success">承認</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="disapproval2" label="仕入変更承認解除">
@@ -1595,7 +1796,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
 		<div slot="body" class="mt-3">仕入明細</div>
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
-		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">承認解除</button>
+		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success">承認解除</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="reflection2" label="仕入変更反映">
@@ -1604,7 +1805,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
 		<div slot="body" class="mt-3">仕入明細</div>
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
-		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">反映</button>
+		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success">反映</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="number_format"></modal-dialog>
