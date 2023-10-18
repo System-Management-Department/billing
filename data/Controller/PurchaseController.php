@@ -124,9 +124,10 @@ class PurchaseController extends ControllerBase{
 			->setTable("purchase_workflow")
 			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchase_workflow.pu)");
 		$query9 = $db->select("EXPORT")
-			->addWith("find AS (SELECT DISTINCT * FROM JSON_TABLE(?,'$[*]' COLUMNS(pu INT PATH '$.pu')) AS t)", $searchTable)
+			->addWith("temp AS (SELECT DISTINCT * FROM JSON_TABLE(?,'$[*]' COLUMNS(pu INT PATH '$.pu')) AS t)", $searchTable)
+			->addWith("find AS (SELECT pu,MAX(request_datetime) AS request_datetime FROM purchase_correction_workflow WHERE EXISTS(SELECT 1 FROM temp WHERE temp.pu=purchase_correction_workflow.pu) GROUP BY pu)")
 			->setTable("purchase_correction_workflow")
-			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchase_correction_workflow.pu)");
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchase_correction_workflow.pu AND find.request_datetime=purchase_correction_workflow.request_datetime)");
 		
 		return new FileView(SQLite::memoryData([
 			"sales_slips" => $query1(),
