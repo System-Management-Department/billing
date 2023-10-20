@@ -247,6 +247,9 @@ class SalesSlip{
 					"unit" => $detail[$i]["unit"],
 					"unit_price" => $detail[$i]["unit_price"],
 					"category" => $detail[$i]["category"],
+					"amount_exc" => $detail[$i]["amount_exc"],
+					"amount_tax" => $detail[$i]["amount_tax"],
+					"amount_inc" => $detail[$i]["amount_inc"],
 				],[]);
 				$updateQuery->andWhere("sd=?", $detail[$i]["sd"]);
 				$updateQuery();
