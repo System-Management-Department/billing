@@ -1689,7 +1689,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 	<datalist id="request"><option value="">すべて</option><option value="1">申請中のもののみ</option></datalist>
 	<datalist id="category"></datalist>
 	<datalist id="division"></datalist>
-	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>
+	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option><option value="5">インボイス対応（軽減税率適用）請求書</option></datalist>
 	<datalist id="taxable"><option value="1">課税</option><option value="0">非課税</option></datalist>
 	<modal-dialog name="leader" label="部門長選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>

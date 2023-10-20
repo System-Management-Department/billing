@@ -104,6 +104,10 @@ new VirtualPage("/4", class{
 	constructor(vp){
 	}
 });
+new VirtualPage("/5", class{
+	constructor(vp){
+	}
+});
 
 const search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
 	const found = t.match(/^(.*?)=(.*)$/);
@@ -216,7 +220,7 @@ Promise.all([
 	const root = xmlDoc.documentElement;
 	const id = xmlDoc.querySelector('info').getAttribute("type");
 	SinglePage.location = `/${id}`;
-	const inputElements = document.querySelectorAll('form-control[name]');
+	const inputElements = document.querySelectorAll('form-control[name],input[name="tax_rate"]');
 	for(let i = inputElements.length - 1; i >= 0; i--){
 		const name = inputElements[i].getAttribute("name");
 		if(root.hasAttribute(name)){
@@ -388,6 +392,7 @@ Promise.all([
 			const fragment = xmlDoc.createDocumentFragment();
 			const info = xmlDoc.querySelector('info');
 			fragment.appendChild(info);
+			let taxRate = {};
 			const total = obj.options.data.reduce((a, rowProxy) => {
 				const row = rowProxy[objectData];
 				const detail = xmlDoc.createElement("detail");
@@ -405,16 +410,29 @@ Promise.all([
 					}
 				}
 				a.fragment.appendChild(detail);
-				if(row.record == 1){
+				if(row.record){
 					a.amount_exc += row.amount_exc;
 					a.amount_tax += row.amount_tax;
 					a.amount_inc += row.amount_inc;
+					if(row.taxable){
+						if(!(row.tax_rate in taxRate)){
+							taxRate[row.tax_rate] = {amount_exc: 0, amount_inc: 0, amount_tax: 0};
+						}
+						taxRate[row.tax_rate].amount_exc += row.amount_exc;
+						taxRate[row.tax_rate].amount_tax += row.amount_tax;
+						taxRate[row.tax_rate].amount_inc += row.amount_inc;
+					}
 				}
 				return a; 
 			}, {amount_exc: 0, amount_inc: 0, amount_tax: 0, fragment: fragment});
 			document.querySelector('form-control[name="amount_exc"]').value = total.amount_exc;
 			document.querySelector('form-control[name="amount_tax"]').value = total.amount_tax;
 			document.querySelector('form-control[name="amount_inc"]').value = total.amount_inc;
+			const taxRateInput = document.querySelector('input[name="tax_rate"]')
+			if(taxRateInput != null){
+				taxRateInput.value = JSON.stringify(taxRate);
+				root.setAttribute("tax_rate", taxRateInput.value);
+			}
 			root.setAttribute("amount_exc", total.amount_exc);
 			root.setAttribute("amount_tax", total.amount_tax);
 			root.setAttribute("amount_inc", total.amount_inc);
@@ -516,7 +534,27 @@ Promise.all([
 			note: document.querySelector('form-control[name="note"]').value,
 			summary_header1: (e => (e == null) ? void(0) : e.value)(document.querySelector('form-control[name="summary_header1"]')),
 			summary_header2: (e => (e == null) ? void(0) : e.value)(document.querySelector('form-control[name="summary_header2"]')),
-			summary_header3: (e => (e == null) ? void(0) : e.value)(document.querySelector('form-control[name="summary_header3"]'))
+			summary_header3: (e => (e == null) ? void(0) : e.value)(document.querySelector('form-control[name="summary_header3"]')),
+			amount_tax_8: (e => {
+				if((e == null) || (e.value == "")){
+					return 0;
+				}
+				const taxRate = JSON.parse(e.value);
+				if("0.08" in taxRate){
+					return SinglePage.modal.number_format.query(taxRate["0.08"].amount_tax);
+				}
+				return 0;
+			})(document.querySelector('input[name="tax_rate"]')),
+			amount_tax_10: (e => {
+				if((e == null) || (e.value == "")){
+					return 0;
+				}
+				const taxRate = JSON.parse(e.value);
+				if("0.1" in taxRate){
+					return SinglePage.modal.number_format.query(taxRate["0.1"].amount_tax);
+				}
+				return 0;
+			})(document.querySelector('input[name="tax_rate"]'))
 		};
 		const printArea = document.querySelector('#spmain [slot="print"]');
 		printArea.innerHTML = "";
@@ -1262,6 +1300,103 @@ function setDataTable(parent, columns, data, callback = null){
 					</print-page>
 				</div>
 			</template>
+			<template data-page="/5">
+				<div slot="print" style="height:0;overflow:hidden;">
+					<print-page size="A4" orientation="P">
+						<div class="page">
+							<div data-page-break="headline" class="d-flex flex-column" style="gap: 20px;">
+								<div class="d-flex flex-column">
+									<div class="text-end"><span data-slot="today"></span></div>
+									<h1 class="text-decoration-underline text-center">御見積書</h1>
+									<div class="text-decoration-underline client"><span data-slot="client_name"></span>御中</div>
+									<div class="d-flex flex-row"><div class="flex-grow-1"></div><div>
+										<div class="co">株式会社ダイレクト・ホールディングス</div>
+										<div class="ab" style="position: relative;">
+											<div><span data-slot="leader"></span>・<span data-slot="manager"></span></div>
+											<div>〒163-1439</div>
+											<div>東京都新宿区西新宿3丁目20番2号</div>
+											<div>東京オペラシティタワー39階</div>
+											<div>TEL：03-6416-4822</div>
+											<img src="/assets/common/image/inkan_kaku.png" style="position: absolute; top: 15px; right: 15px;width: 90px;" />
+										</div>
+									</div></div>
+								</div>
+								<div class="d-flex flex-row gap-1">
+									<div>件名</div>
+									<div><span data-slot="subject"></span></div>
+								</div>
+								<div style="border: solid black calc(1rem / 12);">
+									<div class="border-xs border-ts border-bs" style="border-bottom: solid black calc(1rem / 12);background: #CCCCCC;">仕様</div>
+									<div class="border-xs border-bd" style="border-bottom: dashed black calc(1rem / 12);">&#8203;<span data-slot="specification"></span></div>
+									<div class="border-xs border-bs">&#8203;</div>
+								</div>
+								<div>
+									<div class="d-flex flex-row gap-1">
+										<div>合計金額</div>
+										<div class="price">\<span data-slot="amount_inc">0,000,000</span>-</div>
+										<div>（税込）</div>
+									</div>
+								</div>
+							</div>
+							<div>
+								<table class="w-100" style="border: solid black calc(1rem / 6);">
+									<colgroup data-page-clone="1">
+										<col class="tw1" />
+										<col class="tw2" style="width: 80px;" />
+										<col class="tw3" style="width: 55px;" />
+										<col class="tw4" style="width: 80px;" />
+										<col class="tw5" style="width: 130px;" />
+									</colgroup>
+									<thead  data-page-clone="1" style="border-bottom: solid black calc(1rem / 12);background: #CCCCCC;">
+										<tr class="text-center">
+											<th>摘要</th>
+											<th style="border-left: solid black calc(1rem / 12);">数量</th>
+											<th style="border-left: solid black calc(1rem / 12);">単位</th>
+											<th style="border-left: solid black calc(1rem / 12);">単価</th>
+											<th style="border-left: solid black calc(1rem / 12);">金額</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr data-page-break="detail" style="border-bottom: dashed black calc(1rem / 12);">
+											<td><span data-table-slot="detail">DATA</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="quantity">0,000.00</span></td>
+											<td class="text-center" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit">DATA</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="unit_price">0,000.00</span></td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-table-slot="amount_exc">0,000,000</span></td>
+										</tr>
+									</tbody>
+									<tbody data-page-break="aggregate" style="border-top: solid black calc(1rem / 6);">
+										<tr style="border-bottom: dashed black calc(1rem / 12);">
+											<td colspan="4">上記計</td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_exc">0,000,000</span></td>
+										</tr>
+										<tr style="border-bottom: dashed black calc(1rem / 12);">
+											<td colspan="4">消費税（8％）</td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_tax_8">0,000,000</span></td>
+										</tr>
+										<tr style="border-bottom: dashed black calc(1rem / 12);">
+											<td colspan="4">消費税（10％）</td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_tax_10">0,000,000</span></td>
+										</tr>
+										<tr style="border-bottom: dashed black calc(1rem / 12);">
+											<td colspan="4">消費税</td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_tax">0,000,000</span></td>
+										</tr>
+										<tr>
+											<td colspan="4">合計</td>
+											<td class="text-end" style="border-left: solid black calc(1rem / 12);"><span data-slot="amount_inc">0,000,000</span></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							<div class="grow-1 flex-column" style="margin-top: 20px;">
+								<div>備考</div>
+								<div class="grow-1 border-2" style="height: 6em; border: solid black calc(1rem / 6);"><span data-slot="note" style="white-space: pre-wrap;"></span></div>
+							</div>
+						</div>
+					</print-page>
+				</div>
+			</template>
 			<template data-page-share="">
 				<div slot="table1" class="table d-contents"><div class="d-contents">
 					<div class="d-table-row">
@@ -1294,7 +1429,7 @@ function setDataTable(parent, columns, data, callback = null){
 					<div class="invalid"></div>
 				</div>
 			</template>
-			<template data-page-share="/3">
+			<template data-page-share="/3|/5">
 				<div slot="table2" class="table d-contents"><div class="d-contents">
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">得意先</div>
@@ -1377,6 +1512,43 @@ function setDataTable(parent, columns, data, callback = null){
 					</div>
 				</div></div>
 			</template>
+			<template data-page="/5">
+				<div slot="table2" class="table d-contents"><div class="d-contents">
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">得意先</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="client_name" type="text"></form-control><div class="invalid"></div></div>
+					</div>
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">請求先</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="apply_client" type="keyword" list="apply_client" placeholder="請求先名・請求先CDで検索"></form-control><div class="invalid"></div></div>
+					</div>
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">入金予定日</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date"></form-control><div class="invalid"></div></div>
+					</div>
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">仕様</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="specification" type="select" list="specification"></form-control><div class="invalid"></div></div>
+					</div>
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">備考</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="note" type="textarea"></form-control><div class="invalid"></div></div>
+					</div>
+					<input name="tax_rate" type="hidden" />
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">税抜合計金額</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_exc" type="label" list="number_format"></form-control><div class="invalid"></div></div>
+					</div>
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">消費税合計金額</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_tax" type="label" list="number_format"></form-control><div class="invalid"></div></div>
+					</div>
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">税込合計金額</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="amount_inc" type="label" list="number_format"></form-control><div class="invalid"></div></div>
+					</div>
+				</div></div>
+			</template>
 			<template data-page-share="">
 				<span slot="tools" class="btn btn-primary my-2" data-trigger="print">見積書生成</span>
 				<span slot="tools"" class="btn btn-primary my-2" data-trigger="submit">確定登録</span>
@@ -1387,7 +1559,7 @@ function setDataTable(parent, columns, data, callback = null){
 	
 	<datalist id="category"></datalist>
 	<datalist id="division"></datalist>
-	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>
+	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option><option value="5">インボイス対応（軽減税率適用）請求書</option></datalist>
 	<datalist id="specification"><option value=""></option></datalist>
 	<modal-dialog name="leader" label="部門長選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>

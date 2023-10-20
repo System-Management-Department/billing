@@ -23,6 +23,10 @@
 							<div class="btn py-2 text-white shadow-sm" style="width:120px;background:#008db5;">見積書4</div>
 							<form-control class="btn btn-light ps-4 py-2 flex-grow-1 text-center shadow-sm" type="label" list="invoice_format">4</form-control>
 						</div>
+						<div data-estimate="5" class="input-group">
+							<div class="btn py-2 text-white shadow-sm" style="width:120px;background:#008db5;">見積書5</div>
+							<form-control class="btn btn-light ps-4 py-2 flex-grow-1 text-center shadow-sm" type="label" list="invoice_format">5</form-control>
+						</div>
 						<show-dialog label="一時保存された見積一覧" target="estimate" class="btn btn-success"></show-dialog>
 					</div>
 				</div>

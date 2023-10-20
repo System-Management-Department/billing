@@ -56,7 +56,7 @@ class ListButtonElement extends HTMLElement{
 customElements.define("list-button", ListButtonElement);
 </script>{/literal}
 {jsiife id=$id}{literal}
-new VirtualPage("/edit", class{
+var editPage = new VirtualPage("/edit", class{
 	constructor(vp){
 		document.querySelector('[data-trigger="submit"]').addEventListener("click", e => {
 			const form = document.querySelector("form");
@@ -85,6 +85,9 @@ new VirtualPage("/edit", class{
 				}
 				return {data: JSON.stringify(row.attributes), sd: row.sd};
 			});
+			if(this.attributes != null){
+				formData.append("attribute", JSON.stringify(this.attributes));
+			}
 			formData.append("detail", JSON.stringify(details));
 			formData.append("detail_attribute", JSON.stringify(detailAttributes));
 			fetch(`/Committed/update/${id}`, {
@@ -235,6 +238,13 @@ Promise.all([
 	const salesSlip = transaction.select("ROW")
 		.setTable("sales_slips")
 		.apply();
+	const salesSlipAttributes = transaction.select("ROW")
+		.setTable("sales_attributes")
+		.apply();
+	if(salesSlipAttributes != null){
+		editPage.instance.attributes = JSON.parse(salesSlipAttributes.data);
+	}
+	
 	formTableInit(document.querySelector('.sales-form'), formTableQuery("/Sales#edit").apply()).then(form => {
 		const inputElements = form.querySelectorAll('form-control[name]');
 		const n = inputElements.length;
@@ -402,15 +412,28 @@ Promise.all([
 			toolbarDisplay(borderTop);
 		},
 		onchange: (el, cell, x, y, value, oldValue) => {
+			let taxRate = {};
 			const total = obj.options.data.reduce((a, rowProxy) => {
 				const row = rowProxy[objectData];
 				if(row.record == 1){
 					a.amount_exc += row.amount_exc;
 					a.amount_tax += row.amount_tax;
 					a.amount_inc += row.amount_inc;
+					if(row.taxable){
+						if(!(row.tax_rate in taxRate)){
+							taxRate[row.tax_rate] = {amount_exc: 0, amount_inc: 0, amount_tax: 0};
+						}
+						taxRate[row.tax_rate].amount_exc += row.amount_exc;
+						taxRate[row.tax_rate].amount_tax += row.amount_tax;
+						taxRate[row.tax_rate].amount_inc += row.amount_inc;
+					}
 				}
 				return a; 
 			}, {amount_exc: 0, amount_inc: 0, amount_tax: 0});
+			if((editPage.instance.attributes != null) && ("tax_rate" in editPage.instance.attributes)){
+				editPage.instance.attributes.tax_rate = taxRate;
+			}
+			console.log(editPage.instance);
 			document.querySelector('form-control[name="amount_exc"]').value = total.amount_exc;
 			document.querySelector('form-control[name="amount_tax"]').value = total.amount_tax;
 			document.querySelector('form-control[name="amount_inc"]').value = total.amount_inc;
@@ -626,7 +649,7 @@ function setDataTable(parent, columns, data, callback = null){
 	
 	<datalist id="category"></datalist>
 	<datalist id="division"></datalist>
-	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option></datalist>
+	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option><option value="5">インボイス対応（軽減税率適用）請求書</option></datalist>
 	<datalist id="specification"></datalist>
 	<modal-dialog name="leader" label="部門長選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>

@@ -138,6 +138,13 @@ class SalesSlip{
 				],[]);
 				$insertQuery();
 			}
+			if($q["invoice_format"] == 5){
+				$insertQuery = $db->insertSet("sales_attributes", [
+					"ss" => $id,
+					"data" => json_encode(["tax_rate" => json_decode($q["tax_rate"], true)]),
+				],[]);
+				$insertQuery();
+			}
 			
 			$insertQuery = $db->insertSet("sales_workflow", [
 				"ss" => $id,
@@ -222,6 +229,14 @@ class SalesSlip{
 			],[]);
 			$updateQuery->andWhere("ss=?", $id);
 			$updateQuery();
+			
+			if(array_key_exists("attribute", $q)){
+				$updateQuery = $db->updateSet("sales_attributes", [
+					"data" => $q["attribute"],
+				],[]);
+				$updateQuery->andWhere("ss=?", $id);
+				$updateQuery();
+			}
 			
 			$detail = json_decode($q["detail"], true);
 			$len = count($detail);

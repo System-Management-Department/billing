@@ -74,12 +74,13 @@ new VirtualPage("/", class{
 			query.addField(`${fields[i].query} AS field${i}`);
 			csvHeader.push(fields[i].header);
 		}
-		const csvFormats = [{key: 1, label: "通常請求書"}, {key: 2, label: "ニッピ用請求書"}, {key: 3, label: "加茂繊維用請求書"}, {key: 4, label: "ダイドー用請求書"}];
+		const csvFormats = [{key: 1, label: "通常請求書"}, {key: 2, label: "ニッピ用請求書"}, {key: 3, label: "加茂繊維用請求書"}, {key: 4, label: "ダイドー用請求書"}, {key: 5, label: "インボイス対応（軽減税率適用）請求書"}];
 		const csvData = {
 			[1]: [],
 			[2]: [],
 			[3]: [],
-			[4]: []
+			[4]: [],
+			[5]: []
 		};
 		const data = query.apply();
 		for(let row of data){
