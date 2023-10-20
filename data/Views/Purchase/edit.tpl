@@ -168,13 +168,23 @@ Promise.all([
 	
 	SinglePage.modal.supplier.querySelector('table-sticky').columns = dataTableQuery("/Modal/Supplier#list").setField("label,width,slot,part").apply();
 	SinglePage.modal.supplier.setQuery(v => master.select("ONE").setTable("suppliers").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
-		//const keyword = e.detail;
 		setDataTable(
 			SinglePage.modal.supplier.querySelector('table-sticky'),
 			dataTableQuery("/Modal/Supplier#list").apply(),
 			master.select("ALL")
 				.setTable("suppliers")
-				//.andWhere("has(json_array(code,name),?)", keyword)
+				.apply(),
+			row => {}
+		);
+	});
+	SinglePage.modal.supplier.querySelector('[data-search="search-btn"]').addEventListener("click", e => {
+		const keyword = SinglePage.modal.supplier.querySelector('[data-search="keyword"]').value;
+		setDataTable(
+			SinglePage.modal.supplier.querySelector('table-sticky'),
+			dataTableQuery("/Modal/Supplier#list").apply(),
+			master.select("ALL")
+				.setTable("suppliers")
+				.andWhere("has(json_array(code,name,kana),?)", keyword)
 				.apply(),
 			row => {}
 		);
@@ -534,6 +544,7 @@ function setDataTable(parent, columns, data, callback = null){
 	<modal-dialog name="manager" label="当社担当者選択"></modal-dialog>
 	<modal-dialog name="apply_client" label="請求先選択"></modal-dialog>
 	<modal-dialog name="supplier" label="仕入先選択">
+		<div slot="body" class="col-6"><div class="input-group"><input class="form-control" type="text" data-search="keyword" /><button type="button" class="btn btn-success" data-search="search-btn">検索</button></div></div>
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
 	</modal-dialog>
 {/block}
