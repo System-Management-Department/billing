@@ -255,4 +255,10 @@ class SalesController extends ControllerBase{
 		$v = new View();
 		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function exportList2(){
+		$v = new View();
+		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
+	}
 }
