@@ -17,6 +17,25 @@
 						cache.delete("estimate").andWhere("dt=?", Number(e.result)).apply();
 						cache.commit();
 					}
+				}else if(e.dialog == "salses_export"){
+					if((e.trigger == "submit") && (e.result != null)){
+						let number = null;
+						fetch("/Sales/genSlipNumber")
+							.then(fetchJson).then(result => {
+								for(let message of result.messages){
+									if(message[2] == "no"){
+										number = message[0];
+									}
+								}
+								if(number != null){
+									return Promise.resolve(null);
+								}else{
+									return Promise.reject(null);
+								}
+							}).then(() => {
+								open(`/Sales/exportList2?channel=${CreateWindowElement.channel}&key=${number}&month=${e.result}`, "_blank", "left=0,top=0,width=1200,height=700");
+							});
+					}
 				}
 			});
 			const estimates = document.querySelectorAll('[data-estimate]');

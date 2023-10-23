@@ -123,6 +123,63 @@ class SalesController extends ControllerBase{
 		]), "application/vnd.sqlite3");
 	}
 	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function search2(){
+		$db = Session::getDB();
+		$query = $db->select("COL")
+			->setTable("sales_slips")
+			->setField("sales_slips.ss")
+			->leftJoin("sales_workflow using(ss)")
+			->andWhere("approval=1");
+		if(!empty($_POST)){
+			if(!empty($_POST["approval_month"])){
+				$query->andWhere("DATE_FORMAT(approval_datetime,'%Y-%m')=?", $_POST["approval_month"]);
+			}
+		}
+		$searchIds = json_encode($query($cnt));
+		
+		
+		$query1 = $db->select("EXPORT")
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
+			->setTable("sales_slips")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_slips.ss)");
+		$query2 = $db->select("EXPORT")
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
+			->setTable("sales_attributes")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_attributes.ss)");
+		$query3 = $db->select("EXPORT")
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
+			->setTable("sales_workflow")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=sales_workflow.ss)");
+		$query4 = $db->select("EXPORT")
+			->addWith("find AS (SELECT * FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t)", $searchIds)
+			->setTable("purchase_relations")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.ss=purchase_relations.ss)");
+		$query5 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT purchase_relations.sd FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t LEFT JOIN purchase_relations using(ss))", $searchIds)
+			->setTable("sales_details")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.sd=sales_details.sd)");
+		$query6 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT purchase_relations.sd FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t LEFT JOIN purchase_relations using(ss))", $searchIds)
+			->setTable("sales_detail_attributes")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.sd=sales_detail_attributes.sd)");
+		$query7 = $db->select("EXPORT")
+			->addWith("find AS (SELECT DISTINCT purchase_relations.pu FROM JSON_TABLE(?,'$[*]' COLUMNS(ss INT PATH '$')) AS t LEFT JOIN purchase_relations using(ss))", $searchIds)
+			->setTable("purchases")
+			->andWhere("EXISTS(SELECT 1 FROM find WHERE find.pu=purchases.pu)");
+		
+		return new FileView(SQLite::memoryData([
+			"sales_slips" => $query1($cnt2),
+			"sales_attributes" => $query2(),
+			"sales_workflow" => $query3(),
+			"purchase_relations" => $query4(),
+			"sales_details" => $query5(),
+			"sales_detail_attributes" => $query6(),
+			"purchases" => $query7(),
+			"_info" => ["columns" => ["key", "value"], "data" => [["key" => "count", "value" => $cnt], ["key" => "display", "value" => $cnt2]]]
+		]), "application/vnd.sqlite3");
+	}
+	
 	#[\Attribute\AcceptRole("admin", "leader")]
 	public function disapproval(){
 		$db = Session::getDB();

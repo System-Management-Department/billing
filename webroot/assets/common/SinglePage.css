@@ -448,6 +448,9 @@ modal-dialog::part(content){
 	border-radius: 0.5rem;
 	outline: 0;
 }
+modal-dialog.w-sm::part(content){
+	width: calc(50vw - 3rem);
+}
 modal-dialog::part(header){
 	display: flex;
 	flex-direction: row;

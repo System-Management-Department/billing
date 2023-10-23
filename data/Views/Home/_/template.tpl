@@ -1,6 +1,7 @@
 <template data-page="/">
 	<span slot="title" class="navbar-text text-dark">ホーム</span>
 	<a slot="tools" class="btn btn-success my-2" href="/exment/admin/" style="order: 1;">マスター管理</a>
+	<show-dialog slot="tools" class="btn btn-success my-2" target="salses_export" label="売上一覧表出力" style="order: 2;"></show-dialog>
 	<main slot="main" class="d-contents">
 		<div class="d-flex mx-5 gap-5">
 			<div>

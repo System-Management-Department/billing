@@ -1414,7 +1414,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		SinglePage.modal.payment.querySelector('[data-proxy]').addEventListener("click", e => {
 			const input = SinglePage.modal.payment.querySelector('[slot="footer"] input');
 			const result = {target: input.getAttribute("data-target"), value: input.value};
-			if(result == ""){
+			if(result.value == ""){
 				alert("コメントを入力してください。");
 			}else{
 				SinglePage.modal.payment.hide("submit", result);
@@ -1466,6 +1466,15 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 					}
 				);
 			});
+		});
+		SinglePage.modal.salses_export.querySelector('[data-proxy]').addEventListener("click", e => {
+			const input = SinglePage.modal.salses_export.querySelector('[slot="body"] input');
+			const result = input.value;
+			if(result == ""){
+				alert("出力年月を入力してください。");
+			}else{
+				SinglePage.modal.salses_export.hide("submit", result);
+			}
 		});
 		
 		master.select("ALL")
@@ -1853,6 +1862,11 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<div slot="body" class="mt-3">仕入明細</div>
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
 		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success">反映</button>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
+	</modal-dialog>
+	<modal-dialog name="salses_export" label="売上伝票出力" class="w-sm">
+		<div slot="body" class="p-3"><input type="month" class="form-control w-auto" /></div>
+		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">出力</button>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="number_format"></modal-dialog>
