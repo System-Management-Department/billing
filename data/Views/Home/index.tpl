@@ -1467,6 +1467,39 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				);
 			});
 		});
+		SinglePage.modal.estimate.querySelector('[data-proxy="import"] input').addEventListener("change", e => {
+			if(e.currentTarget.files.length == 0){
+				return;
+			}
+			const parser = new DOMParser();
+			const now = Date.now();
+			const p = [];
+			let i = 0;
+			for(let file of e.currentTarget.files){
+				const reader = new FileReader();
+				const readEvent = {
+					dt: now + i,
+					p: null,
+					f: file,
+					handleEvent(e){
+						const xmlDoc = parser.parseFromString(`<root>${reader.result}</root>`, "application/xml");
+						xmlDoc.querySelector('info').setAttribute("dt", this.dt);
+						cache.insertSet("estimate", {
+							xml: xmlDoc.documentElement.innerHTML,
+							dt: this.dt
+						}, {}).apply();
+						this.p.resolve(null);
+					}
+				};
+				reader.addEventListener("load", readEvent);
+				p.push(new Promise((resolve, reject) => {
+					readEvent.p = {resolve, reject};
+					reader.readAsText(readEvent. f);
+				}));
+				i++;
+			}
+			Promise.all(p).then(() => cache.commit()).then(() => { SinglePage.modal.estimate.dispatchEvent(new CustomEvent("modal-open", {bubbles: true, composed: true, detail: {}})); });
+		});
 		SinglePage.modal.salses_export.querySelector('[data-proxy]').addEventListener("click", e => {
 			const input = SinglePage.modal.salses_export.querySelector('[slot="body"] input');
 			const result = input.value;
@@ -1817,6 +1850,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 	</modal-dialog>
 	<modal-dialog name="estimate" label="見積選択">
 		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
+		<label slot="footer" type="button" data-proxy="import" class="btn btn-success"><input type="file" class="d-contents" accept=".xml" multiple />インポート</label>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="request2" label="仕入変更申請">
