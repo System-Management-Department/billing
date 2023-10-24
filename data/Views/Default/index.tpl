@@ -100,13 +100,17 @@ if("code" in search){
 	}).then(res => res.json())
 	.then(v => {location.reload();});
 }else{
-	const chromeVersion = /Chrome\/([\d.]+)/.exec(navigator.userAgent);
-	if(chromeVersion){
-		const version = chromeVersion[1];
-		console.log(`Chrome バージョン: ${version}`);
-	}else{
-		document.querySelector('[data-id="btn-login"]').style.opacity = "0.5";
-	}
+	document.addEventListener("DOMContentLoaded", function(e){
+		const chromeVersion = /Chrome\/([\d.]+)/.exec(navigator.userAgent);
+		if(chromeVersion){
+			const version = chromeVersion[1];
+			console.log(`Chrome バージョン: ${version}`);
+		}else{
+			const btn = document.querySelector('[data-id="btn-login"]');
+			btn.setAttribute("title", navigator.userAgent);
+			btn.style.opacity = "0.5";
+		}
+	});
 }
 {/literal}{/jsiife}
 {/block}
