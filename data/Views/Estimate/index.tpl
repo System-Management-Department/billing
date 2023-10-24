@@ -291,6 +291,7 @@ Promise.all([
 	toolbar.appendChild(Object.assign(document.createElement("select"), {innerHTML: '<option value="0">見出し行</option><option value="1">通常行</option>', className: 'toolbar-record'}));
 	toolbar.appendChild(Object.assign(document.createElement("select"), {innerHTML: '<option value="1">課税</option><option value="0">非課税</option>', className: 'toolbar-taxable'}));
 	toolbar.appendChild(Object.assign(document.createElement("div"), {innerHTML: '税率<input type="number" style="width: 7ex" />％', className: 'toolbar-tax-rate'}));
+	toolbar.appendChild(Object.assign(document.createElement("div"), {innerHTML: '<button type="button" class="btn btn-success" />再計算</button>', className: 'toolbar-recalc'}));
 	
 	let tableColumns = [
 		{ [refDetail]: "detail",     type: 'text', title: '内容', width: 200 },
@@ -411,16 +412,16 @@ Promise.all([
 				}
 				a.fragment.appendChild(detail);
 				if(row.record){
-					a.amount_exc += row.amount_exc;
-					a.amount_tax += row.amount_tax;
-					a.amount_inc += row.amount_inc;
+					a.amount_exc += Number(row.amount_exc);
+					a.amount_tax += Number(row.amount_tax);
+					a.amount_inc += Number(row.amount_inc);
 					if(row.taxable){
 						if(!(row.tax_rate in taxRate)){
 							taxRate[row.tax_rate] = {amount_exc: 0, amount_inc: 0, amount_tax: 0};
 						}
-						taxRate[row.tax_rate].amount_exc += row.amount_exc;
-						taxRate[row.tax_rate].amount_tax += row.amount_tax;
-						taxRate[row.tax_rate].amount_inc += row.amount_inc;
+						taxRate[row.tax_rate].amount_exc += Number(row.amount_exc);
+						taxRate[row.tax_rate].amount_tax += Number(row.amount_tax);
+						taxRate[row.tax_rate].amount_inc += Number(row.amount_inc);
 					}
 				}
 				return a; 
@@ -517,6 +518,9 @@ Promise.all([
 	});
 	obj.toolbar.querySelector('.toolbar-tax-rate input').addEventListener("keydown", e => {
 		e.stopPropagation();
+	});
+	obj.toolbar.querySelector('.toolbar-recalc button').addEventListener("click", e => {
+		obj.options.onchange(null, null, null, null, null, null);
 	});
 	
 	const template = document.querySelector('#spmain [slot="print"] print-page');
