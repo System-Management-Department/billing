@@ -531,9 +531,9 @@ Promise.all([
 			leader: document.querySelector('form-control[name="leader"]').text,
 			manager: document.querySelector('form-control[name="manager"]').text,
 			client_name: document.querySelector('form-control[name="client_name"]').value,
-			amount_exc: document.querySelector('form-control[name="amount_exc"]').text,
-			amount_tax: document.querySelector('form-control[name="amount_tax"]').text,
-			amount_inc: document.querySelector('form-control[name="amount_inc"]').text,
+			amount_exc: "\\" + document.querySelector('form-control[name="amount_exc"]').text,
+			amount_tax: "\\" + document.querySelector('form-control[name="amount_tax"]').text,
+			amount_inc: "\\" + document.querySelector('form-control[name="amount_inc"]').text,
 			specification: document.querySelector('form-control[name="specification"]').text,
 			note: document.querySelector('form-control[name="note"]').value,
 			summary_header1: (e => (e == null) ? void(0) : e.value)(document.querySelector('form-control[name="summary_header1"]')),
@@ -541,23 +541,23 @@ Promise.all([
 			summary_header3: (e => (e == null) ? void(0) : e.value)(document.querySelector('form-control[name="summary_header3"]')),
 			amount_tax_8: (e => {
 				if((e == null) || (e.value == "")){
-					return 0;
+					return "\\" + 0;
 				}
 				const taxRate = JSON.parse(e.value);
 				if("0.08" in taxRate){
-					return SinglePage.modal.number_format.query(taxRate["0.08"].amount_tax);
+					return "\\" + SinglePage.modal.number_format.query(taxRate["0.08"].amount_tax);
 				}
-				return 0;
+				return "\\" + 0;
 			})(document.querySelector('input[name="tax_rate"]')),
 			amount_tax_10: (e => {
 				if((e == null) || (e.value == "")){
-					return 0;
+					return "\\" + 0;
 				}
 				const taxRate = JSON.parse(e.value);
 				if("0.1" in taxRate){
-					return SinglePage.modal.number_format.query(taxRate["0.1"].amount_tax);
+					return "\\" + SinglePage.modal.number_format.query(taxRate["0.1"].amount_tax);
 				}
-				return 0;
+				return "\\" + 0;
 			})(document.querySelector('input[name="tax_rate"]'))
 		};
 		const printArea = document.querySelector('#spmain [slot="print"]');
@@ -591,13 +591,13 @@ Promise.all([
 				if(value == null){
 					return "";
 				}
-				return SinglePage.modal.number_format2.query(value);
+				return "\\" + SinglePage.modal.number_format2.query(value);
 			},
 			amount_exc(value){
 				if(value == null){
 					return "";
 				}
-				return SinglePage.modal.number_format.query(value);
+				return "\\" + SinglePage.modal.number_format.query(value);
 			},
 			circulation(value){
 				if(value == null){
@@ -967,10 +967,10 @@ function setDataTable(parent, columns, data, callback = null){
 									<div class="border-xs border-bs">&#8203;</div>
 								</div>
 								<div>
-									<div class="d-flex flex-row gap-1">
+									<div class="d-flex flex-row gap-1" style="font-size: 1.5rem; align-items: center;">
 										<div>合計金額</div>
-										<div class="price">\<span data-slot="amount_inc">0,000,000</span>-</div>
-										<div>（税込）</div>
+										<div class="price"><span data-slot="amount_inc">0,000,000</span>-</div>
+										<div style="font-size: 1rem;">（税込）</div>
 									</div>
 								</div>
 							</div>
@@ -1056,10 +1056,10 @@ function setDataTable(parent, columns, data, callback = null){
 									<div class="border-xs border-bs">&#8203;</div>
 								</div>
 								<div>
-									<div class="d-flex flex-row gap-1">
+									<div class="d-flex flex-row gap-1" style="font-size: 1.5rem; align-items: center;">
 										<div>合計金額</div>
-										<div class="price">\<span data-slot="amount_inc">0,000,000</span>-</div>
-										<div>（税込）</div>
+										<div class="price"><span data-slot="amount_inc">0,000,000</span>-</div>
+										<div style="font-size: 1rem;">（税込）</div>
 									</div>
 								</div>
 							</div>
@@ -1148,10 +1148,10 @@ function setDataTable(parent, columns, data, callback = null){
 									<div class="border-xs border-bs">&#8203;</div>
 								</div>
 								<div>
-									<div class="d-flex flex-row gap-1">
+									<div class="d-flex flex-row gap-1" style="font-size: 1.5rem; align-items: center;">
 										<div>合計金額</div>
-										<div class="price">\<span data-slot="amount_inc">0,000,000</span>-</div>
-										<div>（税込）</div>
+										<div class="price"><span data-slot="amount_inc">0,000,000</span>-</div>
+										<div style="font-size: 1rem;">（税込）</div>
 									</div>
 								</div>
 							</div>
@@ -1246,10 +1246,10 @@ function setDataTable(parent, columns, data, callback = null){
 									<div class="border-xs border-bs">&#8203;</div>
 								</div>
 								<div>
-									<div class="d-flex flex-row gap-1">
+									<div class="d-flex flex-row gap-1" style="font-size: 1.5rem; align-items: center;">
 										<div>合計金額</div>
-										<div class="price">\<span data-slot="amount_inc">0,000,000</span>-</div>
-										<div>（税込）</div>
+										<div class="price"><span data-slot="amount_inc">0,000,000</span>-</div>
+										<div style="font-size: 1rem;">（税込）</div>
 									</div>
 								</div>
 							</div>
@@ -1335,10 +1335,10 @@ function setDataTable(parent, columns, data, callback = null){
 									<div class="border-xs border-bs">&#8203;</div>
 								</div>
 								<div>
-									<div class="d-flex flex-row gap-1">
+									<div class="d-flex flex-row gap-1" style="font-size: 1.5rem; align-items: center;">
 										<div>合計金額</div>
-										<div class="price">\<span data-slot="amount_inc">0,000,000</span>-</div>
-										<div>（税込）</div>
+										<div class="price"><span data-slot="amount_inc">0,000,000</span>-</div>
+										<div style="font-size: 1rem;">（税込）</div>
 									</div>
 								</div>
 							</div>
