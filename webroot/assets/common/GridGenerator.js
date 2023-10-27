@@ -6,6 +6,7 @@ class GridGenerator{
 	static widthVar = "--grid-width";
 	static emptyImage = new Image(1, 1);
 	static cellSelector = ':scope>*:first-child>*,:scope>*:nth-child(n + 2)';
+	static tagFilter = {};
 	static resizeEvent = {
 		handleEvent(e){
 			this[`${e.type}Event`](e);
@@ -154,6 +155,9 @@ class GridGenerator{
 						item.classList.add(c);
 					}
 					items[col.slot] = item;
+					if(col.tag_name in GridGenerator.tagFilter){
+						GridGenerator.tagFilter[col.tag_name](item, data, col);
+					}
 					
 					(col.freeze ? gbf : gbody).appendChild(GridGenerator.wrap(item, col.cell, col.width));
 				}

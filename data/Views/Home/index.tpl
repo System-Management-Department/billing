@@ -102,6 +102,9 @@
 <script type="text/javascript" src="assets/common/SinglePage.js"></script>
 <script type="text/javascript" src="assets/common/GridGenerator.js"></script>
 <script type="text/javascript">
+GridGenerator.tagFilter["form-control"] = function(item, data, col){
+	item.value = col.text(data);
+};
 class ShowDialogElement extends HTMLElement{
 	constructor(){
 		super();
@@ -1211,8 +1214,8 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 			const result = {target: input.getAttribute("data-target"), value: input.value};
 			SinglePage.modal.payment_execution.hide("submit", result);
 		});
-		SinglePage.modal.number_format.setQuery(v => new Intl.NumberFormat().format(v));
-		SinglePage.modal.percentage.setQuery(v => `${v * 100}％`);
+		SinglePage.modal.number_format.setQuery(v => (v == "") ? "" : new Intl.NumberFormat().format(Number(v)));
+		SinglePage.modal.percentage.setQuery(v => (v == "") ? "" : `${Number(v) * 100}％`);
 		SinglePage.modal.estimate.addEventListener("modal-open", e => {
 			cache.use("cache").then(() => {
 				const parser = new DOMParser();
