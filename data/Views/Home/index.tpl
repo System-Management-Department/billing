@@ -88,12 +88,6 @@
 		--background-color: #f8d7da;
 	}
 }
-{/literal}
-{if !(($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "manager") or ($smarty.session["User.role"] eq "entry"))}{literal}#spmain *::part(d-manager){ display: none; }{/literal}{/if}
-{if !(($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "leader"))}{literal}#spmain *::part(d-leader){ display: none; }{/literal}{/if}
-{if !(($smarty.session["User.role"] eq "admin") or ($smarty.session["User.role"] eq "entry"))}{literal}#spmain *::part(d-entry){ display: none; }{/literal}{/if}
-{if !($smarty.session["User.role"] eq "admin")}{literal}#spmain *::part(d-admin){ display: none; }{/literal}{/if}
-{literal}
 </style>
 {/literal}{/block}
 {block name="scripts" append}{literal}
@@ -243,8 +237,13 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 			text: "IFNULL(text, '')",
 			attributes: "IFNULL(attributes, '')"
 		}).apply();
-		//master.delete("grid_columns").andWhere("filter=?");
-		
+{/literal}{if $smarty.session["User.role"] eq "entry"}{literal}
+	master.delete("grid_columns").andWhere("((filter='d-admin'))").apply();
+{/literal}{elseif $smarty.session["User.role"] eq "leader"}{literal}
+	master.delete("grid_columns").andWhere("((filter='d-admin') OR (filter='d-entry'))").apply();
+{/literal}{elseif $smarty.session["User.role"] eq "manager"}{literal}
+	master.delete("grid_columns").andWhere("((filter='d-admin') OR (filter='d-entry') OR (filter='d-leader'))").apply();
+{/literal}{/if}{literal}
 		const dtf = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'short',timeStyle: 'medium'});
 		const callbackList = {
 			["/Detail/RedSales#list"]: row => {
