@@ -143,14 +143,14 @@ class PurchaseController extends ControllerBase{
 		]), "application/vnd.sqlite3");
 	}
 	
-	#[\Attribute\AcceptRole("admin", "entry")]
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function edit(){
 		$v = new View();
 		$v["id"] = $this->requestContext->id;
 		return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 	}
 	
-	#[\Attribute\AcceptRole("admin", "manager", "leader")]
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
 	public function regist(){
 		$db = Session::getDB();
 		
