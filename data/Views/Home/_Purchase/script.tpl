@@ -163,7 +163,125 @@
 					});
 				}
 			});
-			document.querySelector('table-sticky').columns = dataTableQuery("/Purchase#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
+			
+			const grid = document.querySelector('[slot="main"] [data-grid]');
+			const gridLocation = grid.getAttribute("data-grid");
+			const gridInfo = master.select("ROW").setTable("grid_infos").andWhere("location=?", gridLocation).apply();
+			const gridColumns = master.select("ALL").setTable("grid_columns").andWhere("location=?", gridLocation).apply();
+			const gridCallback = (row, data, items) => {
+				if(data.close == 1){
+					if("edit" in items){
+						items.edit.parentNode.removeChild(items.edit);
+						delete items.edit;
+					}
+					if("delete" in items){
+						items.delete.parentNode.removeChild(items.delete);
+						delete items.delete;
+					}
+				}
+				if(data.request == 1){
+					if("edit" in items){
+						// items.edit.parentNode.removeChild(items.edit);
+					}
+				}
+				if(data.payment == 1){
+					if("payment" in items){
+						const slot = items.payment.parentNode;
+						slot.removeChild(items.payment);
+						slot.innerHTML = '<span class="text-danger">受領済</span>';
+						delete items.payment;
+					}
+				}
+				if(data.pu == null){
+					if("payment" in items){
+						items.payment.parentNode.removeChild(items.payment);
+					}
+					if("delete" in items){
+						items.delete.parentNode.removeChild(items.delete);
+					}
+					if("checkbox" in items){
+						items.checkbox.parentNode.removeChild(items.checkbox);
+					}
+					if("execution_date" in items){
+						items.execution_date.parentNode.removeChild(items.execution_date);
+					}
+				}
+				if(data.execution_date != null){
+					if("execution_date" in items){
+						items.execution_date.insertAdjacentElement("afterend", Object.assign(document.createElement("span"), {textContent: data.execution_date}));
+					}
+				}
+				if((data.pu == null) || (data.close != 1)){
+					if("request" in items){
+						items.request.parentNode.removeChild(items.request);
+					}
+					if("approval" in items){
+						items.approval.parentNode.removeChild(items.approval);
+					}
+					if("reflection" in items){
+						items.reflection.parentNode.removeChild(items.reflection);
+					}
+					if("status" in items){
+						items.status.textContent = "";
+					}
+					
+				}else if(data.reflection == 1){
+					if("approval" in items){
+						items.approval.parentNode.removeChild(items.approval);
+					}
+					if("reflection" in items){
+						items.reflection.parentNode.removeChild(items.reflection);
+					}
+					if("status" in items){
+						items.status.textContent = "反映済み";
+					}
+				}else if(data.approval == 1){
+					if("request" in items){
+						items.request.parentNode.removeChild(items.request);
+					}
+					if("approval" in items){
+						items.approval.textContent = "承認解除";
+						items.approval.setAttribute("target", "disapproval2");
+						items.approval.classList.remove("btn-primary");
+						items.approval.classList.add("btn-warning");
+					}
+					if("status" in items){
+						items.status.textContent = "承認済み";
+					}
+				}else if(data.prequest){
+					if("request" in items){
+						items.request.textContent = "取下";
+						items.request.setAttribute("target", "withdraw2");
+						items.request.classList.remove("btn-primary");
+						items.request.classList.add("btn-warning");
+					}
+					if("reflection" in items){
+						items.reflection.parentNode.removeChild(items.reflection);
+					}
+					if("status" in items){
+						items.status.textContent = "申請中";
+					}
+				}else{
+					if("approval" in items){
+						items.approval.parentNode.removeChild(items.approval);
+					}
+					if("reflection" in items){
+						items.reflection.parentNode.removeChild(items.reflection);
+					}
+					if("status" in items){
+						items.status.textContent = "";
+					}
+				}
+				if("manager" in items){
+					items.manager.textContent = SinglePage.modal.manager.query(data.manager);
+				}
+				if("supplier" in items){
+					items.supplier.textContent = SinglePage.modal.supplier.query(data.supplier);
+				}
+			};
+			GridGenerator.define(gridLocation, gridInfo, gridColumns, gridCallback);
+			GridGenerator.init(grid);
+			
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Purchase#search").apply()).then(form => { form.submit(); });
 			document.querySelector('[data-proc="export"]').addEventListener("click", e => {
 				const dt = Date.now();
@@ -177,7 +295,7 @@
 						}
 						if(number != null){
 							const selected = [];
-							const checked = document.querySelectorAll('table-row [slot="checkbox"] [value]:checked');
+							const checked = document.querySelectorAll('[slot="main"] [data-grid] [type="checkbox"][value]:checked');
 							const n = checked.length;
 							for(let i = 0; i < n; i++){
 								selected.push(checked[i].getAttribute("value"));
@@ -206,9 +324,8 @@
 				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
 				document.querySelector('search-form').setAttribute("result", `${info.count}件中${info.display}件を表示`);
 				
-				setDataTable(
-					document.querySelector('table-sticky'),
-					dataTableQuery("/Purchase#list").apply(),
+				GridGenerator.createTable(
+					document.querySelector('[slot="main"] [data-grid]'),
 					this.transaction.select("ALL")
 						.setTable("purchase_relations")
 						.addField("purchase_relations.sd")
@@ -233,133 +350,7 @@
 						.addField("sales_workflow.regist_datetime")
 						.addField("sales_workflow.request")
 						.addField("sales_workflow.close")
-						.apply(),
-					(row, data) => {
-						let edit = row.querySelector('[slot="edit"]');
-						let payment = row.querySelector('[slot="payment"] show-dialog');
-						let delete1 = row.querySelector('[slot="delete"] show-dialog');
-						const manager = row.querySelector('[slot="manager"]');
-						const supplier = row.querySelector('[slot="supplier"]');
-						const checkbox = row.querySelector('[slot="checkbox"] span');
-						const status = row.querySelector('[slot="status"]');
-						const request = row.querySelector('[slot="request"] show-dialog');
-						const approval = row.querySelector('[slot="approval"] show-dialog');
-						const reflection = row.querySelector('[slot="reflection"] show-dialog');
-						const execution_date = row.querySelector('[slot="execution_date"]');
-						if(data.close == 1){
-							if(edit != null){
-								edit.parentNode.removeChild(edit);
-								edit = null;
-							}
-							if(delete1 != null){
-								delete1.parentNode.removeChild(delete1);
-								delete1 = null;
-							}
-						}
-						if(data.request == 1){
-							if(edit != null){
-								// edit.parentNode.removeChild(edit);
-							}
-						}
-						if(data.payment == 1){
-							if(payment != null){
-								const slot = payment.parentNode;
-								slot.removeChild(payment);
-								slot.innerHTML = '<span class="text-danger">受領済</span>';
-								payment = null;
-							}
-						}
-						if(data.pu == null){
-							if(payment != null){
-								payment.parentNode.removeChild(payment);
-							}
-							if(delete1 != null){
-								delete1.parentNode.removeChild(delete1);
-							}
-							if(checkbox != null){
-								checkbox.parentNode.removeChild(checkbox);
-							}
-							if(execution_date != null){
-								execution_date.parentNode.removeChild(execution_date);
-							}
-						}else if(checkbox != null){
-							const input = document.createElement("input");
-							input.setAttribute("type", "checkbox");
-							input.setAttribute("value", data.pu);
-							input.checked = true;
-							checkbox.parentNode.replaceChild(input, checkbox);
-						}
-						if(data.execution_date != null){
-							execution_date.appendChild(Object.assign(document.createElement("span"), {textContent: data.execution_date}));
-						}
-						if((data.pu == null) || (data.close != 1)){
-							if(request != null){
-								request.parentNode.removeChild(request);
-							}
-							if(approval != null){
-								approval.parentNode.removeChild(approval);
-							}
-							if(reflection != null){
-								reflection.parentNode.removeChild(reflection);
-							}
-							if(status != null){
-								status.textContent = "";
-							}
-							
-						}else if(data.reflection == 1){
-							if(approval != null){
-								approval.parentNode.removeChild(approval);
-							}
-							if(reflection != null){
-								reflection.parentNode.removeChild(reflection);
-							}
-							if(status != null){
-								status.textContent = "反映済み";
-							}
-						}else if(data.approval == 1){
-							if(request != null){
-								request.parentNode.removeChild(request);
-							}
-							if(approval != null){
-								approval.setAttribute("label", "承認解除");
-								approval.setAttribute("target", "disapproval2");
-								approval.classList.remove("btn-primary");
-								approval.classList.add("btn-warning");
-							}
-							if(status != null){
-								status.textContent = "承認済み";
-							}
-						}else if(data.prequest){
-							if(request != null){
-								request.setAttribute("label", "取下");
-								request.setAttribute("target", "withdraw2");
-								request.classList.remove("btn-primary");
-								request.classList.add("btn-warning");
-							}
-							if(reflection != null){
-								reflection.parentNode.removeChild(reflection);
-							}
-							if(status != null){
-								status.textContent = "申請中";
-							}
-						}else{
-							if(approval != null){
-								approval.parentNode.removeChild(approval);
-							}
-							if(reflection != null){
-								reflection.parentNode.removeChild(reflection);
-							}
-							if(status != null){
-								status.textContent = "";
-							}
-						}
-						if(manager != null){
-							manager.textContent = SinglePage.modal.manager.query(data.manager);
-						}
-						if(supplier != null){
-							supplier.textContent = SinglePage.modal.supplier.query(data.supplier);
-						}
-					}
+						.apply()
 				);
 			});
 		}

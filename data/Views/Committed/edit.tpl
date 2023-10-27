@@ -7,6 +7,92 @@
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jsuites.css" />
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jspreadsheet.css" />
 <style type="text/css">
+[data-grid]{
+	--border-width: 1px;
+	--border-color: #dedede;
+	--grid-padding: 0.25rem;
+	display: grid;
+	position: relative;
+	white-space: pre;
+	gap: var(--border-width);
+	>*{
+		--background-color: white;
+		display: grid;
+		grid-template-columns: subgrid;
+		grid-column: 1 / -1;
+		>*:first-child{
+			display: grid;
+			grid-template-columns: subgrid;
+			grid-column: 1 / span var(--freeze, 0);
+			position: sticky;
+			left: var(--border-width);
+			&:empty{
+				display: none;
+			}
+		}
+		>*:first-child>*,>*:nth-child(n + 2){
+			outline: var(--border-width) solid var(--border-color);
+			overflow: hidden;
+			text-overflow: ellipsis;
+	    	background: var(--background-color);
+			padding: var(--grid-padding);
+			display: block;
+			&.gcell{
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+			&.gcell-auto{
+				overflow: visible;
+			}
+		}
+		[data-grid-width]{
+			display: flex;
+			background: none;
+			padding: 0;
+			overflow: visible;
+			position: relative;
+			>*:first-child{
+				flex-grow: 1;
+				flex-shrink: 1;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				background: var(--background-color);
+				padding: var(--grid-padding);
+				text-align: inherit;
+			}
+			>*:last-child{
+				position: absolute;
+				right: calc(-3px - var(--border-width));
+				top: 0;
+				width: calc(6px + var(--border-width));
+				height: 100%;
+				cursor: col-resize;
+			}
+		}
+		&:nth-child(n + 2):hover{
+			--background-color: yellow;
+		}
+	}
+	>*:first-child{
+		position: sticky;
+		top: var(--border-width);
+		--background-color: #009EA7;
+		color: white;
+		text-align: center;
+		z-index: 1;
+		>*:first-child{
+			z-index: 1;
+		}
+	}
+	
+	.table-secondary{
+		--background-color: #e2e3e5;
+	}
+	.table-danger{
+		--background-color: #f8d7da;
+	}
+}
 #spmain::part(body){
 	height: auto;
 }
@@ -28,6 +114,7 @@ edit-table{
 <script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
 <script type="text/javascript" src="/assets/common/SQLite.js"></script>
 <script type="text/javascript" src="/assets/common/SinglePage.js"></script>
+<script type="text/javascript" src="/assets/common/GridGenerator.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jsuites.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jspreadsheet.js"></script>
 <script type="text/javascript">
@@ -157,48 +244,59 @@ Promise.all([
 			return array.indexOf(JSON.stringify(search).replace(/^"|"$/g, "")) > 0 ? 1 : 0;
 		}
 	});
+	const callbackList = {};
+	master.updateSet("grid_columns", {},{
+		label: "IFNULL(label, '')",
+		width: "IFNULL(width, 'auto')",
+		slot: "IFNULL(slot, '')",
+		cell: "(cell='YES')",
+		tag_name: "IFNULL(tag_name, 'span')",
+		class_list: "IFNULL(class_list, '')",
+		text: "IFNULL(text, '')",
+		attributes: "IFNULL(attributes, '')"
+	}).apply();
+	//master.delete("grid_columns").andWhere("filter=?");
+	master.select("ALL").setTable("grid_infos").apply().forEach(info => {
+		const columns = master.select("ALL").setTable("grid_columns").andWhere("location=?", info.location).apply();
+		GridGenerator.define(info.location, info, columns, (info.location in callbackList) ? callbackList[info.location] : null);
+	});
+	Array.from(document.querySelectorAll('[data-grid]')).forEach(grid => {
+		GridGenerator.init(grid);
+	});
+	
 	transaction.import(response[1], "transaction");
-	SinglePage.modal.leader      .querySelector('table-sticky').columns = dataTableQuery("/Modal/Leader#list").setField("label,width,slot,part").apply();
-	SinglePage.modal.manager     .querySelector('table-sticky').columns = dataTableQuery("/Modal/Manager#list").setField("label,width,slot,part").apply();
-	SinglePage.modal.apply_client.querySelector('table-sticky').columns = dataTableQuery("/Modal/ApplyClient#list").setField("label,width,slot,part").apply();
 	
 	SinglePage.modal.leader.setQuery(v => master.select("ONE").setTable("leaders").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 		const keyword = e.detail;
-		setDataTable(
-			SinglePage.modal.leader.querySelector('table-sticky'),
-			dataTableQuery("/Modal/Leader#list").apply(),
+		GridGenerator.createTable(
+			SinglePage.modal.leader.querySelector('[data-grid]'),
 			master.select("ALL")
 				.setTable("leaders")
 				.andWhere("has(json_array(code,name),?)", keyword)
-				.apply(),
-			row => {}
+				.apply()
 		);
 	});
 	SinglePage.modal.manager.setQuery(v => master.select("ONE").setTable("managers").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 		const keyword = e.detail;
-		setDataTable(
-			SinglePage.modal.manager.querySelector('table-sticky'),
-			dataTableQuery("/Modal/Manager#list").apply(),
+		GridGenerator.createTable(
+			SinglePage.modal.manager.querySelector('[data-grid]'),
 			master.select("ALL")
 				.setTable("managers")
 				.andWhere("has(json_array(code,name),?)", keyword)
-				.apply(),
-			row => {}
+				.apply()
 		);
 	});
 	SinglePage.modal.apply_client.setQuery(v => master.select("ONE").setTable("system_apply_clients").setField("unique_name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
 		const keyword = e.detail;
-		setDataTable(
-			SinglePage.modal.apply_client.querySelector('table-sticky'),
-			dataTableQuery("/Modal/ApplyClient#list").apply(),
+		GridGenerator.createTable(
+			SinglePage.modal.apply_client.querySelector('[data-grid]'),
 			master.select("ALL")
 				.setTable("system_apply_clients")
 				.setField("system_apply_clients.code,system_apply_clients.unique_name as name,system_apply_clients.kana")
 				.leftJoin("clients on system_apply_clients.client=clients.code")
 				.addField("clients.name as client")
 				.andWhere("has(json_array(system_apply_clients.code,system_apply_clients.unique_name,system_apply_clients.name),?)", keyword)
-				.apply(),
-			row => {}
+				.apply()
 		);
 	});
 	
@@ -652,13 +750,13 @@ function setDataTable(parent, columns, data, callback = null){
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option><option value="5">インボイス対応（軽減税率適用）請求書</option></datalist>
 	<datalist id="specification"></datalist>
 	<modal-dialog name="leader" label="部門長選択">
-		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
+		<div slot="body" class="overflow-auto" style="height: calc(100vh - 20rem);"><div data-grid="/Modal/Leader#list"></div></div>
 	</modal-dialog>
 	<modal-dialog name="manager" label="当社担当者選択">
-		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
+		<div slot="body" class="overflow-auto" style="height: calc(100vh - 20rem);"><div data-grid="/Modal/Manager#list"></div></div>
 	</modal-dialog>
 	<modal-dialog name="apply_client" label="請求先選択">
-		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
+		<div slot="body" class="overflow-auto" style="height: calc(100vh - 20rem);"><div data-grid="/Modal/ApplyClient#list"></div></div>
 	</modal-dialog>
 	<modal-dialog name="number_format"></modal-dialog>
 	<modal-dialog name="number_format2"></modal-dialog>

@@ -71,7 +71,54 @@
 						});
 				}
 			});
-			document.querySelector('table-sticky').columns = dataTableQuery("/Committed#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
+			const grid = document.querySelector('[slot="main"] [data-grid]');
+			const gridLocation = grid.getAttribute("data-grid");
+			const gridInfo = master.select("ROW").setTable("grid_infos").andWhere("location=?", gridLocation).apply();
+			const gridColumns = master.select("ALL").setTable("grid_columns").andWhere("location=?", gridLocation).apply();
+			const gridCallback = (row, data, items) => {
+				if(data.hide == 1){
+					row.classList.add("table-secondary");
+				}
+				if("apply_client" in items){
+					items.apply_client.textContent = SinglePage.modal.apply_client.query(data.apply_client);
+				}
+				if("manager" in items){
+					items.manager.textContent = SinglePage.modal.manager.query(data.manager);
+				}
+				if(data.request == 1){
+					if("request" in items){
+						items.request.textContent = "取下";
+						items.request.setAttribute("target", "withdraw");
+						items.request.classList.remove("btn-primary");
+						items.request.classList.add("btn-warning");
+					}
+					if("edit" in items){
+						items.edit.parentNode.removeChild(items.edit);
+					}
+					if("delete_slip" in items){
+						items.delete_slip.parentNode.removeChild(items.delete_slip);
+						delete items.delete_slip;
+					}
+					if("status" in items){
+						items.status.classList.add("text-danger");
+						items.status.innerHTML = '<i class="bi bi-reply-fill text-red"></i>申請中';
+					}
+				}else{
+					if("approval" in items){
+						items.approval.parentNode.removeChild(items.approval);
+					}
+					if("status" in items){
+						items.status.textContent = "";
+					}
+				}
+				if(data.release_datetime != null){
+					if("delete_slip" in items){
+						items.delete_slip.parentNode.removeChild(items.delete_slip);
+					}
+				}
+			};
+			GridGenerator.define(gridLocation, gridInfo, gridColumns, gridCallback);
+			GridGenerator.init(grid);
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Committed#search").apply()).then(form => { form.submit(); });
 		}
 		reload(){
@@ -84,9 +131,8 @@
 				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
 				document.querySelector('search-form').setAttribute("result", `${info.count}件中${info.display}件を表示`);
 				
-				setDataTable(
-					document.querySelector('table-sticky'),
-					dataTableQuery("/Committed#list").apply(),
+				GridGenerator.createTable(
+					document.querySelector('[slot="main"] [data-grid]'),
 					this.transaction.select("ALL")
 						.setTable("sales_slips")
 						.addField("sales_slips.*")
@@ -95,56 +141,7 @@
 						.addField("sales_workflow.request")
 						.addField("sales_workflow.release_datetime")
 						.addField("sales_workflow.hide")
-						.apply(),
-					(row, data) => {
-						if(data.hide == 1){
-							row.classList.add("table-secondary");
-						}
-						const apply_client = row.querySelector('[slot="apply_client"]');
-						const manager = row.querySelector('[slot="manager"]');
-						const request = row.querySelector('[slot="request"] show-dialog');
-						const approval = row.querySelector('[slot="approval"]');
-						const edit = row.querySelector('[slot="edit"]');
-						const status = row.querySelector('[slot="status"]');
-						let delete_slip = row.querySelector('[slot="delete_slip"]');
-						if(apply_client != null){
-							apply_client.textContent = SinglePage.modal.apply_client.query(data.apply_client);
-						}
-						if(manager != null){
-							manager.textContent = SinglePage.modal.manager.query(data.manager);
-						}
-						if(data.request == 1){
-							if(request != null){
-								request.setAttribute("label", "取下");
-								request.setAttribute("target", "withdraw");
-								request.classList.remove("btn-primary");
-								request.classList.add("btn-warning");
-							}
-							if(edit != null){
-								edit.parentNode.removeChild(edit);
-							}
-							if(delete_slip != null){
-								delete_slip.parentNode.removeChild(delete_slip);
-								delete_slip = null;
-							}
-							if(status != null){
-								status.classList.add("text-danger");
-								status.innerHTML = '<i class="bi bi-reply-fill text-red"></i>申請中';
-							}
-						}else{
-							if(approval != null){
-								approval.parentNode.removeChild(approval);
-							}
-							if(status != null){
-								status.textContent = "";
-							}
-						}
-						if(data.release_datetime != null){
-							if(delete_slip != null){
-								delete_slip.parentNode.removeChild(delete_slip);
-							}
-						}
-					}
+						.apply()
 				);
 			});
 		}

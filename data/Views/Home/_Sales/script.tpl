@@ -26,12 +26,30 @@
 						});
 				}
 			});
-			document.querySelector('table-sticky').columns = dataTableQuery("/Sales#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
+			
+			const grid = document.querySelector('[slot="main"] [data-grid]');
+			const gridLocation = grid.getAttribute("data-grid");
+			const gridInfo = master.select("ROW").setTable("grid_infos").andWhere("location=?", gridLocation).apply();
+			const gridColumns = master.select("ALL").setTable("grid_columns").andWhere("location=?", gridLocation).apply();
+			const gridCallback = (row, data, items) => {
+				if(data.hide == 1){
+					row.classList.add("table-secondary");
+				}
+				if("apply_client" in items){
+					items.apply_client.textContent = SinglePage.modal.apply_client.query(data.apply_client);
+				}
+				if("manager" in items){
+					items.manager.textContent = SinglePage.modal.manager.query(data.manager);
+				}
+			};
+			GridGenerator.define(gridLocation, gridInfo, gridColumns, gridCallback);
+			GridGenerator.init(grid);
+			
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Sales#search").apply()).then(form => { form.submit(); });
 			document.querySelector('[data-proc="close"]').addEventListener("click", e => {
 				let number = null;
 				const selected = [];
-				const checked = document.querySelectorAll('table-row [slot="checkbox"] [value]:checked');
+				const checked = document.querySelectorAll('[slot="main"] [data-grid] [type="checkbox"][value]:checked');
 				const n = checked.length;
 				for(let i = 0; i < n; i++){
 					selected.push(checked[i].getAttribute("value"));
@@ -64,7 +82,7 @@
 						}
 						if(number != null){
 							const selected = [];
-							const checked = document.querySelectorAll('table-row [slot="checkbox"] [value]:checked');
+							const checked = document.querySelectorAll('[slot="main"] [data-grid] [type="checkbox"][value]:checked');
 							const n = checked.length;
 							for(let i = 0; i < n; i++){
 								selected.push(checked[i].getAttribute("value"));
@@ -93,37 +111,15 @@
 				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
 				document.querySelector('search-form').setAttribute("result", `${info.count}件中${info.display}件を表示`);
 				
-				setDataTable(
-					document.querySelector('table-sticky'),
-					dataTableQuery("/Sales#list").apply(),
+				GridGenerator.createTable(
+					document.querySelector('[slot="main"] [data-grid]'),
 					this.transaction.select("ALL")
 						.setTable("sales_slips")
 						.addField("sales_slips.*")
 						.leftJoin("sales_workflow using(ss)")
 						.addField("sales_workflow.regist_datetime")
 						.addField("sales_workflow.hide")
-						.apply(),
-					(row, data) => {
-						if(data.hide == 1){
-							row.classList.add("table-secondary");
-						}
-						const apply_client = row.querySelector('[slot="apply_client"]');
-						const manager = row.querySelector('[slot="manager"]');
-						const checkbox = row.querySelector('[slot="checkbox"] span');
-						if(apply_client != null){
-							apply_client.textContent = SinglePage.modal.apply_client.query(data.apply_client);
-						}
-						if(manager != null){
-							manager.textContent = SinglePage.modal.manager.query(data.manager);
-						}
-						if(checkbox != null){
-							const input = document.createElement("input");
-							input.setAttribute("type", "checkbox");
-							input.setAttribute("value", data.slip_number);
-							input.checked = true;
-							checkbox.parentNode.replaceChild(input, checkbox);
-						}
-					}
+						.apply()
 				);
 			});
 		}

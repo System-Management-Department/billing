@@ -1,7 +1,7 @@
 <template data-page="/">
 	<span slot="title" class="navbar-text text-dark">ホーム</span>
 	<a slot="tools" class="btn btn-success my-2" href="/exment/admin/" style="order: 1;">マスター管理</a>
-	<show-dialog slot="tools" class="btn btn-success my-2" target="salses_export" label="売上一覧表出力" style="order: 2;"></show-dialog>
+	<show-dialog slot="tools" class="btn btn-success my-2" target="salses_export" style="order: 2;">売上一覧表出力</show-dialog>
 	<main slot="main" class="d-contents">
 		<div class="d-flex mx-5 gap-5">
 			<div>
@@ -28,7 +28,7 @@
 							<div class="btn py-2 text-white shadow-sm" style="width:120px;background:#008db5;">見積書5</div>
 							<form-control class="btn btn-light ps-4 py-2 flex-grow-1 text-center shadow-sm" type="label" list="invoice_format">5</form-control>
 						</div>
-						<show-dialog label="一時保存された見積一覧" target="estimate" class="btn btn-success"></show-dialog>
+						<show-dialog target="estimate" class="btn btn-success">一時保存された見積一覧</show-dialog>
 					</div>
 				</div>
 			</div>

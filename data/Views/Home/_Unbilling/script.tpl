@@ -13,40 +13,70 @@
 			vp.addEventListener("reload", e => { this.reload(); });
 			vp.addEventListener("modal-close", e => {
 			});
-			document.querySelector('table-sticky').addEventListener("click", e => {
-				if(e.target.nodeType == Node.ELEMENT_NODE){
-					if(e.target.hasAttribute("data-row-hide")){
-						const btn = e.target;
-						const row = btn.closest('table-row');
+			document.querySelector('[slot="main"] [data-grid]').addEventListener("click", e => {
+				const gridInfo = GridGenerator.getInfo(e.target);
+				if(gridInfo.slot == "hide"){
+					const btn = gridInfo.cell.querySelector('[data-row-hide],[data-row-show]');
+					if(btn.hasAttribute("data-row-hide")){
 						const value = btn.getAttribute("data-row-hide");
 						fetch(`/Unbilling/hide/${value}`).then(fetchJson).then(result => {
 							if(result.success){
 								btn.setAttribute("data-row-show", value);
 								btn.removeAttribute("data-row-hide");
 								btn.textContent = "表示";
-								row.classList.add("table-secondary");
+								gridInfo.row.classList.add("table-secondary");
 							}
 						});
-					}else if(e.target.hasAttribute("data-row-show")){
-						const btn = e.target;
-						const row = btn.closest('table-row');
+					}else{
 						const value = btn.getAttribute("data-row-show");
 						fetch(`/Unbilling/show/${value}`).then(fetchJson).then(result => {
 							if(result.success){
 								btn.setAttribute("data-row-hide", value);
 								btn.removeAttribute("data-row-show");
 								btn.textContent = "非表示";
-								row.classList.remove("table-secondary");
+								gridInfo.row.classList.remove("table-secondary");
 							}
 						});
 					}
 				}
 			}, {useCapture: true});
-			document.querySelector('table-sticky').columns = dataTableQuery("/Unbilling#list").apply().map(row => { return {label: row.label, width: row.width, slot: row.slot, part: row.part}; });
+			
+			const grid = document.querySelector('[slot="main"] [data-grid]');
+			const gridLocation = grid.getAttribute("data-grid");
+			const gridInfo = master.select("ROW").setTable("grid_infos").andWhere("location=?", gridLocation).apply();
+			const gridColumns = master.select("ALL").setTable("grid_columns").andWhere("location=?", gridLocation).apply();
+			const gridCallback = (row, data, items) => {
+				if(this.#lastApplyClient == null){
+					if("checkbox" in items){
+						items.checkbox.parentNode.removeChild(items.checkbox);
+					}
+				}
+				if(data.hide == 1){
+					row.classList.add("table-secondary");
+					if("hide" in items){
+						items.hide.textContent = "表示";
+						items.hide.setAttribute("data-row-show", data.ss);
+					}
+				}else{
+					if("hide" in items){
+						items.hide.textContent = "非表示";
+						items.hide.setAttribute("data-row-hide", data.ss);
+					}
+				}
+				if("apply_client" in items){
+					items.apply_client.textContent = SinglePage.modal.apply_client.query(data.apply_client);
+				}
+				if("manager" in items){
+					items.manager.textContent = SinglePage.modal.manager.query(data.manager);
+				}
+			};
+			GridGenerator.define(gridLocation, gridInfo, gridColumns, gridCallback);
+			GridGenerator.init(grid);
+			
 			formTableInit(document.querySelector('search-form'), formTableQuery("/Unbilling#search").apply()).then(form => { form.submit(); });
 			document.querySelector('[data-proc="marge"]').addEventListener("click", e => {
 				const dt = Date.now();
-				const checked = document.querySelectorAll('table-row [slot="checkbox"] [value]:checked');
+				const checked = document.querySelectorAll('[slot="main"] [data-grid] [type="checkbox"][value]:checked');
 				if(checked.length < 1){
 					alert("選択されていません。");
 				}else{
@@ -145,7 +175,7 @@
 			});
 			document.querySelector('[data-proc="aggregation"]').addEventListener("click", e => {
 				const dt = Date.now();
-				const checked = document.querySelectorAll('table-row [slot="checkbox"] [value]:checked');
+				const checked = document.querySelectorAll('[slot="main"] [data-grid] [type="checkbox"][value]:checked');
 				if(checked.length < 1){
 					alert("選択されていません。");
 				}else{
@@ -209,7 +239,6 @@
 			});
 		}
 		reload(){
-			const displayCheckbox = this.#lastApplyClient != null;
 			fetch("/Unbilling/search", {
 				method: "POST",
 				body: this.#lastFormData
@@ -219,50 +248,15 @@
 				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
 				document.querySelector('search-form').setAttribute("result", `${info.count}件中${info.display}件を表示`);
 				
-				setDataTable(
-					document.querySelector('table-sticky'),
-					dataTableQuery("/Unbilling#list").apply(),
+				GridGenerator.createTable(
+					document.querySelector('[slot="main"] [data-grid]'),
 					this.transaction.select("ALL")
 						.setTable("sales_slips")
 						.addField("sales_slips.*")
 						.leftJoin("sales_workflow using(ss)")
 						.addField("sales_workflow.regist_datetime")
 						.addField("sales_workflow.hide")
-						.apply(),
-					(row, data) => {
-						const apply_client = row.querySelector('[slot="apply_client"]');
-						const manager = row.querySelector('[slot="manager"]');
-						const checkbox = row.querySelector('[slot="checkbox"] span');
-						const hide = row.querySelector('[slot="hide"] span');
-						if(data.hide == 1){
-							row.classList.add("table-secondary");
-							if(hide != null){
-								hide.textContent = "表示";
-								hide.setAttribute("data-row-show", data.ss);
-							}
-						}else{
-							if(hide != null){
-								hide.textContent = "非表示";
-								hide.setAttribute("data-row-hide", data.ss);
-							}
-						}
-						if(apply_client != null){
-							apply_client.textContent = SinglePage.modal.apply_client.query(data.apply_client);
-						}
-						if(manager != null){
-							manager.textContent = SinglePage.modal.manager.query(data.manager);
-						}
-						if(checkbox != null){
-							if(displayCheckbox){
-								const input = document.createElement("input");
-								input.setAttribute("type", "checkbox");
-								input.setAttribute("value", data.ss);
-								checkbox.parentNode.replaceChild(input, checkbox);
-							}else{
-								checkbox.parentNode.removeChild(checkbox);
-							}
-						}
-					}
+						.apply()
 				);
 			});
 		}

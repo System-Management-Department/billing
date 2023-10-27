@@ -5,6 +5,92 @@
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jsuites.css" />
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jspreadsheet.css" />
 <style type="text/css">
+[data-grid]{
+	--border-width: 1px;
+	--border-color: #dedede;
+	--grid-padding: 0.25rem;
+	display: grid;
+	position: relative;
+	white-space: pre;
+	gap: var(--border-width);
+	>*{
+		--background-color: white;
+		display: grid;
+		grid-template-columns: subgrid;
+		grid-column: 1 / -1;
+		>*:first-child{
+			display: grid;
+			grid-template-columns: subgrid;
+			grid-column: 1 / span var(--freeze, 0);
+			position: sticky;
+			left: var(--border-width);
+			&:empty{
+				display: none;
+			}
+		}
+		>*:first-child>*,>*:nth-child(n + 2){
+			outline: var(--border-width) solid var(--border-color);
+			overflow: hidden;
+			text-overflow: ellipsis;
+	    	background: var(--background-color);
+			padding: var(--grid-padding);
+			display: block;
+			&.gcell{
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+			&.gcell-auto{
+				overflow: visible;
+			}
+		}
+		[data-grid-width]{
+			display: flex;
+			background: none;
+			padding: 0;
+			overflow: visible;
+			position: relative;
+			>*:first-child{
+				flex-grow: 1;
+				flex-shrink: 1;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				background: var(--background-color);
+				padding: var(--grid-padding);
+				text-align: inherit;
+			}
+			>*:last-child{
+				position: absolute;
+				right: calc(-3px - var(--border-width));
+				top: 0;
+				width: calc(6px + var(--border-width));
+				height: 100%;
+				cursor: col-resize;
+			}
+		}
+		&:nth-child(n + 2):hover{
+			--background-color: yellow;
+		}
+	}
+	>*:first-child{
+		position: sticky;
+		top: var(--border-width);
+		--background-color: #009EA7;
+		color: white;
+		text-align: center;
+		z-index: 1;
+		>*:first-child{
+			z-index: 1;
+		}
+	}
+	
+	.table-secondary{
+		--background-color: #e2e3e5;
+	}
+	.table-danger{
+		--background-color: #f8d7da;
+	}
+}
 .jcalendar-header .jcalendar-year::after{
 	content: "年";
 }
@@ -14,6 +100,7 @@
 <script type="text/javascript" src="/assets/node_modules/co.min.js"></script>
 <script type="text/javascript" src="/assets/common/SQLite.js"></script>
 <script type="text/javascript" src="/assets/common/SinglePage.js"></script>
+<script type="text/javascript" src="/assets/common/GridGenerator.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jsuites.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jspreadsheet.js"></script>
 <script type="text/javascript">{literal}
@@ -163,33 +250,48 @@ Promise.all([
 			return array.indexOf(JSON.stringify(search).replace(/^"|"$/g, "")) > 0 ? 1 : 0;
 		}
 	});
+	const callbackList = {};
+	master.updateSet("grid_columns", {},{
+		label: "IFNULL(label, '')",
+		width: "IFNULL(width, 'auto')",
+		slot: "IFNULL(slot, '')",
+		cell: "(cell='YES')",
+		tag_name: "IFNULL(tag_name, 'span')",
+		class_list: "IFNULL(class_list, '')",
+		text: "IFNULL(text, '')",
+		attributes: "IFNULL(attributes, '')"
+	}).apply();
+	//master.delete("grid_columns").andWhere("filter=?");
+	master.select("ALL").setTable("grid_infos").apply().forEach(info => {
+		const columns = master.select("ALL").setTable("grid_columns").andWhere("location=?", info.location).apply();
+		GridGenerator.define(info.location, info, columns, (info.location in callbackList) ? callbackList[info.location] : null);
+	});
+	Array.from(document.querySelectorAll('[data-grid]')).forEach(grid => {
+		GridGenerator.init(grid);
+	});
+	
 	transaction.import(response[1], "transaction");
 	transaction.attach(master, "master");
 	
-	SinglePage.modal.supplier.querySelector('table-sticky').columns = dataTableQuery("/Modal/Supplier#list").setField("label,width,slot,part").apply();
 	SinglePage.modal.supplier.setQuery(v => master.select("ONE").setTable("suppliers").setField("name").andWhere("code=?", v).apply()).addEventListener("modal-open", e => {
-		setDataTable(
-			SinglePage.modal.supplier.querySelector('table-sticky'),
-			dataTableQuery("/Modal/Supplier#list").apply(),
+		GridGenerator.createTable(
+			SinglePage.modal.supplier.querySelector('[data-grid]'),
 			master.select("ALL")
 				.setTable("suppliers")
-				.apply(),
-			row => {}
+				.apply()
 		);
 	});
 	SinglePage.modal.supplier.querySelector('[data-search="search-btn"]').addEventListener("click", e => {
 		const keyword = SinglePage.modal.supplier.querySelector('[data-search="keyword"]').value;
-		setDataTable(
-			SinglePage.modal.supplier.querySelector('table-sticky'),
-			dataTableQuery("/Modal/Supplier#list").apply(),
+		GridGenerator.createTable(
+			SinglePage.modal.supplier.querySelector('[data-grid]'),
 			master.select("ALL")
 				.setTable("suppliers")
 				.andWhere("has(json_array(code,name,kana),?)", keyword)
-				.apply(),
-			row => {}
+				.apply()
 		);
 	});
-		
+	
 	const suppliers = master.select("ALL")
 		.setTable("suppliers")
 		.apply();
@@ -545,6 +647,6 @@ function setDataTable(parent, columns, data, callback = null){
 	<modal-dialog name="apply_client" label="請求先選択"></modal-dialog>
 	<modal-dialog name="supplier" label="仕入先選択">
 		<div slot="body" class="col-6"><div class="input-group"><input class="form-control" type="text" data-search="keyword" /><button type="button" class="btn btn-success" data-search="search-btn">検索</button></div></div>
-		<table-sticky slot="body" style="height: calc(100vh - 20rem);"></table-sticky>
+		<div slot="body" class="overflow-auto" style="height: calc(100vh - 20rem);"><div data-grid="/Modal/Supplier#list"></div></div>
 	</modal-dialog>
 {/block}
