@@ -537,6 +537,28 @@ Promise.all([
 	};
 	const gridCallback = (row, data, items) => {
 		const cleave = {};
+		if(id == 2){
+			if(!("attributes" in data) || (data.attributes == null)){
+				data.attributes = {};
+			}
+			if(!("circulation" in data.attributes)){
+				data.attributes.circulation = "";
+			}
+		}
+		if(id == 3){
+			if(!("attributes" in data) || (data.attributes == null)){
+				data.attributes = {};
+			}
+			if(!("summary_data1" in data.attributes)){
+				data.attributes.summary_data1 = "";
+			}
+			if(!("summary_data2" in data.attributes)){
+				data.attributes.summary_data2 = "";
+			}
+			if(!("summary_data3" in data.attributes)){
+				data.attributes.summary_data3 = "";
+			}
+		}
 		gridRowMap.set(row, {data, items, cleave});
 		row.addEventListener("change", gridChangeEvent);
 		row.addEventListener("keydown", gridKeydownEvent);
