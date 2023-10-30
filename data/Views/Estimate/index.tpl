@@ -425,7 +425,7 @@ Promise.all([
 		if("quantity" in items){
 			if(data.record){
 				items.quantity.value = SinglePage.modal.number_format2.query(data.quantity).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(data.quantity_place).substring(1));
-				data.quantity = Number(items.quantity.value);
+				data.quantity = Number(items.quantity.value.replace(/,/g, ""));
 			}else{
 				items.quantity.value = "";
 			}
@@ -436,7 +436,7 @@ Promise.all([
 		if("unit_price" in items){
 			if(data.record){
 				items.unit_price.value = SinglePage.modal.number_format2.query(data.unit_price).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(data.price_place).substring(1));
-				data.unit_price = Number(items.unit_price.value);
+				data.unit_price = Number(items.unit_price.value.replace(/,/g, ""));
 			}else{
 				items.unit_price.value = "";
 			}
