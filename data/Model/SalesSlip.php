@@ -170,6 +170,8 @@ class SalesSlip{
 					"taxable" => $detail[$i]["taxable"],
 					"tax_rate" => $detail[$i]["tax_rate"],
 					"category" => $detail[$i]["category"],
+					"quantity_place" => $detail[$i]["quantity_place"],
+					"price_place" => $detail[$i]["price_place"],
 				],[]);
 				$insertQuery($sd);
 				

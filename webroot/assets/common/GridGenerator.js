@@ -27,7 +27,7 @@ class GridGenerator{
 		dragenterEvent(e){
 			if(e.target == this.targetGrid){
 				const rect = this.targetLabel.getBoundingClientRect();
-				const x = e.clientX - rect.left;
+				const x = Math.max(5, e.clientX - rect.left);
 				this.targetGrid.style.setProperty(`${GridGenerator.widthVar}${this.widthIndex}`, `${x}px`);
 				e.preventDefault();
 			}
@@ -35,7 +35,7 @@ class GridGenerator{
 		dragoverEvent(e){
 			if(e.composedPath().includes(this.targetGrid)){
 				const rect = this.targetLabel.getBoundingClientRect();
-				const x = e.clientX - rect.left;
+				const x = Math.max(5, e.clientX - rect.left);
 				this.targetGrid.style.setProperty(`${GridGenerator.widthVar}${this.widthIndex}`, `${x}px`);
 				e.preventDefault();
 			}
@@ -167,6 +167,17 @@ class GridGenerator{
 				return gbody;
 			},
 			getSlot: index => gc[index].slot,
+			slots: () => {
+				return {
+					*[Symbol.iterator](){
+						let i = 0;
+						for(let item of gc){
+							yield [i, item];
+							i++;
+						}
+					},
+				};
+			},
 			callback: callback
 		};
 		GridGenerator.#container[name] = ggo;
@@ -205,6 +216,10 @@ class GridGenerator{
 			if(GridGenerator.resizeEvent.gridSet.has(row.parentNode)){
 				grid = row.parentNode;
 				break;
+			}else if((row.previousElementSibling == null) && GridGenerator.resizeEvent.gridSet.has(row.parentNode.parentNode)){
+				row = row.parentNode;
+				grid = row.parentNode;
+				break;
 			}
 		}
 		if(grid == null){
@@ -228,5 +243,20 @@ class GridGenerator{
 		const nextRow = ((cell == null) || (cells == null)) ? null : cells[columnIndex];
 		
 		return {grid, row, cell, columnIndex, slot, prev, next, prevRow, nextRow};
+	}
+	static getSlot(grid, slot){
+		const name = grid.getAttribute(GridGenerator.referenceAttribute);
+		const row = grid.firstElementChild;
+		const cells = Array.from(row.querySelectorAll(GridGenerator.cellSelector));
+		for(let slotItem of GridGenerator.#container[name].slots()){
+			const [i, item] = slotItem;
+			if(slot == item.slot){
+				return {
+					index: i,
+					head: (item.width == "auto") ? cells[i] : cells[i].firstElementChild
+				};
+			}
+		}
+		return null;
 	}
 }

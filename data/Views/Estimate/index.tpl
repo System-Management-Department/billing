@@ -11,6 +11,7 @@
 	--border-width: 1px;
 	--border-color: #dedede;
 	--grid-padding: 0.25rem;
+	counter-reset: grid-row-counter;
 	display: grid;
 	position: relative;
 	white-space: pre;
@@ -44,6 +45,9 @@
 			}
 			&.gcell-auto{
 				overflow: visible;
+			}
+			&:focus-within{
+				box-shadow: inset 0 0 5px 2px #86b7fe;
 			}
 		}
 		[data-grid-width]{
@@ -92,6 +96,13 @@
 	.table-danger{
 		--background-color: #f8d7da;
 	}
+	.grid-row-counter::before{
+		counter-increment: grid-row-counter;
+		content: counter(grid-row-counter);
+	}
+}
+#tools{
+	background: color-mix(in lab, var(--bs-success) 20%, white);
 }
 #spmain::part(nav2){
 	justify-content: space-between;
@@ -147,54 +158,20 @@ edit-table{
 <script type="text/javascript" src="/assets/common/SinglePage.js"></script>
 <script type="text/javascript" src="/assets/common/GridGenerator.js"></script>
 <script type="text/javascript" src="/assets/common/PrintPage.js"></script>
+<script type="text/javascript" src="/assets/cleave/cleave.min.js"></script>
 <script type="text/javascript" src="/assets/jspdf/jspdf.umd.min.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jsuites.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jspreadsheet.js"></script>
 <script type="text/javascript">
-class ListButtonElement extends HTMLElement{
-	#root;
-	constructor(){
-		super();
-		this.#root = Object.assign(this.attachShadow({mode: "closed"}), {innerHTML: '<span></span>'});
+class EstimatePage{
+	constructor(vp){
 	}
-	connectedCallback(){
-		queueMicrotask(() => {this.setAttribute("data-result", this.textContent); });
-	}
-	disconnectedCallback(){}
-	attributeChangedCallback(name, oldValue, newValue){
-		if(name == "label"){
-			const label = this.#root.querySelector('span');
-			if(newValue == null){
-				label.textContent = "";
-			}else{
-				label.textContent = newValue;
-			}
-		}
-	}
-	static get observedAttributes(){ return ["label"]; }
 }
-customElements.define("list-button", ListButtonElement);
-
-new VirtualPage("/1", class{
-	constructor(vp){
-	}
-});
-new VirtualPage("/2", class{
-	constructor(vp){
-	}
-});
-new VirtualPage("/3", class{
-	constructor(vp){
-	}
-});
-new VirtualPage("/4", class{
-	constructor(vp){
-	}
-});
-new VirtualPage("/5", class{
-	constructor(vp){
-	}
-});
+new VirtualPage("/1", EstimatePage);
+new VirtualPage("/2", EstimatePage);
+new VirtualPage("/3", EstimatePage);
+new VirtualPage("/4", EstimatePage);
+new VirtualPage("/5", EstimatePage);
 
 const search = location.search.replace(/^\?/, "").split("&").reduce((a, t) => {
 	const found = t.match(/^(.*?)=(.*)$/);
@@ -238,7 +215,13 @@ Promise.all([
 		text: "IFNULL(text, '')",
 		attributes: "IFNULL(attributes, '')"
 	}).apply();
-	//master.delete("grid_columns").andWhere("filter=?");
+{/literal}{if $smarty.session["User.role"] eq "entry"}{literal}
+	master.delete("grid_columns").andWhere("((filter='d-admin'))").apply();
+{/literal}{elseif $smarty.session["User.role"] eq "leader"}{literal}
+	master.delete("grid_columns").andWhere("((filter='d-admin') OR (filter='d-entry'))").apply();
+{/literal}{elseif $smarty.session["User.role"] eq "manager"}{literal}
+	master.delete("grid_columns").andWhere("((filter='d-admin') OR (filter='d-entry') OR (filter='d-leader'))").apply();
+{/literal}{/if}{literal}
 	master.select("ALL").setTable("grid_infos").apply().forEach(info => {
 		const columns = master.select("ALL").setTable("grid_columns").andWhere("location=?", info.location).apply();
 		GridGenerator.define(info.location, info, columns, (info.location in callbackList) ? callbackList[info.location] : null);
@@ -334,7 +317,6 @@ Promise.all([
 	
 	const refDetail = Symbol("refDetail");
 	const refAttr = Symbol("refAttr");
-	const jse = document.getElementById("detail");
 	const taxableObj = {
 		taxable: true,
 		tax_rate: 0.1
@@ -344,8 +326,10 @@ Promise.all([
 		tax_rate: null
 	};
 	const recordObj = {
+		quantity_place: 2,
 		quantity: 0,
 		unit: "",
+		price_place: 2,
 		unit_price: 0,
 		amount_exc: 0,
 		amount_tax: 0,
@@ -356,8 +340,10 @@ Promise.all([
 		tax_rate: 0.1
 	};
 	const unrecordObj = {
+		quantity_place: 2,
 		quantity: null,
 		unit: null,
+		price_place: 2,
 		unit_price: null,
 		amount_exc: null,
 		amount_tax: null,
@@ -367,258 +353,327 @@ Promise.all([
 		taxable: false,
 		tax_rate: null
 	};
-	const toolbarDisplay = top => {
-		const data = obj.options.data[top][objectData];
-		obj.toolbar.querySelector('.toolbar-record').value = data.record ? "1" : "0";
-		if(data.record){
-			obj.toolbar.querySelector('.toolbar-taxable').style.display = "block";
+	
+	if(id == "2"){
+		master.delete("grid_columns").andWhere("filter=?", "d-summary-data").apply();
+	}else if(id == "3"){
+		master.delete("grid_columns").andWhere("filter=?", "d-circulation").apply();
+	}else{
+		master.delete("grid_columns").andWhere("filter=?", "d-summary-data").apply();
+		master.delete("grid_columns").andWhere("filter=?", "d-circulation").apply();
+	}
+	
+	const grid = document.querySelector('[slot="main"] [data-grid]');
+	const gridLocation = grid.getAttribute("data-grid");
+	const gridInfo = master.select("ROW").setTable("grid_infos").andWhere("location=?", gridLocation).apply();
+	const gridColumns = master.select("ALL").setTable("grid_columns").andWhere("location=?", gridLocation).apply();
+	const gridRowMap = new Map();
+	const gridChangeEvent = e => {
+		const gridInfo = GridGenerator.getInfo(e.target);
+		const gridRows = Array.from(gridInfo.grid.querySelectorAll(':scope>*'));
+		const {data, items, cleave} = gridRowMap.get(gridInfo.row);
+		const fragment = xmlDoc.createDocumentFragment();
+		const info = xmlDoc.querySelector('info');
+		const taxRate = {};
+		const total = {amount_exc: 0, amount_inc: 0, amount_tax: 0};
+		
+		if(gridInfo.slot == "dtype"){
+			const dt = e.target.value;
+			if(dt == "0"){
+				Object.assign(data, unrecordObj);
+			}else if(dt == "1"){
+				Object.assign(data, data.record ? {} : recordObj, taxableObj);
+			}else if(dt == "2"){
+				Object.assign(data, data.record ? {} : recordObj, untaxableObj);
+			}else{
+				gridRowMap.delete(gridInfo.row);
+				gridInfo.grid.removeChild(gridInfo.row);
+			}
+		}else if((gridInfo.slot == "summary_data1") || (gridInfo.slot == "summary_data2") || (gridInfo.slot == "summary_data3")){
+			data.attributes[gridInfo.slot] = e.target.value;
+		}else if(gridInfo.slot == "circulation"){
+			data.attributes[gridInfo.slot] = e.target.value;
+		}else if((gridInfo.slot == "quantity") || (gridInfo.slot == "unit_price")){
+			if(!data.record){
+				Object.assign(data, data.record ? {} : recordObj);
+				if("dtype" in items){
+					items.dtype.value = "1";
+				}
+			}
+			data[gridInfo.slot] = Number(e.target.value.replace(/,/g, ""));
+		}else if(gridInfo.slot == "tax_rate"){
+			if(!data.record){
+				Object.assign(data, recordObj);
+				if("dtype" in items){
+					items.dtype.value = "1";
+				}
+			}else if(!data.taxable){
+				Object.assign(data, taxableObj);
+				if("dtype" in items){
+					items.dtype.value = "1";
+				}
+			}
+			data[gridInfo.slot] = Number(e.target.value.replace(/,/g, "")) / 100;
+		}else if((gridInfo.slot == "quantity_place") || (gridInfo.slot == "price_place")){
+			data[gridInfo.slot] = Number(e.target.value);
 		}else{
-			obj.toolbar.querySelector('.toolbar-taxable').style.display = "none";
+			data[gridInfo.slot] = e.target.value;
 		}
-		obj.toolbar.querySelector('.toolbar-taxable').value = data.taxable ? "1" : "0";
-		if(data.taxable){
-			obj.toolbar.querySelector('.toolbar-tax-rate').style.display = "block";
-			obj.toolbar.querySelector('.toolbar-tax-rate input').value = data.tax_rate * 100;
-			
-		}else{
-			obj.toolbar.querySelector('.toolbar-tax-rate').style.display = "none";
+		if("quantity_place" in items){
+			items.quantity_place.value = data.record ? data.quantity_place : "";
+		}
+		if("quantity" in items){
+			if(data.record){
+				items.quantity.value = SinglePage.modal.number_format2.query(data.quantity).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(data.quantity_place).substring(1));
+				data.quantity = Number(items.quantity.value);
+			}else{
+				items.quantity.value = "";
+			}
+		}
+		if("price_place" in items){
+			items.price_place.value = data.record ? data.price_place : "";
+		}
+		if("unit_price" in items){
+			if(data.record){
+				items.unit_price.value = SinglePage.modal.number_format2.query(data.unit_price).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(data.price_place).substring(1));
+				data.unit_price = Number(items.unit_price.value);
+			}else{
+				items.unit_price.value = "";
+			}
+		}
+		if(data.record){
+			data.amount_exc = Math.floor(data.quantity * data.unit_price);
+			data.amount_tax = Math.floor((data.taxable) ? data.amount_exc * data.tax_rate : 0);
+			data.amount_inc = data.amount_exc + data.amount_tax;
+		}
+		if("unit" in items){
+			items.unit.value = data.record ? data.unit : "";
+		}
+		if("tax_rate" in items){
+			items.tax_rate.value = data.taxable ? data.tax_rate * 100 : "";
+		}
+		if("amount_exc" in items){
+			items.amount_exc.textContent = data.record ? SinglePage.modal.number_format.query(data.amount_exc) : "";
+		}
+		if("amount_tax" in items){
+			items.amount_tax.textContent = data.record ? SinglePage.modal.number_format.query(data.amount_tax) : "";
+		}
+		if("amount_inc" in items){
+			items.amount_inc.textContent = data.record ? SinglePage.modal.number_format.query(data.amount_inc) : "";
+		}
+		if("category" in items){
+			items.category.value = data.category;
+		}
+		
+		fragment.appendChild(info);
+		for(let rowElement of gridRows){
+			if(!gridRowMap.has(rowElement)){
+				continue;
+			}
+			const {data: row} = gridRowMap.get(rowElement);
+			const detail = xmlDoc.createElement("detail");
+			const attributes = ("attributes" in row) ? xmlDoc.createElement("attributes") : null;
+			if(attributes != null){
+				detail.appendChild(attributes);
+			}
+			for(let key in row){
+				if(key == "attributes"){
+					for(let key2 in row.attributes){
+						attributes.setAttribute(key2, `${row.attributes[key2]}`);
+					}
+				}else if(row[key] != null){
+					detail.setAttribute(key, `${row[key]}`);
+				}
+			}
+			fragment.appendChild(detail);
+			if(row.record){
+				total.amount_exc += Number(row.amount_exc);
+				total.amount_tax += Number(row.amount_tax);
+				total.amount_inc += Number(row.amount_inc);
+				if(row.taxable){
+					if(!(row.tax_rate in taxRate)){
+						taxRate[row.tax_rate] = {amount_exc: 0, amount_inc: 0, amount_tax: 0};
+					}
+					taxRate[row.tax_rate].amount_exc += Number(row.amount_exc);
+					taxRate[row.tax_rate].amount_tax += Number(row.amount_tax);
+					taxRate[row.tax_rate].amount_inc += Number(row.amount_inc);
+				}
+			}
+		}
+		document.querySelector('form-control[name="amount_exc"]').value = total.amount_exc;
+		document.querySelector('form-control[name="amount_tax"]').value = total.amount_tax;
+		document.querySelector('form-control[name="amount_inc"]').value = total.amount_inc;
+		const taxRateInput = document.querySelector('input[name="tax_rate"]')
+		if(taxRateInput != null){
+			taxRateInput.value = JSON.stringify(taxRate);
+			root.setAttribute("tax_rate", taxRateInput.value);
+		}
+		root.setAttribute("amount_exc", total.amount_exc);
+		root.setAttribute("amount_tax", total.amount_tax);
+		root.setAttribute("amount_inc", total.amount_inc);
+		info.setAttribute("update", Date.now());
+		root.innerHTML = "";
+		root.appendChild(fragment);
+		cache.updateSet("estimate", {xml: root.outerHTML}, {}).andWhere("dt=?", Number(search.key)).apply();
+		cache.commit();
+	};
+	const gridKeydownEvent = e => {
+		if(e.keyCode == 13){
+			const info = GridGenerator.getInfo(e.target);
+			e.preventDefault();
+			if(e.shiftKey){
+				if(info.prevRow != null){
+					info.prevRow.focus();
+				}
+			}else{
+				if(info.nextRow != null){
+					info.nextRow.focus();
+				}else{
+					info.grid.appendChild(GridGenerator.createRows(info.grid, [Object.assign({}, unrecordObj)]));
+					GridGenerator.getInfo(e.target).nextRow.focus();
+				}
+			}
 		}
 	};
-	const toolbar = document.createDocumentFragment();
-	toolbar.appendChild(Object.assign(document.createElement("select"), {innerHTML: '<option value="0">見出し行</option><option value="1">通常行</option>', className: 'toolbar-record'}));
-	toolbar.appendChild(Object.assign(document.createElement("select"), {innerHTML: '<option value="1">課税</option><option value="0">非課税</option>', className: 'toolbar-taxable'}));
-	toolbar.appendChild(Object.assign(document.createElement("div"), {innerHTML: '税率<input type="number" style="width: 7ex" />％', className: 'toolbar-tax-rate'}));
-	toolbar.appendChild(Object.assign(document.createElement("div"), {innerHTML: '<button type="button" class="btn btn-success" />再計算</button>', className: 'toolbar-recalc'}));
-	
-	let tableColumns = [
-		{ [refDetail]: "detail",     type: 'text', title: '内容', width: 200 },
-		{ [refDetail]: "quantity",   type: 'numeric', title: '数量', width: 60, mask:'#,##.00' },
-		{ [refDetail]: "unit",       type: 'text', title: '単位', width: 60 },
-		{ [refDetail]: "unit_price", type: 'numeric', title: '単価', width: 80, mask:'#,##.00' },
-		{ [refDetail]: "amount_exc", type: 'numeric', title: '税抜金額', width: 100, mask:'#,##' },
-		{ [refDetail]: "amount_tax", type: 'numeric', title: '消費税金額', width: 100, mask:'#,##' },
-		{ [refDetail]: "amount_inc", type: 'numeric', title: '税込金額', width: 100, mask:'#,##' },
-		{ [refDetail]: "category",   type: 'dropdown', title: 'カテゴリー', width: 200, source: categories.map(r => r.name) }
-	];
-	if(id == "2"){
-		tableColumns.push(
-			{ [refAttr]: "circulation", type: 'numeric', title: '発行部数', width: 60, mask:'#,##' }
-		);
-	}else if(id == "3"){
-		tableColumns.push(
-			{ [refAttr]: "summary_data1", type: 'text', title: '摘要１', width: 200 },
-			{ [refAttr]: "summary_data2", type: 'text', title: '摘要２', width: 200 },
-			{ [refAttr]: "summary_data3", type: 'text', title: '摘要３', width: 200 }
-		);
-	}
-	const obj = jspreadsheet(jse, {
-		minDimensions: [1, 1],
-		columns: tableColumns,
-		toolbar: toolbar,
-		dataProxy(){
-			return new Proxy(
-				Object.assign({detail: "", attributes: {}}, unrecordObj), {
-				get(target, prop, receiver){
-					if(prop == "length"){
-						return tableColumns.length;
-					}
-					if(prop == objectData){
-						return target;
-					}
-					if((refDetail in tableColumns[prop]) && (tableColumns[prop][refDetail] == "category")){
-						let found = null;
-						const searchC = target.category;
-						for(let category of categories){
-							if(searchC == category.code){
-								found = category.name;
-							}
-						}
-						return found;
-					}
-					if(refAttr in tableColumns[prop]){
-						return target.attributes[tableColumns[prop][refAttr]];
-					}
-					return target[tableColumns[prop][refDetail]];
-				},
-				set(obj, prop, value){
-					if(refAttr in tableColumns[prop]){
-						if(tableColumns[prop][refAttr] == "circulation"){
-							if(value == ""){
-								value = 0;
-							}else{
-								value = Number(value.replace(/,/g, ""));
-							}
-						}
-						obj.attributes[tableColumns[prop][refAttr]] = value;
-					}else if(refDetail in tableColumns[prop]){
-						if((tableColumns[prop][refDetail] != "detail") && (value != "") && (!obj.record)){
-							Object.assign(obj, recordObj);
-						}
-						if(tableColumns[prop][refDetail] == "detail"){
-							obj[tableColumns[prop][refDetail]] = value;
-						}else if(obj.record){
-							if((tableColumns[prop][refDetail] == "quantity") || (tableColumns[prop][refDetail] == "unit_price")){
-								if(value == ""){
-									value = 0;
-								}else{
-									value = Number(value.replace(/,/g, ""));
-								}
-							}else if(tableColumns[prop][refDetail] == "category"){
-								let found = null;
-								for(let category of categories){
-									if(value == category.name){
-										found = category.code;
-									}
-								}
-								value = found;
-							}
-							obj[tableColumns[prop][refDetail]] = value;
-							obj.amount_exc = Math.floor(obj.quantity * obj.unit_price);
-							obj.amount_tax = Math.floor((obj.taxable) ? obj.amount_exc * obj.tax_rate : 0);
-							obj.amount_inc = obj.amount_exc + obj.amount_tax;
-						}
-					}
-					return true;
-				}
-			});
-		},
-		text: { rowNumber: "項番" },
-		onselection: (el, borderLeft, borderTop, borderRight, borderBottom, origin) => {
-			toolbarDisplay(borderTop);
-		},
-		onchange: (el, cell, x, y, value, oldValue) => {
-			const fragment = xmlDoc.createDocumentFragment();
-			const info = xmlDoc.querySelector('info');
-			fragment.appendChild(info);
-			let taxRate = {};
-			const total = obj.options.data.reduce((a, rowProxy) => {
-				const row = rowProxy[objectData];
-				const detail = xmlDoc.createElement("detail");
-				const attributes = ("attributes" in row) ? xmlDoc.createElement("attributes") : null;
-				if(attributes != null){
-					detail.appendChild(attributes);
-				}
-				for(let key in row){
-					if(key == "attributes"){
-						for(let key2 in row.attributes){
-							attributes.setAttribute(key2, `${row.attributes[key2]}`);
-						}
-					}else if(row[key] != null){
-						detail.setAttribute(key, `${row[key]}`);
-					}
-				}
-				a.fragment.appendChild(detail);
-				if(row.record){
-					a.amount_exc += Number(row.amount_exc);
-					a.amount_tax += Number(row.amount_tax);
-					a.amount_inc += Number(row.amount_inc);
-					if(row.taxable){
-						if(!(row.tax_rate in taxRate)){
-							taxRate[row.tax_rate] = {amount_exc: 0, amount_inc: 0, amount_tax: 0};
-						}
-						taxRate[row.tax_rate].amount_exc += Number(row.amount_exc);
-						taxRate[row.tax_rate].amount_tax += Number(row.amount_tax);
-						taxRate[row.tax_rate].amount_inc += Number(row.amount_inc);
-					}
-				}
-				return a; 
-			}, {amount_exc: 0, amount_inc: 0, amount_tax: 0, fragment: fragment});
-			document.querySelector('form-control[name="amount_exc"]').value = total.amount_exc;
-			document.querySelector('form-control[name="amount_tax"]').value = total.amount_tax;
-			document.querySelector('form-control[name="amount_inc"]').value = total.amount_inc;
-			const taxRateInput = document.querySelector('input[name="tax_rate"]')
-			if(taxRateInput != null){
-				taxRateInput.value = JSON.stringify(taxRate);
-				root.setAttribute("tax_rate", taxRateInput.value);
+	const gridCallback = (row, data, items) => {
+		const cleave = {};
+		gridRowMap.set(row, {data, items, cleave});
+		row.addEventListener("change", gridChangeEvent);
+		row.addEventListener("keydown", gridKeydownEvent);
+		if("dtype" in items){
+			items.dtype.innerHTML = `<option value="0">見出し行</option><option value="1">通常行（課税）</option><option value="2">通常行（非課税）</option><option value="-1">削除</option>`;
+			if(data.taxable){
+				items.dtype.value = "1";
+			}else if(data.record){
+				items.dtype.value = "2";
+			}else{
+				items.dtype.value = "0";
 			}
-			root.setAttribute("amount_exc", total.amount_exc);
-			root.setAttribute("amount_tax", total.amount_tax);
-			root.setAttribute("amount_inc", total.amount_inc);
-			info.setAttribute("update", Date.now());
-			root.innerHTML = "";
-			root.appendChild(fragment);
-			cache.updateSet("estimate", {xml: root.outerHTML}, {}).andWhere("dt=?", Number(search.key)).apply();
-			cache.commit();
 		}
-	});
-	obj.setData(
-		Array.from({
-			[Symbol.iterator]: function*(){
-				const n = this.details.length;
-				for(let i = 0; i < n; i++){
-					const row = Array.from(this.details[i].attributes).reduce((a, attr) => {
-						if((attr.name == "record") || (attr.name == "taxable")){
-							a[attr.name] = (attr.value == "true");
-						}else{
-							a[attr.name] = attr.value;
-						}
+		if("category" in items){
+			items.category.innerHTML = '<option value=""></option>' + document.getElementById("category").innerHTML;
+			items.category.value = data.category;
+		}
+		if(data.taxable && ("tax_rate" in items)){
+			items.tax_rate.value = data.tax_rate * 100;
+		}
+		if("quantity_place" in items){
+			items.quantity_place.innerHTML = '<option value="0">整数</option><option value="1">小数点以下1桁</option><option value="2">小数点以下2桁</option>';
+			items.quantity_place.value = data.record ? data.quantity_place : "";
+		}
+		if("quantity" in items){
+			cleave.quantity = new Cleave(items.quantity, {
+				numeral: true,
+				numeralDecimalMark: '.',
+				delimiter: ',',
+				numeralDecimalScale: 2,
+				numeralThousandsGroupStyle: 'thousand'
+			});
+			items.quantity.value = data.record ? SinglePage.modal.number_format2.query(data.quantity).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(data.quantity_place).substring(1)) : "";
+		}
+		if("price_place" in items){
+			items.price_place.innerHTML = '<option value="0">整数</option><option value="1">小数点以下1桁</option><option value="2">小数点以下2桁</option>';
+			items.price_place.value = data.record ? data.price_place : "";
+		}
+		if("unit_price" in items){
+			cleave.unit_price = new Cleave(items.unit_price, {
+				numeral: true,
+				numeralDecimalMark: '.',
+				delimiter: ',',
+				numeralDecimalScale: 2,
+				numeralThousandsGroupStyle: 'thousand'
+			});
+			items.unit_price.value = data.record ? SinglePage.modal.number_format2.query(data.unit_price).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(data.price_place).substring(1)) : "";
+		}
+		if("circulation" in items){
+			cleave.circulation = new Cleave(items.circulation, {
+				numeral: true,
+				numeralDecimalMark: '.',
+				delimiter: ',',
+				numeralDecimalScale: 2,
+				numeralThousandsGroupStyle: 'thousand'
+			});
+		}
+		if("amount_exc" in items){
+			items.amount_exc.textContent = data.record ? SinglePage.modal.number_format.query(data.amount_exc) : "";
+		}
+		if("amount_tax" in items){
+			items.amount_tax.textContent = data.record ? SinglePage.modal.number_format.query(data.amount_tax) : "";
+		}
+		if("amount_inc" in items){
+			items.amount_inc.textContent = data.record ? SinglePage.modal.number_format.query(data.amount_inc) : "";
+		}
+		if("attributes" in data){
+			if("summary_data1" in items){
+				items.summary_data1.value = data.attributes.summary_data1;
+			}
+			if("summary_data2" in items){
+				items.summary_data2.value = data.attributes.summary_data2;
+			}
+			if("summary_data3" in items){
+				items.summary_data3.value = data.attributes.summary_data3;
+			}
+			if("circulation" in items){
+				items.circulation.value = data.attributes.circulation;
+			}
+		}
+	};
+	GridGenerator.define(gridLocation, gridInfo, gridColumns, gridCallback);
+	GridGenerator.init(grid);
+	GridGenerator.createTable(grid, Array.from({
+		[Symbol.iterator]: function*(){
+			const n = this.details.length;
+			for(let i = 0; i < n; i++){
+				const row = Array.from(this.details[i].attributes).reduce((a, attr) => {
+					if((attr.name == "record") || (attr.name == "taxable")){
+						a[attr.name] = (attr.value == "true");
+					}else{
+						a[attr.name] = attr.value;
+					}
+					return a;
+				}, {});
+				const attrElement = this.details[i].querySelector('attributes');
+				if(attrElement == null){
+					row.attributes = null;
+				}else{
+					row.attributes = Array.from(attrElement.attributes).reduce((a, attr) => {
+						a[attr.name] = attr.value;
 						return a;
 					}, {});
-					const attrElement = this.details[i].querySelector('attributes');
-					if(attrElement == null){
-						row.attributes = null;
-					}else{
-						row.attributes = Array.from(attrElement.attributes).reduce((a, attr) => {
-							a[attr.name] = attr.value;
-							return a;
-						}, {});
-					}
-					yield row;
 				}
-			},
-			details: xmlDoc.querySelectorAll('detail')
-		}).map(row => {
-			const insert = obj.options.dataProxy();
-			Object.assign(insert[objectData], row);
-			return insert;
-		}),
-		true
-	);
-	obj.toolbar.querySelector('.toolbar-record').addEventListener("change", e => {
-		const selected = obj.selectedCell.map(Number);
-		const top = Math.min(selected[1], selected[3]);
-		const bottom = Math.max(selected[1], selected[3]);
-		for(let i = top; i <= bottom; i++){
-			Object.assign(obj.options.data[i][objectData], e.currentTarget.value == "0" ? unrecordObj : recordObj);
-			obj.updateRow(null, i, null, null);
-		}
-		toolbarDisplay(top);
-	});
-	obj.toolbar.querySelector('.toolbar-taxable').addEventListener("change", e => {
-		const selected = obj.selectedCell.map(Number);
-		const top = Math.min(selected[1], selected[3]);
-		const bottom = Math.max(selected[1], selected[3]);
-		for(let i = top; i <= bottom; i++){
-			const data = obj.options.data[i][objectData];
-			if((e.currentTarget.value == "1") && (!data.record)){
-				Object.assign(data, recordObj);
-				obj.updateRow(null, i, null, null);
+				for(let key in unrecordObj){
+					if(!(key in row)){
+						row[key] = unrecordObj[key];
+					}
+				}
+				if(!("detail" in row)){
+					row.detail = "";
+				}
+				yield row;
 			}
-			Object.assign(data, e.currentTarget.value == "0" ? untaxableObj : taxableObj);
-		}
-		toolbarDisplay(top);
+		},
+		details: xmlDoc.querySelectorAll('detail')
+	}));
+	document.getElementById("addrow").addEventListener("click", e => {
+		grid.appendChild(GridGenerator.createRows(grid, [Object.assign({}, unrecordObj)]));
 	});
-	obj.toolbar.querySelector('.toolbar-tax-rate input').addEventListener("input", e => {
-		const selected = obj.selectedCell.map(Number);
-		const top = Math.min(selected[1], selected[3]);
-		const bottom = Math.max(selected[1], selected[3]);
-		for(let i = top; i <= bottom; i++){
-			const data = obj.options.data[i][objectData];
-			const rate = Number(e.currentTarget.value / 100);
-			if(!data.record){
-				Object.assign(data, recordObj, {taxable: true});
-				obj.updateRow(null, i, null, null);
+	for(let i = inputElements.length - 1; i >= 0; i--){
+		const name = inputElements[i].getAttribute("name");
+		if(root.hasAttribute(name)){
+			if((name == "summary_header1") || (name == "summary_header2") || (name == "summary_header3")){
+				inputElements[i].addEventListener("change", e => {
+					const slotInfo = GridGenerator.getSlot(grid, name.replace("header", "data"));
+					if(slotInfo != null){
+						slotInfo.head.textContent = e.target.value;
+					}
+				});
+				const slotInfo = GridGenerator.getSlot(grid, name.replace("header", "data"));
+				if(slotInfo != null){
+					slotInfo.head.textContent = root.getAttribute(name);
+				}
 			}
-			data.tax_rate = rate;
 		}
-		toolbarDisplay(top);
-	});
-	obj.toolbar.querySelector('.toolbar-tax-rate input').addEventListener("keydown", e => {
-		e.stopPropagation();
-	});
-	obj.toolbar.querySelector('.toolbar-recalc button').addEventListener("click", e => {
-		obj.options.onchange(null, null, null, null, null, null);
-	});
+	}
 	
 	const template = document.querySelector('#spmain [slot="print"] print-page');
 	const getPdfDoc = () => {
@@ -670,54 +725,53 @@ Promise.all([
 		const tbody = printArea.querySelector('tbody:has([data-table-slot])');
 		const tr = tbody.querySelector('tr');
 		tbody.removeChild(tr);
-		const details = document.getElementById("detail").jspreadsheet.options.data;
+		const details = Array.from(grid.querySelectorAll(':scope>*')).filter(row => gridRowMap.has(row)).map(row => gridRowMap.get(row).data);
 		const proc = {
-			detail(value){
+			detail(data, value){
 				if(value == ""){
 					return "\u200B";
 				}
 				return value;
 			},
-			quantity(value){
+			quantity(data, value){
 				if(value == null){
 					return "";
 				}
-				return SinglePage.modal.number_format2.query(value);
+				return SinglePage.modal.number_format2.query(value).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(data.quantity_place).substring(1));
 			},
-			unit_price(value){
+			unit_price(data, value){
 				if(value == null){
 					return "";
 				}
-				return "\\" + SinglePage.modal.number_format2.query(value);
+				return "\\" + SinglePage.modal.number_format2.query(value).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(data.price_place).substring(1));
 			},
-			amount_exc(value){
+			amount_exc(data, value){
 				if(value == null){
 					return "";
 				}
 				return "\\" + SinglePage.modal.number_format.query(value);
 			},
-			circulation(value){
+			circulation(data, value){
 				if(value == null){
 					return "";
 				}
 				return SinglePage.modal.number_format.query(value);
 			}
 		};
-		for(let rowProxy of details){
-			const row = rowProxy[objectData];
+		for(let row of details){
 			const insertRow = tr.cloneNode(true);
 			const slotElements2 = insertRow.querySelectorAll('[data-table-slot]');
 			const slotElements3 = insertRow.querySelectorAll('[data-table-slot-attribute]');
 			for(let i = slotElements2.length - 1; i >= 0; i--){
 				const attr = slotElements2[i].getAttribute("data-table-slot");
 				if(attr in row){
-					slotElements2[i].textContent = (attr in proc) ? proc[attr](row[attr]) : row[attr];
+					slotElements2[i].textContent = (attr in proc) ? proc[attr](row, row[attr]) : row[attr];
 				}
 			}
 			for(let i = slotElements3.length - 1; i >= 0; i--){
 				const attr = slotElements3[i].getAttribute("data-table-slot-attribute");
 				if(attr in row.attributes){
-					slotElements3[i].textContent = (attr in proc) ? proc[attr](row.attributes[attr]) : row.attributes[attr];
+					slotElements3[i].textContent = (attr in proc) ? proc[attr](row, row.attributes[attr]) : row.attributes[attr];
 				}
 			}
 			tbody.appendChild(insertRow);
@@ -844,9 +898,9 @@ Promise.all([
 		const info = xmlDoc.querySelector('info');
 		const form = document.querySelector('form');
 		const formData = new FormData(form);
-		const details = document.getElementById("detail").jspreadsheet.options.data.map(rowProxy => {
+		const details = Array.from(grid.querySelectorAll(':scope>*')).filter(row => gridRowMap.has(row)).map(tempRow => {
+			const row = gridRowMap.get(tempRow).data
 			let res = {};
-			const row = rowProxy[objectData];
 			for(let key in row){
 				if(typeof row[key] == "boolean"){
 					res[key] = row[key] ? 1 : 0;
@@ -888,7 +942,7 @@ Promise.all([
 					inputElements[i].nextSibling.textContent = (name in messages) ? messages[name] : "";
 				}
 				const range = document.createRange();
-				const tableInvalid = document.querySelector('#detail~.invalid');
+				const tableInvalid = document.getElementById("detail_invalid");
 				range.selectNodeContents(tableInvalid);
 				range.deleteContents();
 				tableInvalid.appendChild(messages2);
@@ -897,99 +951,6 @@ Promise.all([
 	});
 });
 
-function formTableInit(parent, data){
-	return new Promise((resolve, reject) => {
-		let tableList = {};
-		for(let row of data){
-			if(!(row.column in tableList)){
-				tableList[row.column] = {
-					table: Object.assign(document.createElement("table"), {className: "table my-0"}),
-					tbody: document.createElement("tbody")
-				};
-				const colgroup = document.createElement("colgroup");
-				colgroup.appendChild(Object.assign(document.createElement("col"), {className: "bg-light"}));
-				colgroup.appendChild(document.createElement("col"));
-				tableList[row.column].table.appendChild(colgroup)
-				tableList[row.column].table.appendChild(tableList[row.column].tbody);
-			}
-			const tr = document.createElement("tr");
-			const th = document.createElement("th");
-			const td = document.createElement("td");
-			const formControl = document.createElement("form-control");
-			const invalid = Object.assign(document.createElement("div"), {className: "invalid"});
-			th.textContent = row.label;
-			th.className = "align-middle ps-4";
-			formControl.setAttribute("fc-class", `col-${row.width}`);
-			formControl.setAttribute("name", row.name);
-			formControl.setAttribute("type", row.type);
-			if((row.list != null) && (row.list != "")){
-				formControl.setAttribute("list", row.list);
-			}
-			if((row.placeholder != null) && (row.placeholder != "")){
-				formControl.setAttribute("placeholder", row.placeholder);
-			}
-			
-			td.appendChild(formControl);
-			td.appendChild(invalid);
-			tr.appendChild(th);
-			tr.appendChild(td);
-			tableList[row.column].tbody.appendChild(tr);
-		}
-		const tableColumns = Object.keys(tableList).sort();
-		for(let tableNo of tableColumns){
-			if(parent.tagName == "SEARCH-FORM"){
-				tableList[tableNo].table.setAttribute("slot", "body");
-			}
-			parent.appendChild(tableList[tableNo].table);
-		}
-		queueMicrotask(() => { resolve(parent); });
-	});
-}
-function formTableQuery(location){
-	return master.select("ALL").setTable("form_datas").andWhere("location=?", location).setOrderBy("CAST(no AS INTEGER)");
-}
-function dataTableQuery(location){
-	return master.select("ALL").setTable("table_datas").andWhere("location=?", location).setOrderBy("CAST(no AS INTEGER)");
-}
-function setDataTable(parent, columns, data, callback = null){
-	return new Promise((resolve, reject) => {
-		parent.innerHTML = "";
-		const text = document.createElement("span");
-		for(let row of data){
-			const elements = [];
-			for(let col of columns){
-				const div = document.createElement("div");
-				const dataElement = document.createElement(col.tag_name);
-				const classList = (col.class_list == null) ? [] : col.class_list.split(/\s/).filter(v => v != "");
-				let attrStr = (col.attributes == null) ? "" : col.attributes;
-				do{
-					const nextStr = attrStr.replace(/^\s*([a-zA-Z0-9\-]+)="([^"]*?)"/, (str, name, value) => {
-						if(name != ""){
-							dataElement.setAttribute(name, Object.assign(text, {innerHTML: value}).textContent);
-						}
-						return "";
-					});
-					if(attrStr == nextStr){
-						break;
-					}
-					attrStr = nextStr;
-				}while(true);
-				div.setAttribute("slot", col.slot);
-				dataElement.textContent = row[col.property];
-				if(classList.length > 0){
-					dataElement.classList.add(...classList);
-				}
-				div.appendChild(dataElement);
-				elements.push(div);
-			}
-			const dataRow = parent.insertRow(...elements);
-			if(callback != null){
-				callback(dataRow, row);
-			}
-		}
-		queueMicrotask(() => { resolve(parent); });
-	});
-}
 {/literal}</script>
 {/block}
 {block name="body"}
@@ -1526,8 +1487,9 @@ function setDataTable(parent, columns, data, callback = null){
 					</div>
 				</div></div>
 				<div slot="main">
-					<div id="detail"></div>
-					<div class="invalid"></div>
+					<div id="tools" class="navbar mx-1 px-2 mb-1 py-1"><button type="button" class="btn btn-success" id="addrow">行追加</button></div>
+					<div class="overflow-auto" style="height: 50vh;"><div id="detail" data-grid="/Edit/Estimate"></div></div>
+					<div class="invalid" id="detail_invalid"></div>
 				</div>
 			</template>
 			<template data-page-share="/3|/5">
