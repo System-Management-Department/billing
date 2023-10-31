@@ -40,7 +40,7 @@ class CommittedController extends ControllerBase{
 			$query->andWhere("sales_workflow.regist_user=?", $_SESSION["User.id"]);
 		}else if($_SESSION["User.role"] == "leader"){
 			// 責任者　自身の所有するすべてと、自身の部署の申請中のもの
-			$query->andWhere("(sales_workflow.regist_user=? OR (sales_slips.division=? AND sales_workflow.request=1))", $_SESSION["User.id"], $_SESSION["User.departmentCode"]);
+			$query->andWhere("(sales_workflow.regist_user=? OR (JSON_CONTAINS(?, JSON_ARRAY(sales_slips.division), '\$') AND sales_workflow.request=1))", $_SESSION["User.id"], json_encode($_SESSION["User.departmentCode"]));
 		}/*else if($_SESSION["User.role"] == "entry"){
 			// 経理　自身の所有するすべてと、申請中のすべて
 			$query->andWhere("(sales_workflow.regist_user=? OR sales_workflow.request=1)", $_SESSION["User.id"]);
