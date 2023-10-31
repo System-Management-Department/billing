@@ -86,8 +86,10 @@ class SalesSlip{
 			$check["amount_inc"]->required("税込金額を入力してください。");
 			$check["taxable"]->required("課税を入力してください。")
 				->range("課税を正しく入力してください。", "in", [0, 1]);
-			$check["tax_rate"]->required("税率を入力してください。");
 			$check["category"]->required("カテゴリーを入力してください。");
+			if($q["taxable"] == 1){
+				$check["tax_rate"]->required("税率を入力してください。");
+			}
 		}
 	}
 	
@@ -252,6 +254,10 @@ class SalesSlip{
 					"amount_exc" => $detail[$i]["amount_exc"],
 					"amount_tax" => $detail[$i]["amount_tax"],
 					"amount_inc" => $detail[$i]["amount_inc"],
+					"taxable" => $detail[$i]["taxable"],
+					"tax_rate" => $detail[$i]["tax_rate"],
+					"quantity_place" => $detail[$i]["quantity_place"],
+					"price_place" => $detail[$i]["price_place"],
 				],[]);
 				$updateQuery->andWhere("sd=?", $detail[$i]["sd"]);
 				$updateQuery();
