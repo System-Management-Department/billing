@@ -517,6 +517,41 @@ Promise.all([
 		cache.updateSet("estimate", {xml: root.outerHTML}, {}).andWhere("dt=?", Number(search.key)).apply();
 		cache.commit();
 	};
+	const gridPasteeEvent = e => {
+		const paste = e.clipboardData.getData("text").split(/\r\n|[\r\n]/g).map(row => row.split("\t"));
+		if((paste.length == 1) && (paste[0].length == 1)){
+			return;
+		}
+		e.preventDefault();
+		let gridInfo = GridGenerator.getInfo(e.target);
+		let currentRow = gridInfo.cell;
+		for(let rowData of paste){
+			let currentCell = currentRow;
+			for(let cellData of rowData){
+				if(currentCell.tagName == "INPUT"){
+					currentCell.value = cellData;
+					gridChangeEvent({target: currentCell});
+				}else if(currentCell.tagName == "SELECT"){
+					const found = Array.from(currentCell.querySelectorAll('option[value]')).find(option => option.textContent == cellData);
+					if(found != null){
+						currentCell.value = found.getAttribute("value");
+						gridChangeEvent({target: currentCell});
+					}
+				}
+				gridInfo = GridGenerator.getInfo(currentCell);
+				currentCell = gridInfo.next;
+				if(currentCell == null){
+					break;
+				}
+			}
+			gridInfo = GridGenerator.getInfo(currentRow);
+			if(gridInfo.nextRow == null){
+				gridInfo.grid.appendChild(GridGenerator.createRows(gridInfo.grid, [Object.assign({}, unrecordObj)]));
+				gridInfo = GridGenerator.getInfo(currentRow);
+			}
+			currentRow = gridInfo.nextRow;
+		}
+	};
 	const gridKeydownEvent = e => {
 		if(e.keyCode == 13){
 			const info = GridGenerator.getInfo(e.target);
@@ -562,6 +597,7 @@ Promise.all([
 		gridRowMap.set(row, {data, items, cleave});
 		row.addEventListener("change", gridChangeEvent);
 		row.addEventListener("keydown", gridKeydownEvent);
+		row.addEventListener("paste", gridPasteeEvent);
 		if("dtype" in items){
 			items.dtype.innerHTML = `<option value="0">見出し行</option><option value="1">通常行（課税）</option><option value="2">通常行（非課税）</option><option value="-1">削除</option>`;
 			if(data.taxable){

@@ -234,7 +234,7 @@ class GridGenerator{
 		const columnIndex = (cell == null) ? null : cells.indexOf(cell);
 		const slot = (cell == null) ? null : GridGenerator.#container[name].getSlot(columnIndex);
 		const prev = ((cell == null) || (columnIndex == 0)) ? null : cells[columnIndex - 1];
-		const next = ((cell == null) || (cells.length - columnIndex > 1)) ? null : cells[columnIndex + 1];
+		const next = ((cell == null) || (cells.length - columnIndex < 1)) ? null : cells[columnIndex + 1];
 		
 		cells = ((row.previousElementSibling == null) || (row.previousElementSibling == grid.firstElementChild)) ? null : Array.from(row.previousElementSibling.querySelectorAll(GridGenerator.cellSelector));
 		const prevRow = ((cell == null) || (cells == null)) ? null : cells[columnIndex];
