@@ -88,6 +88,9 @@
 		--background-color: #f8d7da;
 	}
 }
+.overflow-auto [data-grid]{
+	padding-right: 100vw;
+}
 </style>
 {/literal}{/block}
 {block name="scripts" append}{literal}

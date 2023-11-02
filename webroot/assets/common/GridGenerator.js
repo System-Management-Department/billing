@@ -110,7 +110,7 @@ class GridGenerator{
 				ghead.appendChild(ghf);
 				for(let col of gc){
 					if(col.width == "auto"){
-						(col.freeze ? ghf : ghead).appendChild(Object.assign(document.createElement("div"), {textContent: col.label}));
+						(col.freeze ? ghf : ghead).appendChild(Object.assign(document.createElement("div"), {textContent: col.label, className: "gcell-auto"}));
 						gtc.push("auto");
 					}else{
 						const div = document.createElement("div");
