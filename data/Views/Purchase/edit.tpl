@@ -6,6 +6,7 @@
 <link rel="stylesheet" type="text/css" href="/assets/jspreadsheet/jspreadsheet.css" />
 <style type="text/css">
 [data-grid]{
+	--theme-color: #009EA7;
 	--border-width: 1px;
 	--border-color: #dedede;
 	--grid-padding: 0.25rem;
@@ -14,7 +15,8 @@
 	white-space: pre;
 	gap: var(--border-width);
 	>*{
-		--background-color: white;
+		--background-base-color: white;
+		--background-color: var(--background-base-color);
 		display: grid;
 		grid-template-columns: subgrid;
 		grid-column: 1 / -1;
@@ -69,13 +71,13 @@
 			}
 		}
 		&:nth-child(n + 2):hover{
-			--background-color: yellow;
+			--background-color: color-mix(in lab, var(--theme-color) 20%, var(--background-base-color));
 		}
 	}
 	>*:first-child{
 		position: sticky;
 		top: var(--border-width);
-		--background-color: #009EA7;
+		--background-base-color: var(--theme-color);
 		color: white;
 		text-align: center;
 		z-index: 1;
@@ -85,11 +87,14 @@
 	}
 	
 	.table-secondary{
-		--background-color: #e2e3e5;
+		--background-base-color: #e2e3e5;
 	}
 	.table-danger{
-		--background-color: #f8d7da;
+		--background-base-color: #f8d7da;
 	}
+}
+.overflow-auto [data-grid]{
+	padding-right: 100vw;
 }
 .jcalendar-header .jcalendar-year::after{
 	content: "年";
