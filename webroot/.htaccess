@@ -3,7 +3,3 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
-
-FileEtag None
-RequestHeader unset If-Modified-Since
-Header set Cache-Control no-store
