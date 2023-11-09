@@ -815,7 +815,7 @@ Promise.all([
 				return "\\" + SinglePage.modal.number_format.query(value);
 			},
 			circulation(data, value){
-				if(value == null){
+				if((value == null) || (value == "")){
 					return "";
 				}
 				return SinglePage.modal.number_format.query(value);
