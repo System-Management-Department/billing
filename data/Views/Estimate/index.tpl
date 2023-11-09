@@ -741,7 +741,7 @@ Promise.all([
 	const template = document.querySelector('#spmain [slot="print"] print-page');
 	const getPdfDoc = () => {
 		const slotObj = {
-			today: new Intl.DateTimeFormat("ja-JP").format(new Date()),
+			today: new Intl.DateTimeFormat("ja-JP").format(new Date(document.querySelector('form-control[name="estimate_date"]').value)),
 			subject: document.querySelector('form-control[name="subject"]').value,
 			leader: document.querySelector('form-control[name="leader"]').text,
 			manager: document.querySelector('form-control[name="manager"]').text,
