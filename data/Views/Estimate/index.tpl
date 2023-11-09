@@ -718,7 +718,7 @@ Promise.all([
 		details: xmlDoc.querySelectorAll('detail')
 	}));
 	document.getElementById("addrow").addEventListener("click", e => {
-		grid.appendChild(GridGenerator.createRows(grid, [Object.assign({}, unrecordObj)]));
+		grid.appendChild(GridGenerator.createRows(grid, [Object.assign({detail: ""}, unrecordObj)]));
 	});
 	for(let i = inputElements.length - 1; i >= 0; i--){
 		const name = inputElements[i].getAttribute("name");
