@@ -326,7 +326,7 @@ Promise.all([
 		}, document.getElementById("specification"));
 	
 	SinglePage.modal.number_format.setQuery(v => new Intl.NumberFormat().format(v));
-	SinglePage.modal.number_format2.setQuery(v => new Intl.NumberFormat(void(0), {minimumFractionDigits: 2, maximumFractionDigits: 3}).format(v));
+	SinglePage.modal.number_format2.setQuery(v => new Intl.NumberFormat(void(0), {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(v));
 	
 	SinglePage.location = "/edit";
 	
@@ -648,7 +648,7 @@ Promise.all([
 		}
 		if("price_place" in items){
 			if(data.record){
-				items.price_place.innerHTML = '<option value="0">整数</option><option value="1">小数点以下1桁</option><option value="2">小数点以下2桁</option><option value="3">小数点以下3桁</option>';
+				items.price_place.innerHTML = '<option value="0">整数</option><option value="1">小数点以下1桁</option><option value="2">小数点以下2桁</option>';
 				items.price_place.value = data.record ? data.price_place : "";
 			}else{
 				const item = document.createElement("div");
@@ -663,7 +663,7 @@ Promise.all([
 					numeral: true,
 					numeralDecimalMark: '.',
 					delimiter: ',',
-					numeralDecimalScale: 3,
+					numeralDecimalScale: 2,
 					numeralThousandsGroupStyle: 'thousand'
 				});
 				items.unit_price.value = data.record ? SinglePage.modal.number_format2.query(data.unit_price).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(data.price_place).substring(1)) : "";
