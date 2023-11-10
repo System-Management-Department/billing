@@ -39,6 +39,8 @@ print-page table td:nth-of-type(13){
 <script type="text/javascript" src="/assets/common/SQLite.js"></script>
 <script type="text/javascript" src="/assets/common/SinglePage.js"></script>
 <script type="text/javascript" src="/assets/common/PrintPage.js"></script>
+<script type="text/javascript" src="/assets/common/SJISEncoder.js"></script>
+<script type="text/javascript" src="/assets/common/CSVSerializer.js"></script>
 <script type="text/javascript" src="/assets/jspdf/jspdf.umd.min.js"></script>
 <script type="text/javascript">
 new VirtualPage("/", class{
@@ -74,19 +76,24 @@ new VirtualPage("/", class{
 		let total = new Array(fields.length).fill(0);
 		query.setLimit("3001");
 		const data = query.apply();
+		let csvData = [];
 		const memover = data.length > 3000;
 		let rowno = 1;
 		for(let row of data){
 			const tr = document.createElement("tr");
+			let csvRow = [];
 			tr.appendChild(Object.assign(document.createElement("td"), {textContent: rowno}));
 			for(let i = 0; i < fields.length; i++){
-				tr.appendChild(Object.assign(document.createElement("td"), {textContent: row[`field${i}`]}));
-				if(typeof row[`field${i}`] == "number"){
-					total[i] += row[`field${i}`];
+				const value = row[`field${i}`];
+				tr.appendChild(Object.assign(document.createElement("td"), {textContent: value}));
+				if(typeof value == "number"){
+					total[i] += value;
 				}
+				csvRow.push(value);
 			}
 			rowno++;
 			fragment.appendChild(tr);
+			csvData.push(csvRow);
 		}
 		tbody.appendChild(fragment);
 		if(memover){
@@ -215,6 +222,17 @@ new VirtualPage("/", class{
 				}
 			});
 		});
+		
+		const btn2 = document.createElement("a");
+		btn2.setAttribute("download", "download.csv");
+		btn2.setAttribute("slot", "tools");
+		btn2.setAttribute("class", "btn btn-success my-2");
+		btn2.textContent = "CSVダウンロード";
+		const serializer = new CSVSerializer()
+			.setHeader(["月日","案件番号","取込日時","得意先名","案件名称","請求先名","売上金額（税込）","売上金額（税抜）","仕入金額（税込）","利益（税込）"])
+			.setConverter(text => SJISEncoder.createBlob(text, {type: "text/csv"}));
+		btn2.setAttribute("href", URL.createObjectURL(serializer.serializeToString(csvData)));
+		document.getElementById("spmain").appendChild(btn2);
 	}
 });
 
