@@ -268,6 +268,16 @@ Promise.all([
 				.apply()
 		);
 	});
+	SinglePage.modal.insert_row.addEventListener("modal-open", e => {
+		SinglePage.modal.insert_row.querySelector('[data-no]').textContent = e.detail;
+	});
+	SinglePage.modal.insert_row.querySelector('[data-proxy]').addEventListener("click", e => {
+		const result = {
+			position: SinglePage.modal.insert_row.querySelector('[name="position"]').value,
+			rows: SinglePage.modal.insert_row.querySelector('[name="rows"]').value
+		};
+		SinglePage.modal.insert_row.hide("submit", result);
+	});
 	
 	const categories = master.select("ALL")
 		.setTable("categories")
@@ -575,6 +585,24 @@ Promise.all([
 			}
 		}
 	};
+	const gridDblclickEvent = e => {
+		if(e.button == 0){
+			const info = GridGenerator.getInfo(e.target);
+			if(info.slot == "no"){
+				const no = Array.from(info.grid.children).indexOf(info.row);
+				if(no > 0){
+					const callback = (trigger, result) => {
+						if(trigger == "submit"){
+							for(let rows = Math.min(Number(result.rows), 10); rows > 0; rows--){
+								info.row.insertAdjacentElement(result.position, GridGenerator.createRows(grid, [Object.assign({detail: ""}, unrecordObj)]).firstElementChild);
+							}
+						}
+					};
+					SinglePage.modal.insert_row.show({detail: no, callback: callback});
+				}
+			}
+		}
+	};
 	const gridCallback = (row, data, items) => {
 		const cleave = {};
 		if(id == 2){
@@ -603,6 +631,7 @@ Promise.all([
 		row.addEventListener("change", gridChangeEvent);
 		row.addEventListener("keydown", gridKeydownEvent);
 		row.addEventListener("paste", gridPasteeEvent);
+		row.addEventListener("dblclick", gridDblclickEvent);
 		if("dtype" in items){
 			items.dtype.innerHTML = `<option value="0">見出し行</option><option value="1">通常行（課税）</option><option value="2">通常行（非課税）</option><option value="-1">削除</option>`;
 			if(data.taxable){
@@ -1698,4 +1727,9 @@ Promise.all([
 	</modal-dialog>
 	<modal-dialog name="number_format"></modal-dialog>
 	<modal-dialog name="number_format2"></modal-dialog>
+	<modal-dialog name="insert_row" label="行挿入" class="w-sm">
+		<div slot="body" class="p-3">項番<span data-no=""></span>の<select name="position"><option value="beforebegin">前</option><option value="afterend">後</option></select>に<input type="number" name="rows" class="text-end" style="width: 8ex;" min="1" max="10" />行挿入</div>
+		<button slot="footer" type="button" data-proxy="insert" class="btn btn-success">挿入</button>
+		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
+	</modal-dialog>
 {/block}

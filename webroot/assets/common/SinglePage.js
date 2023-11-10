@@ -396,6 +396,10 @@ class ModalDialogElement extends HTMLElement{
 	}
 	hide(trigger = null, result = null){
 		this.#modal.close();
+		if(this.#callback != null){
+			this.#callback(trigger, result);
+			this.#callback = null;
+		}
 		if((trigger != null) || (result != null)){
 			SinglePage.currentPage.dispatchEvent(new ModalDialogEvent("modal-close", this.getAttribute("name"), trigger, result));
 		}
