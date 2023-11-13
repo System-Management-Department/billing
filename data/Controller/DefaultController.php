@@ -7,6 +7,7 @@ use App\View;
 use App\FileView;
 use App\JsonView;
 use App\RedirectResponse;
+use Config\OAuth;
 use Model\Session;
 use Model\User;
 use Model\Logger;
@@ -20,13 +21,16 @@ class DefaultController extends ControllerBase{
 		}else{
 			// ログインされていなければフォームを表示
 			$v = new View();
+			OAuth::setOAuth($v);
 			return $v->setLayout("Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl");
 		}
 	}
 	
 	public function login(){
-		$result = User::login();
-		return new JsonView($result);
+		OAuth::login($_POST["email"]);
+		$result = new \Model\Result();
+		$result->addMessage("ログインに成功しました。", "INFO", "");
+		return new JsonView([$result, OAUTH]);
 	}
 	
 	public function logout(){
@@ -45,7 +49,6 @@ class DefaultController extends ControllerBase{
 	
 	public function master(){
 		$fileName = SQLite::getCachedMasterFileName();
-		$_SESSION["SQLite.masterUpdate"] = filemtime($fileName);
 		return new FileView($fileName, "application/vnd.sqlite3");
 	}
 }

@@ -1,0 +1,55 @@
+print-page{
+	display: block;
+	font-family: 'MSPゴシック';
+	box-sizing: border-box;
+	overflow: hidden;
+}
+print-page[size="a0" i]{                --lside: 3370.39px; --sside: 2383.94px; }
+print-page[size="a1" i]{                --lside: 2383.94px; --sside: 1683.78px; }
+print-page[size="a2" i]{                --lside: 1683.78px; --sside: 1190.55px; }
+print-page[size="a3" i]{                --lside: 1190.55px; --sside:  841.89px; }
+print-page[size="a4" i]{                --lside:  841.89px; --sside:  595.28px; }
+print-page[size="a5" i]{                --lside:  595.28px; --sside:  419.53px; }
+print-page[size="a6" i]{                --lside:  419.53px; --sside:  297.64px; }
+print-page[size="a7" i]{                --lside:  297.64px; --sside : 209.76px; }
+print-page[size="a8" i]{                --lside:  209.76px; --sside:  147.40px; }
+print-page[size="a9" i]{                --lside:  147.40px; --sside:  104.88px; }
+print-page[size="a10" i]{               --lside: 104.88px;  --sside:   73.70px; }
+print-page[size="b0" i]{                --lside: 4008.19px; --sside: 2834.65px; }
+print-page[size="b1" i]{                --lside: 2834.65px; --sside: 2004.09px; }
+print-page[size="b2" i]{                --lside: 2004.09px; --sside: 1417.32px; }
+print-page[size="b3" i]{                --lside: 1417.32px; --sside: 1000.63px; }
+print-page[size="b4" i]{                --lside: 1000.63px; --sside:  708.66px; }
+print-page[size="b5" i]{                --lside:  708.66px; --sside:  498.90px; }
+print-page[size="b6" i]{                --lside:  498.90px; --sside:  354.33px; }
+print-page[size="b7" i]{                --lside:  354.33px; --sside:  249.45px; }
+print-page[size="b8" i]{                --lside:  249.45px; --sside:  175.75px; }
+print-page[size="b9" i]{                --lside:  175.75px; --sside:  124.72px; }
+print-page[size="b10" i]{               --lside: 124.72px;  --sside:   87.87px; }
+print-page[size="c0" i]{                --lside: 3676.54px; --sside: 2599.37px; }
+print-page[size="c1" i]{                --lside: 2599.37px; --sside: 1836.85px; }
+print-page[size="c2" i]{                --lside: 1836.85px; --sside: 1298.27px; }
+print-page[size="c3" i]{                --lside: 1298.27px; --sside:  918.43px; }
+print-page[size="c4" i]{                --lside:  918.43px; --sside:  649.13px; }
+print-page[size="c5" i]{                --lside:  649.13px; --sside:  459.21px; }
+print-page[size="c6" i]{                --lside:  459.21px; --sside:  323.15px; }
+print-page[size="c7" i]{                --lside:  323.15px; --sside:  229.61px; }
+print-page[size="c8" i]{                --lside:  229.61px; --sside:  161.57px; }
+print-page[size="c9" i]{                --lside:  161.57px; --sside:  113.39px; }
+print-page[size="c10" i]{               --lside:  113.39px; --sside:   79.37px; }
+print-page[size="dl" i]{                --lside:  623.62px; --sside:  311.81px; }
+print-page[size="letter" i]{            --lside:  792.00px; --sside:  612.00px; }
+print-page[size="government-letter" i]{ --lside:  756.00px; --sside:  576.00px; }
+print-page[size="legal" i]{             --lside: 1008.00px; --sside:  612.00px; }
+print-page[size="junior-legal" i]{      --lside:  576.00px; --sside:  360.00px; }
+print-page[size="ledger" i]{            --lside: 1224.00px; --sside:  792.00px; }
+print-page[size="tabloid" i]{           --lside: 1224.00px; --sside:  792.00px; }
+print-page[size="credit-card" i]{       --lside:  243.00px; --sside:  153.00px; }
+print-page[orientation="landscape" i],print-page[orientation="l" i]{
+	height: calc(var(--sside) / 0.75);
+	width: calc(var(--lside) / 0.75);
+}
+print-page[orientation="portrait" i],print-page[orientation="p" i]{
+	height: calc(var(--lside) / 0.75);
+	width: calc(var(--sside) / 0.75);
+}

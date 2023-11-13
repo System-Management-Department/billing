@@ -1,6 +1,6 @@
 class Toaster{
 	static show(messages){
-		let container = document.querySelector('.toast-container');
+		let container = document.getElementById('spmain');
 		let option = {
 			animation: true,
 			autohide: false,
@@ -11,7 +11,8 @@ class Toaster{
 			let header = document.createElement("div");
 			let body = document.createElement("div");
 			let title = document.createElement("strong");
-			toast.setAttribute("class", message["class"]);
+			toast.setAttribute("slot", "toast");
+			toast.setAttribute("class", (Toaster.classTranslate == null) ? message["class"] : Toaster.classTranslate(message["class"]));
 			header.setAttribute("class", "toast-header");
 			body.setAttribute("class", "toast-body text-white");
 			title.setAttribute("class", "me-auto");
@@ -25,4 +26,5 @@ class Toaster{
 			new bootstrap.Toast(toast, option);
 		}
 	}
+	static classTranslate = null;
 }

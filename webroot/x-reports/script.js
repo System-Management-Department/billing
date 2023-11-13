@@ -1,5 +1,11 @@
 document.addEventListener("DOMContentLoaded", function(e){
 	let elementList = [];
+	const anchor = e => {
+		location.replace(e.currentTarget.getAttribute("data-href"));
+	};
+	const fileOpen = e => {
+		open(e.currentTarget.getAttribute("data-href"));
+	};
 	const anchorElements = document.querySelectorAll('a[href]');
 	const n = anchorElements.length;
 	for(let i = 0; i < n; i++){
@@ -7,8 +13,13 @@ document.addEventListener("DOMContentLoaded", function(e){
 		if((location.pathname.length >= href.length) || (anchorElements[i].search != "") || (href.indexOf("/.") >= 0)){
 			continue;
 		}
-		const a = document.createElement("a");
-		a.setAttribute("href", href);
+		const a = document.createElement("div");
+		a.setAttribute("data-href", href);
+		if(href.match(/\/$/)){
+			a.addEventListener("click", anchor);
+		}else{
+			a.addEventListener("click", fileOpen);
+		}
 		a.textContent = anchorElements[i].textContent.replace(/^[\s\/]|[\s/]$/g, "");
 		elementList.push(a);
 	}
@@ -37,6 +48,12 @@ document.addEventListener("DOMContentLoaded", function(e){
 		const title = document.getElementById("title");
 		const main = document.querySelector("main");
 		title.textContent = name + location.pathname.substring(pos);
+		if(location.pathname.length - pos > 1){
+			const a = document.createElement("div");
+			a.setAttribute("data-href", "../");
+			a.addEventListener("click", anchor);
+			main.appendChild(a);
+		}
 		for(let a of elementList){
 			main.appendChild(a);
 		}
