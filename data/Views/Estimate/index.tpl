@@ -1017,12 +1017,15 @@ Promise.all([
 			}else{
 				const messages = {};
 				const messages2 = document.createDocumentFragment();
+				const alertMessages = [];
 				for(let meaasge of result.messages.filter(m => (m[1] == 2))){
 					let token = meaasge[2].split("/");
 					if(token.length == 1){
 						messages[meaasge[2]] = meaasge[0];
+						alertMessages.push(meaasge[0]);
 					}else if(token.length == 3){
 						messages2.appendChild(Object.assign(document.createElement("div"), {textContent: `${Number(token[1]) + 1}行目：${meaasge[0]}`}));
+						alertMessages.push(`明細${Number(token[1]) + 1}行目：${meaasge[0]}`);
 					}
 				}
 				
@@ -1038,6 +1041,7 @@ Promise.all([
 				range.selectNodeContents(tableInvalid);
 				range.deleteContents();
 				tableInvalid.appendChild(messages2);
+				alert(alertMessages.join("\n"));
 			}
 		});
 	});
