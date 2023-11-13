@@ -349,6 +349,12 @@ class ModalDialogElement extends HTMLElement{
 			this.addEventListener("click", e => {
 				let trigger = null;
 				let result = null;
+				let eventType = "modal-close";
+				for(let node = e.target; (node != null) && (node != this); node = node.parentNode){
+					if(node.hasAttribute("data-event")){
+						eventType = `modal-${node.getAttribute("data-event")}`;
+					}
+				}
 				for(let node = e.target; (node != null) && (node != this); node = node.parentNode){
 					if((trigger == null) && node.hasAttribute("data-trigger")){
 						trigger = node.getAttribute("data-trigger");
@@ -364,12 +370,14 @@ class ModalDialogElement extends HTMLElement{
 					}
 				}
 				if((trigger != null) || (result != null)){
-					this.#modal.close();
-					if(this.#callback != null){
-						this.#callback(trigger, result);
-						this.#callback = null;
+					if(eventType == "modal-close"){
+						this.#modal.close();
+						if(this.#callback != null){
+							this.#callback(trigger, result);
+							this.#callback = null;
+						}
 					}
-					SinglePage.currentPage.dispatchEvent(new ModalDialogEvent("modal-close", this.getAttribute("name"), trigger, result));
+					SinglePage.currentPage.dispatchEvent(new ModalDialogEvent(eventType, this.getAttribute("name"), trigger, result));
 				}
 			}, {useCapture: true});
 			

@@ -38,6 +38,19 @@
 					}
 				}
 			});
+			vp.addEventListener("modal-action", e => {
+				if(e.trigger == "export"){
+					const xml = cache.select("ONE").setTable("estimate").setField("xml").andWhere("dt=?", Number(e.result)).apply();
+					const a = document.createElement("a");
+					a.setAttribute("href", URL.createObjectURL(new Blob([xml], {type: "application/xml"})));
+					a.setAttribute("download", `${e.result}.xml`);
+					a.click();
+				}
+				if(e.trigger == "delete"){
+					cache.delete("estimate").andWhere("dt=?", Number(e.result)).apply();
+					cache.commit().then(() => { SinglePage.modal.estimate.dispatchEvent(new CustomEvent("modal-open", {bubbles: true, composed: true, detail: {}})); });
+				}
+			});
 			const estimates = document.querySelectorAll('[data-estimate]');
 			const n = estimates.length;
 			for(let i = 0; i < n; i++){
