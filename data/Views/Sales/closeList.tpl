@@ -124,7 +124,7 @@ new VirtualPage("/", class{
 						const blob = this.downloads[i].getAttribute("href");
 						yield fetch(this.downloads[i].getAttribute("href")).then(res => res.blob()).then(blob => new Promise((resolve, reject) => {
 							reader.addEventListener("load", e => {
-								const res = [
+								const res1 = [
 									[{raw: ["", "/reports/imports"]}, "config.endpoint"],
 									{
 										method: "POST",
@@ -143,7 +143,26 @@ new VirtualPage("/", class{
 										]
 									}
 								];
-								resolve(res);
+								const res2 = [
+									[{raw: ["", "/reports/imports"]}, "config.endpoint"],
+									{
+										method: "POST",
+										headers: [
+											["X-WB-apitoken", [{raw: ["", ""]}, "config.apiToken"]]
+										],
+										body: [
+											["json", JSON.stringify({
+												reportTypeId: key,
+												isNewIssues: "0",
+												importProcessName: `${label} 差替`,
+												skipFirst: "1",
+												isImmApproval: "0"
+											})],
+											["files[0]", reader.result, `${label}.csv`]
+										]
+									}
+								];
+								resolve([res1, res2]);
 							});
 							reader.readAsDataURL(blob);
 						}));
@@ -151,7 +170,14 @@ new VirtualPage("/", class{
 				},
 				downloads: body.querySelectorAll('a[href][download][data-api-label][data-api-key]')
 			});
-			Promise.all(p).then(args => { opener.corsFetch(...args); });
+			const gen = function*(arr){
+				for(let item of arr){
+					for(let item2 of item){
+						yield item2;
+					}
+				}
+			};
+			Promise.all(p).then(args => { opener.corsFetch(...Array.from(gen(args))); });
 		}
 		
 		/*
