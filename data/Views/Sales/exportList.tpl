@@ -72,7 +72,7 @@ new VirtualPage("/", class{
 			query.addField(`${fields[i]} AS field${i}`);
 		}
 		let total = new Array(fields.length).fill(0);
-		query.setLimit("3001");
+		query.setOrderBy("apply_clients.name").setLimit("3001");
 		const data = query.apply();
 		const memover = data.length > 3000;
 		let rowno = 1;
