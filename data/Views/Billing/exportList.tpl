@@ -50,7 +50,7 @@ new VirtualPage("/", class{
 			{header: "消費税(10%)",        query: "json_extract(sales_attributes.data, '$.tax_rate.\"0.1\".amount_tax')"},
 			{header: "税率",               query: "(sales_details.tax_rate * 100)"},
 			{header: "顧客名カナ",         query: "apply_clients.kana"},
-			{header: "請求日",             query: "STRFTIME('%Y/%m/%d', CURRENT_DATE)"},
+			{header: "請求日",             query: "STRFTIME('%Y/%m/%d', IFNULL(sales_slips.billing_date, CURRENT_DATE))"},
 			{header: "請求金額",           query: "sales_slips.amount_inc"},
 			{header: "件名",               query: "sales_slips.subject"},
 			{header: "単位",               query: "sales_details.unit"},

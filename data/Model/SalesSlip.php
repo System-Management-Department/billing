@@ -31,6 +31,7 @@ class SalesSlip{
 		$check = new Validator();
 		self::validate($check, $masterData, $db);
 		$check["slip_number"]->required("伝票番号を入力してください。");
+		$check["billing_date"]->date("請求日を正しく入力してください。");
 		$result = $check($q);
 		
 		try{
@@ -230,6 +231,7 @@ class SalesSlip{
 				"amount_exc" => $q["amount_exc"],
 				"amount_tax" => $q["amount_tax"],
 				"amount_inc" => $q["amount_inc"],
+				"billing_date" => empty($q["billing_date"]) ? null : $q["billing_date"],
 			],[]);
 			$updateQuery->andWhere("ss=?", $id);
 			$updateQuery();

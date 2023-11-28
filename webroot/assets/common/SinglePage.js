@@ -799,7 +799,7 @@ class FCDateElement extends HTMLElement{
 	}
 	attributeChangedCallback(name, oldValue, newValue){}
 	get value(){
-		return new Date(this.#input.value);
+		return (this.#input.value == "") ? null : new Date(this.#input.value);
 	}
 	set value(value){
 		this.#input.value = (typeof value == "string") ? value : JSON.stringify(value);
