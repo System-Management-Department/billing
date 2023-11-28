@@ -37,7 +37,7 @@
 				<div class="card-body d-flex flex-column gap-3 pt-0">
 					<table class="table my-0 text-center align-middle"><tbody>
 						<tr class="table-info">
-							<td><page-link href="/Committed" class="btn btn-info shadow">確定一覧表</page-link></td>
+							<td><page-link href="/Committed" class="btn btn-info shadow position-relative">確定一覧表<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"></span></page-link></td>
 							<td><div class="flex-grow-1 text-center">
 								<div>確定案件の確認</div>
 								<div>確定案件の修正</div>

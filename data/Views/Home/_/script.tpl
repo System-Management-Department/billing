@@ -1,6 +1,7 @@
 {literal}
 	new VirtualPage("/", class{
 		constructor(vp){
+			vp.addEventListener("reload", e => { this.reload(); });
 			vp.addEventListener("modal-close", e => {
 				if(e.dialog == "estimate"){
 					if(e.trigger == "list"){
@@ -75,6 +76,20 @@
 					open(`/Estimate/?channel=${CreateWindowElement.channel}&key=${dt}`, "_blank", "left=0,top=0,width=1200,height=600");
 				});
 			}
+			this.reload();
+		}
+		reload(){
+			fetch("/Home/search", {}).then(fetchArrayBuffer).then(buffer => {
+				this.transaction = new SQLite();
+				this.transaction.import(buffer, "transaction");
+				const countBadge = document.querySelector('page-link[href="/Committed"] span');
+				const countValue = this.transaction.select("ONE").setTable("_info").setField("value").andWhere("key=?", "count").apply();
+				if((countValue != null) || (countValue > 0)){
+					countBadge.textContent = countValue;
+				}else{
+					countBadge.textContent = "";
+				}
+			});
 		}
 	});
 {/literal}
