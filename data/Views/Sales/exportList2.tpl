@@ -59,21 +59,22 @@ new VirtualPage("/", class{
 			.leftJoin("master.system_apply_clients AS apply_clients ON sales_slips.apply_client=apply_clients.code")
 			.leftJoin("master.clients AS clients ON apply_clients.client=clients.code");
 		const fields = [
-			"STRFTIME('%Y-%m',sales_workflow.approval_datetime)",
-			"sales_slips.project",
-			"STRFTIME('%Y-%m-%d %H:%M',sales_workflow.regist_datetime)",
-			"clients.name",
-			"sales_slips.subject",
-			"apply_clients.name",
-			"sales_slips.amount_inc",
-			"sales_slips.amount_exc",
-			"ifnull(temppurchases.amount_inc, 0)",
-			"(sales_slips.amount_inc - ifnull(temppurchases.amount_inc, 0))"
+			{n: 0, q: "STRFTIME('%Y-%m',sales_workflow.approval_datetime)"},
+			{n: 0, q: "sales_slips.project"},
+			{n: 0, q: "STRFTIME('%Y-%m-%d %H:%M',sales_workflow.regist_datetime)"},
+			{n: 0, q: "clients.name"},
+			{n: 0, q: "sales_slips.subject"},
+			{n: 0, q: "apply_clients.name"},
+			{n: 1, q: "sales_slips.amount_inc"},
+			{n: 1, q: "sales_slips.amount_exc"},
+			{n: 1, q: "ifnull(temppurchases.amount_inc, 0)"},
+			{n: 1, q: "(sales_slips.amount_inc - ifnull(temppurchases.amount_inc, 0))"}
 		];
 		for(let i = 0; i < fields.length; i++){
-			query.addField(`${fields[i]} AS field${i}`);
+			query.addField(`${fields[i].q} AS field${i}`);
 		}
 		let total = new Array(fields.length).fill(0);
+		const nfo = new Intl.NumberFormat();
 		query.setOrderBy("apply_clients.name").setLimit("3001");
 		const data = query.apply();
 		let csvData = [];
@@ -85,8 +86,10 @@ new VirtualPage("/", class{
 			tr.appendChild(Object.assign(document.createElement("td"), {textContent: rowno}));
 			for(let i = 0; i < fields.length; i++){
 				const value = row[`field${i}`];
-				tr.appendChild(Object.assign(document.createElement("td"), {textContent: value}));
-				if(typeof value == "number"){
+				if(fields[i].n == 0){
+					tr.appendChild(Object.assign(document.createElement("td"), {textContent: value}));
+				}else{
+					tr.appendChild(Object.assign(document.createElement("td"), {textContent: nfo.format(value)}));
 					total[i] += value;
 				}
 				csvRow.push(value);
@@ -103,8 +106,8 @@ new VirtualPage("/", class{
 		}else{
 			const tfoot = document.querySelectorAll('tbody.tfoot td');
 			for(let i = 0; i < fields.length; i++){
-				if(tfoot[i + 1].textContent == ""){
-					tfoot[i + 1].textContent = total[i];
+				if(fields[i].n != 0){
+					tfoot[i + 1].textContent = nfo.format(total[i]);
 				}
 			}
 		}

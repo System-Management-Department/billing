@@ -3,7 +3,7 @@ class Toaster{
 		let container = document.getElementById('spmain');
 		let option = {
 			animation: true,
-			autohide: false,
+			autohide: true,
 			delay: 1000
 		};
 		for(let message of messages){

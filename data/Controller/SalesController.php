@@ -133,7 +133,7 @@ class SalesController extends ControllerBase{
 			->andWhere("approval=1");
 		if(!empty($_POST)){
 			if(!empty($_POST["approval_month"])){
-				$query->andWhere("DATE_FORMAT(approval_datetime,'%Y-%m')=?", $_POST["approval_month"]);
+				$query->andWhere("DATE_FORMAT(IFNULL(sales_slips.billing_date, sales_workflow.approval_datetime),'%Y-%m')=?", $_POST["approval_month"]);
 			}
 		}
 		$searchIds = json_encode($query($cnt));
