@@ -521,18 +521,21 @@ Promise.all([
 			const {data: row} = gridRowMap.get(rowElement);
 			if(row.record){
 				total.amount_exc += Number(row.amount_exc);
-				total.amount_tax += Number(row.amount_tax);
-				total.amount_inc += Number(row.amount_inc);
 				if(row.taxable){
 					if(!(row.tax_rate in taxRate)){
 						taxRate[row.tax_rate] = {amount_exc: 0, amount_inc: 0, amount_tax: 0};
 					}
 					taxRate[row.tax_rate].amount_exc += Number(row.amount_exc);
-					taxRate[row.tax_rate].amount_tax += Number(row.amount_tax);
-					taxRate[row.tax_rate].amount_inc += Number(row.amount_inc);
 				}
 			}
 		}
+		for(let tax_rate in taxRate){
+			taxRate[tax_rate].amount_tax = Math.floor(taxRate[tax_rate].amount_exc * Number(tax_rate) + 0.000000001);
+			taxRate[tax_rate].amount_inc = taxRate[tax_rate].amount_exc + taxRate[tax_rate].amount_tax;
+			total.amount_tax += taxRate[tax_rate].amount_tax;
+			total.amount_inc += taxRate[tax_rate].amount_inc;
+		}
+		
 		document.querySelector('form-control[name="amount_exc"]').value = total.amount_exc;
 		document.querySelector('form-control[name="amount_tax"]').value = total.amount_tax;
 		document.querySelector('form-control[name="amount_inc"]').value = total.amount_inc;
