@@ -527,7 +527,7 @@ Promise.all([
 					}
 					taxRate[row.tax_rate].amount_exc += Number(row.amount_exc);
 				}else{
-					total.amount_inc += total.amount_exc;
+					total.amount_inc += Number(row.amount_exc);
 				}
 			}
 		}
