@@ -193,7 +193,7 @@ new VirtualPage("/", class{
 				Promise.all(p).then(args => { opener.corsFetch(...Array.from(gen(args))); });
 			}
 		}catch(ex){
-			alert("CSV出力に失敗しました。\n請求締めを取り消します。");
+			alert("CSV出力に失敗しました。\n環境依存文字が使用されています。\n請求締めを取り消します。");
 			const formData = new FormData();
 			formData.append("id", search.key);
 			fetch("/Billing/closeUndo", {
