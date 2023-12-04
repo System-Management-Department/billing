@@ -491,8 +491,8 @@ Promise.all([
 			}
 		}
 		if(data.record){
-			data.amount_exc = Math.floor(data.quantity * data.unit_price);
-			data.amount_tax = Math.floor((data.taxable) ? data.amount_exc * data.tax_rate : 0);
+			data.amount_exc = Math.floor(data.quantity * data.unit_price + 0.000000001);
+			data.amount_tax = Math.floor((data.taxable) ? data.amount_exc * data.tax_rate + 0.000000001 : 0);
 			data.amount_inc = data.amount_exc + data.amount_tax;
 		}
 		if("unit" in items){
