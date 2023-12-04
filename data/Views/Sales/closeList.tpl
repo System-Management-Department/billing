@@ -12,7 +12,7 @@
 <script type="text/javascript" src="/assets/common/PrintPage.js"></script>
 <script type="text/javascript" src="/assets/jspdf/jspdf.umd.min.js"></script>
 <script type="text/javascript" src="/assets/common/SJISEncoder.js"></script>
-<script type="text/javascript" src="/assets/common/CSVSerializer.js"></script>
+<script type="text/javascript" src="/assets/common/CSVSerializer.js?1"></script>
 <script type="text/javascript">
 new VirtualPage("/", class{
 	constructor(vp){
@@ -98,95 +98,102 @@ new VirtualPage("/", class{
 			}
 		}
 
-		const serializer = new CSVSerializer().setHeader(csvHeader).setConverter(text => SJISEncoder.createBlob(text, {type: "text/csv"}));
-		for(let {key, label} of csvFormats){
-			if(csvData[key].length <= 0){
-				continue;
-			}
-			const blob = serializer.serializeToString(csvData[key]);
-			const a = document.createElement("a");
-			a.textContent = `${label} ダウンロード`;
-			a.className = "btn btn-success";
-			a.setAttribute("href", URL.createObjectURL(blob));
-			a.setAttribute("download", `請求データ（${label}）_${search.key}.csv`);
-			a.setAttribute("data-api-label", label);
-			a.setAttribute("data-api-key", key);
-			body.appendChild(a);
-		}
-		if("corsFetch" in opener){
-			const p = Array.from({
-				*[Symbol.iterator](){
-					const n = this.downloads.length;
-					for(let i = 0; i < n; i++){
-						const reader = new FileReader();
-						const label = this.downloads[i].getAttribute("data-api-label");
-						const key = this.downloads[i].getAttribute("data-api-key");
-						const blob = this.downloads[i].getAttribute("href");
-						yield fetch(this.downloads[i].getAttribute("href")).then(res => res.blob()).then(blob => new Promise((resolve, reject) => {
-							reader.addEventListener("load", e => {
-								const res1 = [
-									[{raw: ["", "/reports/imports"]}, "config.endpoint"],
-									{
-										method: "POST",
-										headers: [
-											["X-WB-apitoken", [{raw: ["", ""]}, "config.apiToken"]]
-										],
-										body: [
-											["json", JSON.stringify({
-												reportTypeId: key,
-												isNewIssues: "1",
-												importProcessName: `${label} 取込`,
-												skipFirst: "1",
-												isImmApproval: "0"
-											})],
-											["files[0]", reader.result, `${label}.csv`]
-										]
-									}
-								];
-								const res2 = [
-									[{raw: ["", "/reports/imports"]}, "config.endpoint"],
-									{
-										method: "POST",
-										headers: [
-											["X-WB-apitoken", [{raw: ["", ""]}, "config.apiToken"]]
-										],
-										body: [
-											["json", JSON.stringify({
-												reportTypeId: key,
-												isNewIssues: "0",
-												importProcessName: `${label} 差替`,
-												skipFirst: "1",
-												isImmApproval: "0"
-											})],
-											["files[0]", reader.result, `${label}.csv`]
-										]
-									}
-								];
-								resolve([res1, res2]);
-							});
-							reader.readAsDataURL(blob);
-						}));
+		try{
+			const serializer = new CSVSerializer()
+				.setHeader(csvHeader)
+				.setValidator(text => {
+					let error = SJISEncoder.validate(text);
+					if(error.length > 0){
+						console.log(text);
+						console.log(error);
+						throw new Error(error.join("\n"));
 					}
-				},
-				downloads: body.querySelectorAll('a[href][download][data-api-label][data-api-key]')
-			});
-			const gen = function*(arr){
-				for(let item of arr){
-					for(let item2 of item){
-						yield item2;
-					}
+				})
+				.setConverter(text => SJISEncoder.createBlob(text, {type: "text/csv"}));
+			const fragment = document.createDocumentFragment();
+			for(let {key, label} of csvFormats){
+				if(csvData[key].length <= 0){
+					continue;
 				}
-			};
-			Promise.all(p).then(args => { opener.corsFetch(...Array.from(gen(args))); });
-		}
-		
-		/*
-		const undoBtn = document.createElement("button");
-		undoBtn.textContent = `取り消し`;
-		undoBtn.className = "btn btn-warning";
-		undoBtn.setAttribute("type", "button");
-		body.appendChild(undoBtn);
-		undoBtn.addEventListener("click", e => {
+				const blob = serializer.serializeToString(csvData[key]);
+				const a = document.createElement("a");
+				a.textContent = `${label} ダウンロード`;
+				a.className = "btn btn-success";
+				a.setAttribute("href", URL.createObjectURL(blob));
+				a.setAttribute("download", `請求データ（${label}）_${search.key}.csv`);
+				a.setAttribute("data-api-label", label);
+				a.setAttribute("data-api-key", key);
+				fragment.appendChild(a);
+			}
+			body.appendChild(fragment);
+			if("corsFetch" in opener){
+				const p = Array.from({
+					*[Symbol.iterator](){
+						const n = this.downloads.length;
+						for(let i = 0; i < n; i++){
+							const reader = new FileReader();
+							const label = this.downloads[i].getAttribute("data-api-label");
+							const key = this.downloads[i].getAttribute("data-api-key");
+							const blob = this.downloads[i].getAttribute("href");
+							yield fetch(this.downloads[i].getAttribute("href")).then(res => res.blob()).then(blob => new Promise((resolve, reject) => {
+								reader.addEventListener("load", e => {
+									const res1 = [
+										[{raw: ["", "/reports/imports"]}, "config.endpoint"],
+										{
+											method: "POST",
+											headers: [
+												["X-WB-apitoken", [{raw: ["", ""]}, "config.apiToken"]]
+											],
+											body: [
+												["json", JSON.stringify({
+													reportTypeId: key,
+													isNewIssues: "1",
+													importProcessName: `${label} 取込`,
+													skipFirst: "1",
+													isImmApproval: "0"
+												})],
+												["files[0]", reader.result, `${label}.csv`]
+											]
+										}
+									];
+									const res2 = [
+										[{raw: ["", "/reports/imports"]}, "config.endpoint"],
+										{
+											method: "POST",
+											headers: [
+												["X-WB-apitoken", [{raw: ["", ""]}, "config.apiToken"]]
+											],
+											body: [
+												["json", JSON.stringify({
+													reportTypeId: key,
+													isNewIssues: "0",
+													importProcessName: `${label} 差替`,
+													skipFirst: "1",
+													isImmApproval: "0"
+												})],
+												["files[0]", reader.result, `${label}.csv`]
+											]
+										}
+									];
+									resolve([res1, res2]);
+								});
+								reader.readAsDataURL(blob);
+							}));
+						}
+					},
+					downloads: body.querySelectorAll('a[href][download][data-api-label][data-api-key]')
+				});
+				const gen = function*(arr){
+					for(let item of arr){
+						for(let item2 of item){
+							yield item2;
+						}
+					}
+				};
+				Promise.all(p).then(args => { opener.corsFetch(...Array.from(gen(args))); });
+			}
+		}catch(ex){
+			alert("CSV出力に失敗しました。\n請求締めを取り消します。");
 			const formData = new FormData();
 			formData.append("id", search.key);
 			fetch("/Billing/closeUndo", {
@@ -197,8 +204,26 @@ new VirtualPage("/", class{
 					close();
 				}
 			});
-		});
-		*/
+			/*
+			const undoBtn = document.createElement("button");
+			undoBtn.textContent = `取り消し`;
+			undoBtn.className = "btn btn-warning";
+			undoBtn.setAttribute("type", "button");
+			body.appendChild(undoBtn);
+			undoBtn.addEventListener("click", e => {
+				const formData = new FormData();
+				formData.append("id", search.key);
+				fetch("/Billing/closeUndo", {
+					method: "POST",
+					body: formData
+				}).then(res => res.json()).then(result => {
+					if(result.success){
+						close();
+					}
+				});
+			});
+			*/
+		}
 	}
 });
 

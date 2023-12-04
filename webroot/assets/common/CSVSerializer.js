@@ -13,6 +13,7 @@ class CSVSerializer{
 		this.quotPattern = new RegExp(`[${r}]`);
 		this.header = null;
 		this.converter = null;
+		this.validator = null;
 		this.filter = null;
 	}
 	setHeader(values){
@@ -21,6 +22,10 @@ class CSVSerializer{
 	}
 	setConverter(converter){
 		this.converter = converter;
+		return this;
+	}
+	setValidator(validator){
+		this.validator = validator;
 		return this;
 	}
 	setFilter(filter){
@@ -58,9 +63,13 @@ class CSVSerializer{
 				row++;
 			}
 		}
+		const csvStr = res.join(this.separator);
 		if(this.converter == null){
-			return res.join(this.separator);
+			return csvStr;
 		}
-		return this.converter.apply(this, [res.join(this.separator)]);
+		if(this.validator != null){
+			this.validator.apply(this, [csvStr]);
+		}
+		return this.converter.apply(this, [csvStr]);
 	}
 }
