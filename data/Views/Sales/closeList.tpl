@@ -29,12 +29,6 @@ new VirtualPage("/", class{
 			.leftJoin("master.system_apply_clients AS apply_clients ON sales_slips.apply_client=apply_clients.code")
 			.leftJoin("master.leaders AS leaders ON sales_slips.leader=leaders.code")
 			.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code");
-		transaction.create_function("floor", {
-			apply(thisObj, value){
-				return Math.floor(Number(value));
-			},
-			length: 1
-		});
 		let csvHeader = [];
 		const fields = [
 			{header: "対象日付",           query: "STRFTIME('%Y/%m/%d', sales_workflow.approval_datetime)"},
@@ -42,8 +36,8 @@ new VirtualPage("/", class{
 			{header: "顧客コード",         query: "apply_clients.apply_client"},
 			{header: "顧客名",             query: "apply_clients.name"},
 			{header: "税抜金額",           query: "sales_slips.amount_exc"},
-			{header: "消費税",             query: "floor(sales_slips.amount_exc * 0.1)"},
-			{header: "合計金額",           query: "sales_slips.amount_exc + floor(sales_slips.amount_exc * 0.1)"},
+			{header: "消費税",             query: "sales_slips.amount_tax"},
+			{header: "合計金額",           query: "sales_slips.amount_inc"},
 			{header: "支払期限",           query: "STRFTIME('%Y/%m/%d', sales_slips.payment_date)"},
 			{header: "明細日付",           query: "STRFTIME('%Y/%m/%d', sales_workflow.approval_datetime)"},
 			{header: "摘要",               query: "sales_details.detail"},
@@ -58,7 +52,7 @@ new VirtualPage("/", class{
 			{header: "税率",               query: "(sales_details.tax_rate * 100)"},
 			{header: "顧客名カナ",         query: "apply_clients.kana"},
 			{header: "請求日",             query: "STRFTIME('%Y/%m/%d', IFNULL(sales_slips.billing_date, CURRENT_DATE))"},
-			{header: "請求金額",           query: "sales_slips.amount_exc + floor(sales_slips.amount_exc * 0.1)"},
+			{header: "請求金額",           query: "sales_slips.amount_inc"},
 			{header: "件名",               query: "sales_slips.subject"},
 			{header: "単位",               query: "sales_details.unit"},
 			{header: "摘要ヘッダー１",     query: "json_extract(sales_attributes.data, '$.summary_header[0]')"},
@@ -67,8 +61,8 @@ new VirtualPage("/", class{
 			{header: "摘要ヘッダー１値",   query: "json_extract(sales_detail_attributes.data, '$.summary_data[0]')"},
 			{header: "摘要ヘッダー２値",   query: "json_extract(sales_detail_attributes.data, '$.summary_data[1]')"},
 			{header: "摘要ヘッダー３値",   query: "json_extract(sales_detail_attributes.data, '$.summary_data[2]')"},
-			{header: "消費税(明細別合計)", query: "floor(sales_slips.amount_exc * 0.1)"},
-			{header: "税込金額(明細合計)", query: "sales_slips.amount_exc + floor(sales_slips.amount_exc * 0.1)"},
+			{header: "消費税(明細別合計)", query: "sales_slips.amount_tax"},
+			{header: "税込金額(明細合計)", query: "sales_slips.amount_inc"},
 			{header: "消費税(明細別)",     query: "sales_details.amount_tax"},
 			{header: "税込金額(明細別)",   query: "sales_details.amount_inc"},
 			{header: "担当者氏名",         query: "(leaders.name || '・' || managers.name)"},
