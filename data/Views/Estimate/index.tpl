@@ -1007,7 +1007,6 @@ Promise.all([
 			}
 			return res;
 		});
-		formData.append("note_0", document.querySelector('form-control[name="specification"]').text);
 		formData.append("invoice_format",id);
 		formData.append("detail", JSON.stringify(details));
 		if(info.hasAttribute("ss")){

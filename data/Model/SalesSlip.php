@@ -112,13 +112,6 @@ class SalesSlip{
 			$updateQuery();
 			
 			// 売上・売上追加情報・売上ワークフロー・売上明細・売上明細追加情報・仕入関係の登録
-			$noteList = [];
-			if(!empty($q["note_0"])){
-				$noteList[] = $q["note_0"];
-			}
-			if(!empty($q["note"])){
-				$noteList[] = $q["note"];
-			}
 			$insertQuery = $db->insertSet("sales_slips", [
 				"invoice_format" => $q["invoice_format"],
 				"slip_number" => sprintf("%s%05d", $q["sequence"], $slipNumber),
@@ -130,7 +123,7 @@ class SalesSlip{
 				"client_name" => $q["client_name"],
 				"apply_client" => $q["apply_client"],
 				"payment_date" => $q["payment_date"],
-				"note" =>  implode("\n", $noteList),
+				"note" => $q["note"],
 				"amount_exc" => $q["amount_exc"],
 				"amount_tax" => $q["amount_tax"],
 				"amount_inc" => $q["amount_inc"],
