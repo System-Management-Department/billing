@@ -50,11 +50,13 @@ class UploadController extends ControllerBase{
 		}
 		if(!$result->hasError()){
 			$path = sprintf("/x-reports/estimate/%s/%s/%08d.pdf", $now->format("Y"), $now->format("m"), $slipNumber);
+			$info = sprintf("/x-reports/estimate/%s/%s/info.csv", $now->format("Y"), $now->format("m"));
 			$updir = $_SERVER["DOCUMENT_ROOT"] . $path;
 			if(!is_dir(dirname($updir))){
 				mkdir(dirname($updir), 0777, true);
 			}
 			move_uploaded_file($_FILES["pdf"]["tmp_name"], $updir);
+			file_put_contents($_SERVER["DOCUMENT_ROOT"] . $info, sprintf("%08d.pdf,%s\n", $slipNumber, $_SESSION["User.id"]), FILE_APPEND | LOCK_EX);
 			$result->addMessage($path, "INFO", "path");
 		}
 		return new JsonView($result);
@@ -99,6 +101,20 @@ class UploadController extends ControllerBase{
 		}
 		move_uploaded_file($_FILES["pdf"]["tmp_name"], $updir);
 		$result->addMessage($path, "INFO", "path");
+		return new JsonView($result);
+	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function info(){
+		$result = [];
+		if(($fp = fopen($_SERVER["DOCUMENT_ROOT"] . "/" . $this->requestContext->id, "r")) !== FALSE){
+			while(($data = fgetcsv($fp, 1000, ",")) !== FALSE){
+				if($data[1] == $_SESSION["User.id"]){
+					$result[] = $data[0];
+				}
+			}
+			fclose($fp);
+		}
 		return new JsonView($result);
 	}
 }

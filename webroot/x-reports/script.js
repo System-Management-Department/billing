@@ -6,6 +6,32 @@ document.addEventListener("DOMContentLoaded", function(e){
 	const fileOpen = e => {
 		open(e.currentTarget.getAttribute("data-href"));
 	};
+	const filter = e => {
+		if(e.currentTarget.hasAttribute("data-filter")){
+			const icons = Array.from(document.querySelectorAll('[data-href]'));
+			for(let a of icons){
+				const href = a.getAttribute("data-href");
+				if(href.match(/^\/Upload\/info|\/$/)){
+					continue;
+				}
+				a.hidden = false;
+			}
+			e.currentTarget.removeAttribute("data-filter");
+		}else{
+			fetch(e.currentTarget.getAttribute("data-href")).then(res => res.json()).then(res => {
+				const icons = Array.from(document.querySelectorAll('[data-href]'));
+				for(let a of icons){
+					const href = a.getAttribute("data-href");
+					if(href.match(/^\/Upload\/info|\/$/)){
+						continue;
+					}
+					const filename = href.split("/").pop();
+					a.hidden = !(res.includes(filename));
+				}
+			});
+			e.currentTarget.setAttribute("data-filter", "on");
+		}
+	};
 	const anchorElements = document.querySelectorAll('a[href]');
 	const n = anchorElements.length;
 	for(let i = 0; i < n; i++){
@@ -17,6 +43,12 @@ document.addEventListener("DOMContentLoaded", function(e){
 		a.setAttribute("data-href", href);
 		if(href.match(/\/$/)){
 			a.addEventListener("click", anchor);
+		}else if(href.match(/\/info\.csv$/)){
+			a.setAttribute("data-href", `/Upload/info${href}`);
+			a.addEventListener("click", filter);
+			a.textContent = "フィルタ";
+			elementList.unshift(a);
+			continue;
 		}else{
 			a.addEventListener("click", fileOpen);
 		}
