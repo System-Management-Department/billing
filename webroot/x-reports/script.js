@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function(e){
 		}else if(href.match(/\/info\.csv$/)){
 			a.setAttribute("data-href", `/Upload/info${href}`);
 			a.addEventListener("click", filter);
-			a.textContent = "フィルタ";
+			a.textContent = "マイフィルタ";
 			elementList.unshift(a);
 			continue;
 		}else{
