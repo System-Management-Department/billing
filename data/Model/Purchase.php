@@ -190,7 +190,9 @@ class Purchase{
 		$check["amount_inc"]->required("税込金額を入力してください。");
 		$check["taxable"]->required("課税を入力してください。")
 			->range("課税を正しく入力してください。", "in", [0, 1]);
-		$check["tax_rate"]->required("税率を入力してください。");
+		if($q["taxable"] == 1){
+			$check["tax_rate"]->required("税率を入力してください。");
+		}
 		$check["payment_date"]->required("支払日を入力してください。")
 			->date("支払日を正しく入力してください。");
 	}
