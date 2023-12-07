@@ -68,7 +68,8 @@ new VirtualPage("/", class{
 			{header: "担当者氏名",         query: "(leaders.name || '・' || managers.name)"},
 			{header: "発行部数",           query: "json_extract(sales_detail_attributes.data, '$.circulation')"},
 			{header: "明細単価",           query: "sales_details.unit_price"},
-			{header: "売上日",             query: "STRFTIME('%Y/%m/%d', CURRENT_DATE)"}
+			{header: "売上日",             query: "STRFTIME('%Y/%m/%d', CURRENT_DATE)"},
+			{header: "数量",               query: "sales_details.quantity"}
 		];
 		query.addField("DISTINCT sales_slips.invoice_format");
 		for(let i = 0; i < fields.length; i++){
