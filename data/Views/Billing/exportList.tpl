@@ -28,6 +28,17 @@ new VirtualPage("/", class{
 			.leftJoin("master.system_apply_clients AS apply_clients ON sales_slips.apply_client=apply_clients.code")
 			.leftJoin("master.leaders AS leaders ON sales_slips.leader=leaders.code")
 			.leftJoin("master.managers AS managers ON sales_slips.manager=managers.code");
+		transaction.create_function("number_format", {
+			apply(thisObj, args){
+				const [value, place] = args;
+				if(value == null){
+					return null;
+				}
+				return this.nf.format(value).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(place).substring(1));
+			},
+			nf: new Intl.NumberFormat(void(0), {minimumFractionDigits: 2, maximumFractionDigits: 3}),
+			length: 2
+		});
 		let csvHeader = [];
 		const fields = [
 			{header: "対象日付",           query: "STRFTIME('%Y/%m/%d', sales_workflow.approval_datetime)"},
@@ -66,9 +77,9 @@ new VirtualPage("/", class{
 			{header: "税込金額(明細別)",   query: "sales_details.amount_inc"},
 			{header: "担当者氏名",         query: "(leaders.name || '・' || managers.name)"},
 			{header: "発行部数",           query: "json_extract(sales_detail_attributes.data, '$.circulation')"},
-			{header: "明細単価",           query: "sales_details.unit_price"},
+			{header: "明細単価",           query: "number_format(sales_details.unit_price,sales_details.price_place)"},
 			{header: "売上日",             query: "STRFTIME('%Y/%m/%d', CURRENT_DATE)"},
-			{header: "数量",               query: "sales_details.quantity"}
+			{header: "数量",               query: "number_format(sales_details.quantity,sales_details.quantity_place)"}
 		];
 		query.addField("DISTINCT sales_slips.invoice_format");
 		for(let i = 0; i < fields.length; i++){
