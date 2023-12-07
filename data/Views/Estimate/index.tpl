@@ -261,7 +261,7 @@ Promise.all([
 			SinglePage.modal.apply_client.querySelector('[data-grid]'),
 			master.select("ALL")
 				.setTable("system_apply_clients")
-				.setField("system_apply_clients.code,system_apply_clients.unique_name as name,system_apply_clients.kana")
+				.setField("system_apply_clients.code,system_apply_clients.unique_name as name,system_apply_clients.kana,system_apply_clients.payment_cycle,system_apply_clients.payment_date")
 				.leftJoin("clients on system_apply_clients.client=clients.code")
 				.addField("clients.name as client")
 				.andWhere("has(json_array(system_apply_clients.code,system_apply_clients.unique_name,system_apply_clients.name),?)", keyword)
@@ -316,18 +316,57 @@ Promise.all([
 	const id = xmlDoc.querySelector('info').getAttribute("type");
 	SinglePage.location = `/${id}`;
 	const inputElements = document.querySelectorAll('form-control[name],input[name="tax_rate"]');
+	const inputMap = {};
+	const appendAttributes = {
+		recording_date: ""
+	};
+	for(let key in appendAttributes){
+		if(!root.hasAttribute(key)){
+			root.setAttribute(key, appendAttributes[key]);
+		}
+	}
 	for(let i = inputElements.length - 1; i >= 0; i--){
 		const name = inputElements[i].getAttribute("name");
+		inputMap[name] = inputElements[i];
 		if(root.hasAttribute(name)){
-			inputElements[i].value = root.getAttribute(name);
+			inputElements[i].value = (inputElements[i].getAttribute("type") == "month") ? root.getAttribute(name).replace(/-[0-9]+$/, "") : root.getAttribute(name);
 			inputElements[i].addEventListener("change", e => {
 				const target = e.currentTarget;
-				const value = (target.getAttribute("type") == "date") ? target.querySelector('input[name]').value : target.value;
-				root.setAttribute(name, value);
+				const value = ((target.getAttribute("type") == "date") || (target.getAttribute("type") == "month")) ? target.querySelector('input[name]')?.value : target.value;
+				root.setAttribute(name, (value == null) ? "" : value);
 				cache.updateSet("estimate", {xml: root.outerHTML}, {}).andWhere("dt=?", Number(search.key)).apply();
 				cache.commit();
 			});
 		}
+	}
+	if(("apply_client" in inputMap) && ("recording_date" in inputMap) && ("payment_date" in inputMap)){
+		const datalistElement = document.getElementById("payment_date");
+		const setDatalist = e => {
+			const data = master.select("ROW").setTable("system_apply_clients").setField("IFNULL(payment_cycle, '') AS payment_cycle,IFNULL(payment_date, '') AS payment_date").andWhere("code=?", inputMap.apply_client.value).apply();
+			datalistElement.innerHTML = "";
+			if((data != null) && (inputMap.recording_date.value != null)){
+				const currentDate = new Date(inputMap.recording_date.value);
+				const matchNextCount = data.payment_cycle.match(/[0-9]+/)?.map(Number)?.at(0) || data.payment_cycle.match(/翌[翌々]*/)?.at(0).length || 0;
+				currentDate.setMonth(currentDate.getMonth() + matchNextCount);
+				const month = currentDate.getMonth();
+				const calendar = {};
+				const prefix = `${currentDate.getFullYear()}-` + `0${currentDate.getMonth() + 1}`.slice(-2) + "-";
+				for(currentDate.setDate(1); currentDate.getMonth() == month; currentDate.setDate(currentDate.getDate() + 1)){
+					const date = currentDate.getDate();
+					calendar[date] = calendar["末"] = prefix + `0${date}`.slice(-2);
+				}
+				const options = data.payment_date.match(/[12][0-9]|3[01]|[1-9]|末/g)?.map(i => (i in calendar) ? calendar[i] : null).filter(v => v != null) || [];
+				for(let value of options){
+					const option = document.createElement("option");
+					option.setAttribute("value", value);
+					datalistElement.appendChild(option);
+				}
+			}
+			inputMap.payment_date.setAttribute("list", "payment_date");
+		};
+		setDatalist({});
+		inputMap.apply_client.addEventListener("change", setDatalist);
+		inputMap.recording_date.addEventListener("change", setDatalist);
 	}
 	
 	const refDetail = Symbol("refDetail");
@@ -341,10 +380,10 @@ Promise.all([
 		tax_rate: null
 	};
 	const recordObj = {
-		quantity_place: 2,
+		quantity_place: 0,
 		quantity: 0,
 		unit: "",
-		price_place: 2,
+		price_place: 0,
 		unit_price: 0,
 		amount_exc: 0,
 		amount_tax: 0,
@@ -355,10 +394,10 @@ Promise.all([
 		tax_rate: 0.1
 	};
 	const unrecordObj = {
-		quantity_place: 2,
+		quantity_place: 0,
 		quantity: null,
 		unit: null,
-		price_place: 2,
+		price_place: 0,
 		unit_price: null,
 		amount_exc: null,
 		amount_tax: null,
@@ -1604,8 +1643,12 @@ Promise.all([
 						<div class="d-table-cell"><form-control fc-class="col-10" name="apply_client" type="keyword" list="apply_client" placeholder="請求先名・請求先CDで検索"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">入金予定日</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date"></form-control><div class="invalid"></div></div>
+						<div class="d-table-cell th align-middle ps-4">計上月</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="recording_date" type="month"></form-control><div class="invalid"></div></div>
+					</div>
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">支払期日</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date" list="payment_date"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">仕様</div>
@@ -1640,8 +1683,12 @@ Promise.all([
 						<div class="d-table-cell"><form-control fc-class="col-10" name="apply_client" type="keyword" list="apply_client" placeholder="請求先名・請求先CDで検索"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">入金予定日</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date"></form-control><div class="invalid"></div></div>
+						<div class="d-table-cell th align-middle ps-4">計上月</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="recording_date" type="month"></form-control><div class="invalid"></div></div>
+					</div>
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">支払期日</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date" list="payment_date"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">仕様</div>
@@ -1687,8 +1734,12 @@ Promise.all([
 						<div class="d-table-cell"><form-control fc-class="col-10" name="apply_client" type="keyword" list="apply_client" placeholder="請求先名・請求先CDで検索"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
-						<div class="d-table-cell th align-middle ps-4">入金予定日</div>
-						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date"></form-control><div class="invalid"></div></div>
+						<div class="d-table-cell th align-middle ps-4">計上月</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="recording_date" type="month"></form-control><div class="invalid"></div></div>
+					</div>
+					<div class="d-table-row">
+						<div class="d-table-cell th align-middle ps-4">支払期日</div>
+						<div class="d-table-cell"><form-control fc-class="col-10" name="payment_date" type="date" list="payment_date"></form-control><div class="invalid"></div></div>
 					</div>
 					<div class="d-table-row">
 						<div class="d-table-cell th align-middle ps-4">仕様</div>
@@ -1725,6 +1776,7 @@ Promise.all([
 	<datalist id="division"></datalist>
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option><option value="5">インボイス対応（軽減税率適用）請求書</option></datalist>
 	<datalist id="specification"><option value=""></option></datalist>
+	<datalist id="payment_date"></datalist>
 	<modal-dialog name="leader" label="部門長選択">
 		<div slot="body" class="overflow-auto" style="height: calc(100vh - 20rem);"><div data-grid="/Modal/Leader#list"></div></div>
 	</modal-dialog>

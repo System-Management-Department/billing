@@ -844,6 +844,66 @@ class FCDateElement extends HTMLElement{
 }
 FormControlElement.append("date", FCDateElement, ["fc-text", "fc-text-invalid"], FormControlElement.gridColumnParts);
 
+
+class FCMonthElement extends HTMLElement{
+	#root; #input; #props;
+	constructor(){
+		super();
+		this.#root = this.attachShadow({mode: "closed"});
+		this.#input = document.createElement("input");
+		this.#input.setAttribute("type", "month");
+		this.#root.appendChild(this.#input);
+		this.#props = {};
+		this.#input.addEventListener("change", e => this.dispatchEvent(new CustomEvent("change", {bubbles: true, composed: true})));
+		this.addEventListener("reset", e => { this.value = ""; });
+	}
+	attributeChangedCallback(name, oldValue, newValue){}
+	get value(){
+		return (this.#input.value == "") ? null : new Date(this.#input.value);
+	}
+	set value(value){
+		this.#input.value = (typeof value == "string") ? value : JSON.stringify(value);
+		this.#setList();
+	}
+	set props(value){
+		this.#props = value;
+		this.#setList();
+		if("placeholder" in this.#props){
+			this.#input.setAttribute("placeholder", this.#props.placeholder);
+		}else{
+			this.#input.removeAttribute("placeholder");
+		}
+	}
+	#setList(){
+		let found = false;
+		let dataListElement = this.#root.getElementById(this.#props.list.fc);
+		if(dataListElement != null){
+			this.#root.removeChild(dataListElement);
+		}
+		if("id" in this.#props.list){
+			const dataList = document.getElementById(this.#props.list.id);
+			if(dataList != null){
+				dataListElement = dataList.cloneNode(true);
+				dataListElement.setAttribute("id", this.#props.list.fc);
+				this.#root.appendChild(dataListElement);
+				this.#input.setAttribute("list", this.#props.list.fc);
+				found = true;
+			}
+		}
+		if(!found){
+			this.#input.removeAttribute("list");
+		}
+		let classList = ("fc-class" in this.#props) ? this.#props["fc-class"].split(/\s+/).filter(v => v != "") : [];
+		classList.push("fc-text");
+		if(this.#props.invalid){
+			classList.push("fc-text-invalid");
+		}
+		this.#input.setAttribute("part", classList.join(" "));
+	}
+	static get observedAttributes(){ return []; }
+}
+FormControlElement.append("month", FCMonthElement, ["fc-text", "fc-text-invalid"], FormControlElement.gridColumnParts);
+
 class FCTextareaElement extends HTMLElement{
 	#root; #input; #props;
 	constructor(){

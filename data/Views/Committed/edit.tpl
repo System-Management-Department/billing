@@ -289,7 +289,7 @@ Promise.all([
 			SinglePage.modal.apply_client.querySelector('[data-grid]'),
 			master.select("ALL")
 				.setTable("system_apply_clients")
-				.setField("system_apply_clients.code,system_apply_clients.unique_name as name,system_apply_clients.kana")
+				.setField("system_apply_clients.code,system_apply_clients.unique_name as name,system_apply_clients.kana,system_apply_clients.payment_cycle,system_apply_clients.payment_date")
 				.leftJoin("clients on system_apply_clients.client=clients.code")
 				.addField("clients.name as client")
 				.andWhere("has(json_array(system_apply_clients.code,system_apply_clients.unique_name,system_apply_clients.name),?)", keyword)
@@ -360,12 +360,14 @@ Promise.all([
 	
 	formTableInit(document.querySelector('.sales-form'), formTableQuery("/Sales#edit").apply()).then(form => {
 		const inputElements = form.querySelectorAll('form-control[name]');
+		const inputMap = {};
 		const n = inputElements.length;
 		const grid = document.querySelector('[slot="main"] [data-grid]');
 		for(let i = 0; i < n; i++){
 			const name = inputElements[i].getAttribute("name");
+			inputMap[name] = inputElements[i];
 			if(name in salesSlip){
-				inputElements[i].value = salesSlip[name];
+				inputElements[i].value = (inputElements[i].getAttribute("type") == "month") ? salesSlip[name]?.replace(/-[0-9]+$/, "") : salesSlip[name];
 			}
 			if((name == "summary_header1") || (name == "summary_header2") || (name == "summary_header3")){
 				inputElements[i].addEventListener("change", e => {
@@ -379,6 +381,36 @@ Promise.all([
 					slotInfo.head.textContent = inputElements[i].value;
 				}
 			}
+		}
+		
+		if(("apply_client" in inputMap) && ("recording_date" in inputMap) && ("payment_date" in inputMap)){
+			const datalistElement = document.getElementById("payment_date");
+			const setDatalist = e => {
+				const data = master.select("ROW").setTable("system_apply_clients").setField("IFNULL(payment_cycle, '') AS payment_cycle,IFNULL(payment_date, '') AS payment_date").andWhere("code=?", inputMap.apply_client.value).apply();
+				datalistElement.innerHTML = "";
+				if((data != null) && (inputMap.recording_date.value != null)){
+					const currentDate = new Date(inputMap.recording_date.value);
+					const matchNextCount = data.payment_cycle.match(/[0-9]+/)?.map(Number)?.at(0) || data.payment_cycle.match(/翌[翌々]*/)?.at(0).length || 0;
+					currentDate.setMonth(currentDate.getMonth() + matchNextCount);
+					const month = currentDate.getMonth();
+					const calendar = {};
+					const prefix = `${currentDate.getFullYear()}-` + `0${currentDate.getMonth() + 1}`.slice(-2) + "-";
+					for(currentDate.setDate(1); currentDate.getMonth() == month; currentDate.setDate(currentDate.getDate() + 1)){
+						const date = currentDate.getDate();
+						calendar[date] = calendar["末"] = prefix + `0${date}`.slice(-2);
+					}
+					const options = data.payment_date.match(/[12][0-9]|3[01]|[1-9]|末/g)?.map(i => (i in calendar) ? calendar[i] : null).filter(v => v != null) || [];
+					for(let value of options){
+						const option = document.createElement("option");
+						option.setAttribute("value", value);
+						datalistElement.appendChild(option);
+					}
+				}
+				inputMap.payment_date.setAttribute("list", "payment_date");
+			};
+			setDatalist({});
+			inputMap.apply_client.addEventListener("change", setDatalist);
+			inputMap.recording_date.addEventListener("change", setDatalist);
 		}
 	});
 	const refDetail = Symbol("refDetail");
@@ -889,6 +921,7 @@ function setDataTable(parent, columns, data, callback = null){
 	<datalist id="division"></datalist>
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option><option value="5">インボイス対応（軽減税率適用）請求書</option></datalist>
 	<datalist id="specification"></datalist>
+	<datalist id="payment_date"></datalist>
 	<modal-dialog name="leader" label="部門長選択">
 		<div slot="body" class="overflow-auto" style="height: calc(100vh - 20rem);"><div data-grid="/Modal/Leader#list"></div></div>
 	</modal-dialog>

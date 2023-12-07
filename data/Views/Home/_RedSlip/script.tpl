@@ -28,6 +28,11 @@
 						items.salses_detail.setAttribute("target", "red_salses_detail");
 					}
 				}
+				if(data.recording_date != null){
+					if("recording_date" in items){
+						items.recording_date.textContent = data.recording_date.replace(/-[0-9]+$/, "");
+					}
+				}
 			};
 			GridGenerator.define(gridLocation, gridInfo, gridColumns, gridCallback);
 			GridGenerator.init(grid);

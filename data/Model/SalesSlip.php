@@ -64,8 +64,10 @@ class SalesSlip{
 		$check["client_name"]->required("納品先を入力してください。")
 			->length("納品先は80文字以下で入力してください。", null, 255);
 		$check["apply_client"]->required("請求先を入力してください。");
-		$check["payment_date"]->required("入金予定日を入力してください。")
-			->date("入金予定日を正しく入力してください。");
+		$check["recording_date"]->required("計上月を入力してください。")
+			->date("計上月を正しく入力してください。");
+		$check["payment_date"]->required("支払期日を入力してください。")
+			->date("支払期日を正しく入力してください。");
 		$check["amount_exc"]->required("税抜合計金額を入力してください。");
 		$check["amount_tax"]->required("消費税合計金額を入力してください。");
 		$check["amount_inc"]->required("税込合計金額を入力してください。");
@@ -122,6 +124,7 @@ class SalesSlip{
 				"manager" => $q["manager"],
 				"client_name" => $q["client_name"],
 				"apply_client" => $q["apply_client"],
+				"recording_date" => $q["recording_date"],
 				"payment_date" => $q["payment_date"],
 				"note" => $q["note"],
 				"amount_exc" => $q["amount_exc"],
@@ -226,6 +229,7 @@ class SalesSlip{
 				"manager" => $q["manager"],
 				"client_name" => $q["client_name"],
 				"apply_client" => $q["apply_client"],
+				"recording_date" => $q["recording_date"],
 				"payment_date" => $q["payment_date"],
 				"note" => $q["note"],
 				"amount_exc" => $q["amount_exc"],

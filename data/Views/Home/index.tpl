@@ -358,7 +358,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				SinglePage.modal.apply_client.querySelector('[data-grid]'),
 				master.select("ALL")
 					.setTable("system_apply_clients")
-					.setField("system_apply_clients.code,system_apply_clients.unique_name as name,system_apply_clients.kana")
+					.setField("system_apply_clients.code,system_apply_clients.unique_name as name,system_apply_clients.kana,system_apply_clients.payment_cycle,system_apply_clients.payment_date")
 					.leftJoin("clients on system_apply_clients.client=clients.code")
 					.addField("clients.name as client")
 					.andWhere("has(json_array(system_apply_clients.code,system_apply_clients.unique_name,system_apply_clients.name),?)", keyword)
