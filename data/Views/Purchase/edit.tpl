@@ -10,6 +10,7 @@
 	--border-width: 1px;
 	--border-color: #dedede;
 	--grid-padding: 0.25rem;
+	counter-reset: grid-row-counter;
 	display: grid;
 	position: relative;
 	white-space: pre;
@@ -44,6 +45,9 @@
 			}
 			&.gcell-auto{
 				overflow: visible;
+			}
+			&:focus-within{
+				box-shadow: inset 0 0 5px 2px #86b7fe;
 			}
 		}
 		[data-grid-width]{
@@ -92,6 +96,10 @@
 	.table-danger{
 		--background-base-color: #f8d7da;
 	}
+	.grid-row-counter::before{
+		counter-increment: grid-row-counter;
+		content: counter(grid-row-counter);
+	}
 }
 .overflow-auto [data-grid]{
 	padding-right: 100vw;
@@ -106,6 +114,7 @@
 <script type="text/javascript" src="/assets/common/SQLite.js"></script>
 <script type="text/javascript" src="/assets/common/SinglePage.js"></script>
 <script type="text/javascript" src="/assets/common/GridGenerator.js"></script>
+<script type="text/javascript" src="/assets/cleave/cleave.min.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jsuites.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jspreadsheet.js"></script>
 <script type="text/javascript">{literal}
@@ -132,9 +141,25 @@ class ListButtonElement extends HTMLElement{
 	static get observedAttributes(){ return ["label"]; }
 }
 customElements.define("list-button", ListButtonElement);
+
+class ShowDialogElement extends HTMLElement{
+	constructor(){
+		super();
+		this.addEventListener("click", e => {
+			const target = this.getAttribute("target");
+			const detail = this.getAttribute("detail");
+			SinglePage.modal[target].show({detail: null});
+		});
+	}
+	connectedCallback(){}
+	disconnectedCallback(){}
+	attributeChangedCallback(name, oldValue, newValue){}
+	static get observedAttributes(){ return []; }
+}
+customElements.define("show-dialog", ShowDialogElement);
 {/literal}</script>
 {jsiife id=$id}{literal}
-new VirtualPage("/edit", class{
+var editPage = new VirtualPage("/edit", class{
 	constructor(vp){
 		formTableInit(document.getElementById("sales_slip"), formTableQuery("#sales_slip").apply()).then(form => {
 			const res = transaction.select("ROW")
@@ -166,24 +191,16 @@ new VirtualPage("/edit", class{
 		vp.addEventListener("modal-close", e => {
 			if(e.dialog == "supplier"){
 				if(e.trigger == "list"){
-					const obj = document.getElementById("detail").jspreadsheet;
-					const insert = obj.options.dataProxy();
-					insert[objectData].supplier = e.result;
-					if(obj.options.data.length == 0){
-						obj.setData([insert]);
-					}else{
-						pasteEvent = true;
-						obj.insertRow(insert);
-						pasteEvent = false;
-					}
+					this.addSupplier(e.result);
 				}
 			}
 		});
 		document.querySelector('[data-trigger="submit"]').addEventListener("click", e => {
 			const formData = new FormData();
-			const details = document.getElementById("detail").jspreadsheet.options.data.map(rowProxy => {
+			const grid = document.querySelector('[slot="main"] [data-grid]');
+			const details = Array.from(grid.querySelectorAll(':scope>*')).filter(row => this.gridRowMap.has(row)).map(tempRow => {
+				const row = this.gridRowMap.get(tempRow).data
 				let res = {};
-				const row = rowProxy[objectData];
 				for(let key in row){
 					if(typeof row[key] == "boolean"){
 						res[key] = row[key] ? 1 : 0;
@@ -210,19 +227,22 @@ new VirtualPage("/edit", class{
 					new BroadcastChannel(search.channel).postMessage(JSON.stringify(result));
 					close();
 				}else{
-					const messages = document.createDocumentFragment();
+					const messages = {};
+					const messages2 = document.createDocumentFragment();
 					for(let meaasge of result.messages.filter(m => (m[1] == 2))){
 						let token = meaasge[2].split("/");
-						if(token.length == 3){
-							messages.appendChild(Object.assign(document.createElement("div"), {textContent: `${Number(token[1]) + 1}行目：${meaasge[0]}`}));
+						if(token.length == 1){
+							messages[meaasge[2]] = meaasge[0];
+						}else if(token.length == 3){
+							messages2.appendChild(Object.assign(document.createElement("div"), {textContent: `${Number(token[1]) + 1}行目：${meaasge[0]}`}));
 						}
 					}
 					
 					const range = document.createRange();
-					const tableInvalid = document.querySelector('#detail~.invalid');
+					const tableInvalid = document.getElementById("detail_invalid");
 					range.selectNodeContents(tableInvalid);
 					range.deleteContents();
-					tableInvalid.appendChild(messages);
+					tableInvalid.appendChild(messages2);
 				}
 			});
 		});
@@ -266,7 +286,13 @@ Promise.all([
 		text: "IFNULL(text, '')",
 		attributes: "IFNULL(attributes, '')"
 	}).apply();
-	//master.delete("grid_columns").andWhere("filter=?");
+{/literal}{if $smarty.session["User.role"] eq "entry"}{literal}
+	master.delete("grid_columns").andWhere("((filter='d-admin'))").apply();
+{/literal}{elseif $smarty.session["User.role"] eq "leader"}{literal}
+	master.delete("grid_columns").andWhere("((filter='d-admin') OR (filter='d-entry'))").apply();
+{/literal}{elseif $smarty.session["User.role"] eq "manager"}{literal}
+	master.delete("grid_columns").andWhere("((filter='d-admin') OR (filter='d-entry') OR (filter='d-leader'))").apply();
+{/literal}{/if}{literal}
 	master.select("ALL").setTable("grid_infos").apply().forEach(info => {
 		const columns = master.select("ALL").setTable("grid_columns").andWhere("location=?", info.location).apply();
 		GridGenerator.define(info.location, info, columns, (info.location in callbackList) ? callbackList[info.location] : null);
@@ -335,191 +361,159 @@ Promise.all([
 		taxable: false,
 		tax_rate: null
 	};
-	const toolbarDisplay = top => {
-		const data = obj.options.data[top][objectData];
-		obj.toolbar.querySelector('.toolbar-taxable').value = data.taxable ? "1" : "0";
-		if(data.taxable){
-			obj.toolbar.querySelector('.toolbar-tax-rate').style.display = "block";
-			obj.toolbar.querySelector('.toolbar-tax-rate input').value = data.tax_rate * 100;
+	const recordObj = {
+		pu: null,
+		supplier: null,
+		payment_date: "",
+		detail: "",
+		quantity: 0,
+		unit: "",
+		unit_price: 0,
+		amount_exc: 0,
+		amount_tax: 0,
+		amount_inc: 0,
+		note: "",
+		taxable: true,
+		tax_rate: 0.1
+	};
+	console.log(transaction.tables.purchases);
+	const grid = document.querySelector('[slot="main"] [data-grid]');
+	const gridLocation = grid.getAttribute("data-grid");
+	const gridInfo = master.select("ROW").setTable("grid_infos").andWhere("location=?", gridLocation).apply();
+	const gridColumns = master.select("ALL").setTable("grid_columns").andWhere("location=?", gridLocation).apply();
+	const gridRowMap = new Map();
+	const gridChangeEvent = e => {
+		const gridInfo = GridGenerator.getInfo(e.target);
+		const gridRows = Array.from(gridInfo.grid.querySelectorAll(':scope>*'));
+		const {data, items, cleave} = gridRowMap.get(gridInfo.row);
+		
+		if(gridInfo.slot == "dtype"){
+			const dt = e.target.value;
+			if(dt == "1"){
+				Object.assign(data, {}, taxableObj);
+			}else if(dt == "2"){
+				Object.assign(data, {}, untaxableObj);
+			}
+		}else if((gridInfo.slot == "quantity") || (gridInfo.slot == "unit_price")){
+			data[gridInfo.slot] = Number(e.target.value.replace(/,/g, ""));
+		}else if(gridInfo.slot == "tax_rate"){
+			if(!data.taxable){
+				Object.assign(data, taxableObj);
+				if("dtype" in items){
+					items.dtype.value = "1";
+				}
+			}
+			data[gridInfo.slot] = Number(e.target.value.replace(/,/g, "")) / 100;
 		}else{
-			obj.toolbar.querySelector('.toolbar-tax-rate').style.display = "none";
+			data[gridInfo.slot] = e.target.value;
+		}
+		if("quantity" in items){
+			items.quantity.value = SinglePage.modal.number_format2.query(data.quantity).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(2).substring(1));
+			data.quantity = Number(items.quantity.value.replace(/,/g, ""));
+		}
+		if("unit_price" in items){
+			items.unit_price.value = SinglePage.modal.number_format2.query(data.unit_price).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(2).substring(1));
+			data.unit_price = Number(items.unit_price.value.replace(/,/g, ""));
+		}
+		data.amount_exc = Math.floor(data.quantity * data.unit_price + 0.000000001);
+		data.amount_tax = Math.floor((data.taxable) ? data.amount_exc * data.tax_rate + 0.000000001 : 0);
+		data.amount_inc = data.amount_exc + data.amount_tax;
+		if("unit" in items){
+			items.unit.value = data.unit;
+		}
+		if("tax_rate" in items){
+			items.tax_rate.value = data.taxable ? data.tax_rate * 100 : "";
+		}
+		if("amount_exc" in items){
+			items.amount_exc.textContent = SinglePage.modal.number_format.query(data.amount_exc);
+		}
+		if("amount_tax" in items){
+			items.amount_tax.textContent = SinglePage.modal.number_format.query(data.amount_tax);
+		}
+		if("amount_inc" in items){
+			items.amount_inc.textContent = SinglePage.modal.number_format.query(data.amount_inc);
 		}
 	};
-	const toolbar = document.createDocumentFragment();
-	toolbar.appendChild(Object.assign(document.createElement("div"), {innerHTML: '仕入先追加', className: 'btn btn-success toolbar-supplier'}));
-	toolbar.appendChild(Object.assign(document.createElement("select"), {innerHTML: '<option value="1">課税</option><option value="0">非課税</option>', className: 'toolbar-taxable'}));
-	toolbar.appendChild(Object.assign(document.createElement("div"), {innerHTML: '税率<input type="number" style="width: 7ex" />％', className: 'toolbar-tax-rate'}));
-	
-	let tableColumns = [
-		{ [refDetail]: "supplier",     type: 'text', title: '仕入先', width: 200 },
-		{ [refDetail]: "detail",       type: 'text', title: '内容', width: 200 },
-		{ [refDetail]: "quantity",     type: 'numeric', title: '数量', width: 60, mask:'#,##.00' },
-		{ [refDetail]: "unit",         type: 'text', title: '単位', width: 60 },
-		{ [refDetail]: "unit_price",   type: 'numeric', title: '単価', width: 80, mask:'#,##.00' },
-		{ [refDetail]: "amount_exc",   type: 'numeric', title: '税抜金額', width: 100, mask:'#,##' },
-		{ [refDetail]: "amount_tax",   type: 'numeric', title: '消費税金額', width: 100, mask:'#,##' },
-		{ [refDetail]: "amount_inc",   type: 'numeric', title: '税込金額', width: 100, mask:'#,##' },
-		{ [refDetail]: "note",         type: 'text', title: '備考', width: 200 },
-		{ [refDetail]: "payment_date", type: 'calendar', title: '支払日', width: 100, options: {
-			format: 'YYYY-MM-DD',
-			months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
-			monthsFull: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
-			weekdays: [ '日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日' ],
-			textDone: '完了',
-			textReset: '取消',
-			textUpdate: '更新'
-		} }
-	];
-	
-	const obj = jspreadsheet(document.getElementById("detail"), {
-		onbeforepaste: (el, data, x, y) => {
-			if(x != 0){
-				return data;
-			}
-			pasteEvent = true;
-			return obj.parseCSV(data, "\t").filter(row => {
-				// 仕入先チェック　無効な仕入先を除外
-				let found = null;
-				for(let supplier of suppliers){
-					if(row[0] == supplier.name){
-						found = supplier.code;
-					}
+	const gridKeydownEvent = e => {
+		if(e.keyCode == 13){
+			const info = GridGenerator.getInfo(e.target);
+			e.preventDefault();
+			if(e.shiftKey){
+				if(info.prevRow != null){
+					info.prevRow.focus();
 				}
-				return(found != null);
-			}).map(row => row.map(val => `"${val.split("\"").join("\"\"")}"`).join("\t")).join("\r\n") + "\r\n";
-		},
-		onpaste: (el, data) => {
-			pasteEvent = false;
-		},
-		onbeforeinsertrow: (el, rowNumber, numOfRows, insertBefore) => {
-			return pasteEvent;
-		},
-		onbeforedeleterow: (el, rowNumber, numOfRows) => {
-			const obj = el.jspreadsheet;
-			const n = rowNumber + numOfRows;
-			for(let i = rowNumber; i < n; i++){
-				if(obj.options.data[i][objectData].pu != null){
-					return false;
+			}else{
+				if(info.nextRow != null){
+					info.nextRow.focus();
 				}
 			}
-		},
-		allowDeletingAllRows: true,
-		columns: tableColumns,
-		toolbar: toolbar,
-		dataProxy(){
-			return new Proxy(
-				Object.assign({
-					pu: null,
-					supplier: null,
-					detail: "",
-					quantity: 0,
-					unit: "",
-					unit_price: 0,
-					amount_exc: 0,
-					amount_tax: 0,
-					amount_inc: 0,
-					note: "",
-					payment_date: "",
-					[objectData]: {}
-				}, taxableObj), {
-				get(target, prop, receiver){
-					if(prop == "length"){
-						return tableColumns.length;
-					}
-					if(prop == objectData){
-						return target;
-					}
-					if(prop == Symbol.toPrimitive){
-						return () => 0;
-					}
-					if((refDetail in tableColumns[prop]) && (tableColumns[prop][refDetail] == "supplier")){
-						let found = null;
-						const search = target.supplier;
-						for(let supplier of suppliers){
-							if(search == supplier.code){
-								found = supplier.name;
-							}
-						}
-						return found;
-					}
-					return target[tableColumns[prop][refDetail]];
-				},
-				set(obj, prop, value){
-					if(refDetail in tableColumns[prop]){
-						if((tableColumns[prop][refDetail] == "quantity") || (tableColumns[prop][refDetail] == "unit_price")){
-							if(value == ""){
-								value = 0;
-							}else if(typeof value != "number"){
-								value = Number(value.replace(/,/g, ""));
-							}
-						}else if(tableColumns[prop][refDetail] == "payment_date"){
-							if(value != ""){
-								value = value.replace(/\s[0-9:]+$/, "");
-							}
-						}else if(tableColumns[prop][refDetail] == "supplier"){
-							if((obj.supplier == null) || (obj.pu == null)){
-								let found = obj.supplier;
-								for(let supplier of suppliers){
-									if(value == supplier.name){
-										found = supplier.code;
-									}
-								}
-								value = found;
-							}else{
-								value = obj.supplier;
-							}
-						}
-						obj[tableColumns[prop][refDetail]] = value;
-						obj.amount_exc = Math.floor(obj.quantity * obj.unit_price);
-						obj.amount_tax = Math.floor((obj.taxable) ? obj.amount_exc * obj.tax_rate : 0);
-						obj.amount_inc = obj.amount_exc + obj.amount_tax;
-					}
-					return true;
-				}
+		}
+	};
+	const gridCallback = (row, data, items) => {
+		const cleave = {};
+		gridRowMap.set(row, {data, items, cleave});
+		row.addEventListener("change", gridChangeEvent);
+		row.addEventListener("keydown", gridKeydownEvent);
+		if("dtype" in items){
+			items.dtype.innerHTML = `<option value="1">課税</option><option value="2">非課税</option>`;
+			if(data.taxable){
+				items.dtype.value = "1";
+			}else{
+				items.dtype.value = "2";
+			}
+		}
+		if(data.taxable && ("tax_rate" in items)){
+			items.tax_rate.value = data.tax_rate * 100;
+		}
+		if("quantity" in items){
+			cleave.quantity = new Cleave(items.quantity, {
+				numeral: true,
+				numeralDecimalMark: '.',
+				delimiter: ',',
+				numeralDecimalScale: 2,
+				numeralThousandsGroupStyle: 'thousand'
 			});
-		},
-		text: { rowNumber: "項番" },
-		onselection: (el, borderLeft, borderTop, borderRight, borderBottom, origin) => {
-			toolbarDisplay(borderTop);
+			items.quantity.value = SinglePage.modal.number_format2.query(data.quantity).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(2).substring(1));
 		}
-	});
-	obj.setData(transaction.select("ALL")
-		.setTable("purchases")
-		.apply()
-		.map(row => {
-			const insert = obj.options.dataProxy();
-			Object.assign(insert[objectData], row);
-			return insert;
-		})
+		if("unit_price" in items){
+			cleave.unit_price = new Cleave(items.unit_price, {
+				numeral: true,
+				numeralDecimalMark: '.',
+				delimiter: ',',
+				numeralDecimalScale: 2,
+				numeralThousandsGroupStyle: 'thousand'
+			});
+			items.unit_price.value = SinglePage.modal.number_format2.query(data.unit_price).replace(/(?:\..*)?$/, match => Number(`0${match}`).toFixed(2).substring(1));
+		}
+		if("supplier" in items){
+			items.supplier.textContent = SinglePage.modal.supplier.query(data.supplier);
+		}
+		if("amount_exc" in items){
+			items.amount_exc.textContent = SinglePage.modal.number_format.query(data.amount_exc);
+		}
+		if("amount_tax" in items){
+			items.amount_tax.textContent = SinglePage.modal.number_format.query(data.amount_tax);
+		}
+		if("amount_inc" in items){
+			items.amount_inc.textContent = SinglePage.modal.number_format.query(data.amount_inc);
+		}
+	};
+	GridGenerator.define(gridLocation, gridInfo, gridColumns, gridCallback);
+	GridGenerator.init(grid);
+	GridGenerator.createTable(
+		grid,
+		transaction.select("All")
+			.setTable("purchases")
+			.apply()
+			.map(row => {
+				row.taxable = (row.taxable == 1);
+				return row;
+			})
 	);
-	obj.toolbar.querySelector('.toolbar-supplier').addEventListener("click", e => {
-		SinglePage.modal.supplier.show({detail: null});
-	});
-	obj.toolbar.querySelector('.toolbar-taxable').addEventListener("change", e => {
-		const selected = obj.selectedCell.map(Number);
-		const top = Math.min(selected[1], selected[3]);
-		const bottom = Math.max(selected[1], selected[3]);
-		for(let i = top; i <= bottom; i++){
-			const data = obj.options.data[i][objectData];
-			Object.assign(data, e.currentTarget.value == "0" ? untaxableObj : taxableObj);
-		}
-		toolbarDisplay(top);
-	});
-	obj.toolbar.querySelector('.toolbar-tax-rate input').addEventListener("input", e => {
-		const selected = obj.selectedCell.map(Number);
-		const top = Math.min(selected[1], selected[3]);
-		const bottom = Math.max(selected[1], selected[3]);
-		for(let i = top; i <= bottom; i++){
-			const data = obj.options.data[i][objectData];
-			const rate = Number(e.currentTarget.value / 100);
-			data.tax_rate = rate;
-		}
-		toolbarDisplay(top);
-	});
-	obj.toolbar.querySelector('.toolbar-tax-rate input').addEventListener("keydown", e => {
-		e.stopPropagation();
-	});
-	
+	editPage.instance.gridRowMap = gridRowMap;
+	editPage.instance.addSupplier = supplier => {
+		grid.appendChild(GridGenerator.createRows(grid, [Object.assign({}, recordObj, {supplier: supplier})]));
+	};
 });
 function formTableInit(parent, data){
 	return new Promise((resolve, reject) => {
@@ -634,8 +628,11 @@ function setDataTable(parent, columns, data, callback = null){
 			<div slot="main" id="sales_slip" class="d-grid flex-row" style="column-gap: 0.75rem; grid-template: 1fr/1fr 1fr; grid-auto-columns: 1fr; grid-auto-flow: column; align-items: start;"></div>
 			<div slot="main" id="sales_detail" class="d-grid flex-row" style="column-gap: 0.75rem; grid-template: 1fr/1fr 1fr; grid-auto-columns: 1fr; grid-auto-flow: column; align-items: start;"></div>
 			<div slot="main" class="flex-grow-1">
-				<div id="detail"></div>
-				<div class="invalid"></div>
+				<div id="tools" class="navbar mx-1 px-2 mb-1 py-1">
+					<show-dialog target="supplier" class="btn btn-success">仕入先追加</show-dialog>
+				</div>
+				<div class="overflow-auto" style="height: 50vh;"><div id="detail" data-grid="/Edit/Purchase"></div></div>
+				<div class="invalid" id="detail_invalid"></div>
 			</div>
 		</template>
 		<template data-page-share="">
