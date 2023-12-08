@@ -68,6 +68,15 @@ class UnbillingController extends ControllerBase{
 			if(!empty($_POST["apply_client"])){
 				$query->andWhere("apply_client=?", $_POST["apply_client"]);
 			}
+			//if(!empty($_POST["client"])){
+			//	$query->andWhere("sales_slips.apply_client IN()", $_POST["client"]);
+			//}
+			if(!empty($_POST["client_name"])){
+				$query->andWhere("sales_slips.client_name like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["client_name"]));
+			}
+			if(!empty($_POST["recording_date"])){
+				$query->andWhere("DATE_FORMAT(sales_slips.recording_date,'%Y%m')=DATE_FORMAT(?,'%Y%m')", $_POST["recording_date"]);
+			}
 		}
 		$searchIds = json_encode($query($cnt));
 		
