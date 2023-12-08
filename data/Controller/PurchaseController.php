@@ -43,10 +43,10 @@ class PurchaseController extends ControllerBase{
 				$query->andWhere("purchase_relations.sd=?", $_POST["sd"]);
 			}
 			if(!empty($_POST["slip_number"])){
-				$query->andWhere("slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
+				$query->andWhere("sales_slips.slip_number like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["slip_number"]));
 			}
 			if(!empty($_POST["project"])){
-				$query->andWhere("project like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["project"]));
+				$query->andWhere("sales_slips.project like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["project"]));
 			}
 			if(!empty($_POST["supplier"])){
 				$query->andWhere("purchases.supplier=?", $_POST["supplier"]);
