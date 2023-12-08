@@ -129,7 +129,7 @@
 				if(client != null){
 					const client2 = document.createElement("input");
 					const changeEvent = e => {
-						const applyClients = master.select("COL").setTable("system_apply_clients").setField("apply_client").andWhere("client=?", client.value).apply();
+						const applyClients = master.select("COL").setTable("system_apply_clients").setField("code").andWhere("client=?", client.value).apply();
 						client2.value = JSON.stringify(applyClients);
 					};
 					client.addEventListener("change", changeEvent);
