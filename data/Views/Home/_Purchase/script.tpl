@@ -351,6 +351,7 @@
 						.addField("sales_slips.project")
 						.addField("sales_slips.slip_number")
 						.addField("sales_slips.subject")
+						.addField("sales_slips.recording_date")
 						.leftJoin("sales_workflow using(ss)")
 						.addField("sales_workflow.regist_datetime")
 						.addField("sales_workflow.request")
