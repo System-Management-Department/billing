@@ -222,7 +222,7 @@ search-form::part(header){
 	display: inline-block;
 }
 search-form::part(body){
-	max-height: 50vh;
+	max-height: calc(50vh - 10rem);
 	overflow-y: auto;
 	display: grid;
 	column-gap: .75rem;
