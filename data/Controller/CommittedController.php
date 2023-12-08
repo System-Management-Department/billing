@@ -72,9 +72,9 @@ class CommittedController extends ControllerBase{
 			if(!empty($_POST["status"])){
 				$query->andWhere("sales_workflow.request=1");
 			}
-			//if(!empty($_POST["client"])){
-			//	$query->andWhere("sales_slips.apply_client IN()", $_POST["client"]);
-			//}
+			if((!empty($_POST["client"])) && (!empty($_POST["client2"]))){
+				$query->andWhere("JSON_CONTAINS(?,JSON_QUOTE(sales_slips.apply_client),'$')", $_POST["client2"]);
+			}
 			if(!empty($_POST["client_name"])){
 				$query->andWhere("sales_slips.client_name like concat('%',?,'%')", preg_replace('/(:?[\\\\%_])/', "\\", $_POST["client_name"]));
 			}

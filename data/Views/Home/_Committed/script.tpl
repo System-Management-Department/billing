@@ -124,7 +124,22 @@
 			};
 			GridGenerator.define(gridLocation, gridInfo, gridColumns, gridCallback);
 			GridGenerator.init(grid);
-			formTableInit(document.querySelector('search-form'), formTableQuery("/Committed#search").apply()).then(form => { form.submit(); });
+			formTableInit(document.querySelector('search-form'), formTableQuery("/Committed#search").apply()).then(form => {
+				const client = form.querySelector('form-control[name="client"]');
+				if(client != null){
+					const client2 = document.createElement("input");
+					const changeEvent = e => {
+						const applyClients = master.select("COL").setTable("system_apply_clients").setField("apply_client").andWhere("client=?", client.value).apply();
+						client2.value = JSON.stringify(applyClients);
+					};
+					client.addEventListener("change", changeEvent);
+					client.addEventListener("reset", changeEvent);
+					client2.setAttribute("type", "hidden");
+					client2.setAttribute("name", "client2");
+					form.appendChild(client2);
+				}
+				form.submit();
+			});
 		}
 		reload(){
 			fetch("/Committed/search", {
