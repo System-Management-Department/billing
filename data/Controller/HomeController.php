@@ -73,4 +73,24 @@ class HomeController extends ControllerBase{
 	public function master(){
 		return new View();
 	}
+	
+	#[\Attribute\AcceptRole("admin", "entry", "manager", "leader")]
+	public function billingPreview(){
+		$db = Session::getDB();
+		$id = $this->requestContext->id;
+		$query = $db->select("ONE")
+			->setTable("sales_slips")
+			->setField("invoice_format")
+			->andWhere("ss=?", $id);
+		$format = $query();
+		$v = new View();
+		$v
+			->setLayout(
+				"Shared" . DIRECTORY_SEPARATOR . "_simple_html.tpl|" .
+				DATA_DIR . "Views" . DIRECTORY_SEPARATOR . $this->requestContext->controller . DIRECTORY_SEPARATOR . "{$this->requestContext->action}.tpl"
+			)
+			->setAction($this->requestContext->action . DIRECTORY_SEPARATOR . $format)
+			["id"] = $id;
+		return $v;
+	}
 }

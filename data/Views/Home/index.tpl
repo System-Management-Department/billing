@@ -423,6 +423,8 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 					.addField("json_extract(sales_detail_attributes.data, '$.circulation') AS circulation")
 					.apply()
 			);
+			
+			SinglePage.modal.salses_detail.querySelector('create-window').setAttribute("href", `/Home/billingPreview/${e.detail}`);
 		});
 		SinglePage.modal.red_salses_detail.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
@@ -1533,6 +1535,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;"></div>
 		<div slot="body" class="mt-3">売上明細</div>
 		<div slot="body" class="overflow-auto" style="height: calc(100vh - 20rem);"><div data-grid="/Detail/Sales#list"></div></div>
+		<create-window slot="footer" href="/Home/billingPreview/" top="0" left="0" width="1200" height="600" class="btn btn-success">請求書プレビュー</create-window>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="red_salses_detail" label="売上明細">
