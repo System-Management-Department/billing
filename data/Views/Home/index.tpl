@@ -255,6 +255,9 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				row.classList.add("table-danger");
 			},
 			["/Detail/Sales#list"]: (row, data, items) => {
+				if((data.detail) == "" && ("detail" in items)){
+					items.detail.textContent = "\u200B";
+				}
 				if("category" in items){
 					items.category.value = data.category;
 				}

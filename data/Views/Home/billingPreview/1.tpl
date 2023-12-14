@@ -85,7 +85,7 @@ td,th{
 	color: red;
 }
 [data-table="帳票（明細）"][data-field]:empty::before{
-	content: none;
+	content: "\200B";
 }
 [data-description="ヘッダーエリア"]{
 	display: flex;
