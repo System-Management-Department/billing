@@ -6,6 +6,9 @@ document.addEventListener("DOMContentLoaded", function(e){
 	const fileOpen = e => {
 		open(e.currentTarget.getAttribute("data-href"));
 	};
+	const dragStart = e => {
+		e.dataTransfer.setData("DownloadURL", e.currentTarget.getAttribute("data-download"));
+	};
 	const filter = e => {
 		if(e.currentTarget.hasAttribute("data-filter")){
 			const icons = Array.from(document.querySelectorAll('[data-href]'));
@@ -51,6 +54,11 @@ document.addEventListener("DOMContentLoaded", function(e){
 			continue;
 		}else{
 			a.addEventListener("click", fileOpen);
+			if(href.match(/\.pdf$/)){
+				a.setAttribute("data-download", `application/pdf:${anchorElements[i].textContent.replace(/^[\s\/]|[\s/]$/g, "")}:${anchorElements[i].href}`);
+				a.draggable = true;
+				a.addEventListener("dragstart", dragStart);
+			}
 		}
 		a.textContent = anchorElements[i].textContent.replace(/^[\s\/]|[\s/]$/g, "");
 		elementList.push(a);
