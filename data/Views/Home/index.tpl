@@ -538,7 +538,15 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 					.andWhere("purchase_relations.ss=?", Number(e.detail))
 					.apply()
 			);
-			SinglePage.modal.request.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
+			SinglePage.modal.request.querySelector('[data-action]').setAttribute("data-target", e.detail);
+			SinglePage.modal.request.querySelector('[data-action] [name="to"]').value = res.division;
+		});
+		SinglePage.modal.request.querySelector('[data-action]').addEventListener("submit", e => {
+			const form = SinglePage.modal.request.querySelector('[data-action][data-target]');
+			const sender = `${form.getAttribute("data-action")}?${new URLSearchParams(new FormData(form))}`;
+			open(sender, "_blank", "left=0,top=0,width=600,height=200");
+			SinglePage.modal.request.hide("submit", form.getAttribute("data-target"));
+			e.preventDefault();
 		});
 		SinglePage.modal.withdraw.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
@@ -879,6 +887,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const name = formControls[i].getAttribute("name");
 				formControls[i].value = res[name];
 			}
+			SinglePage.modal.request2.querySelector('[data-action] [name="to"]').value = res.division;
 			res = db.select("ROW")
 				.setTable("purchase_relations")
 				.leftJoin("sales_details using(sd)")
@@ -903,7 +912,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				const name = formControls[i].getAttribute("name");
 				formControls[i].value = res[name];
 			}
-			SinglePage.modal.request2.querySelector('[data-proxy]').setAttribute("data-target", e.detail);
+			SinglePage.modal.request2.querySelector('[data-action]').setAttribute("data-target", e.detail);
 		});
 		Array.from(SinglePage.modal.request2.querySelectorAll('[data-table="3"] form-control')).forEach(input => {
 			input.addEventListener("change", e => {
@@ -919,10 +928,14 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				amount_inc.value = Number(amount_exc.value) + Number(amount_tax.value);
 			});
 		});
-		SinglePage.modal.request2.querySelector('[data-proxy]').addEventListener("click", e => {
+		SinglePage.modal.request2.querySelector('[data-action]').addEventListener("submit", e => {
+			const form = SinglePage.modal.request2.querySelector('[data-action][data-target]');
 			const formData = new FormData(SinglePage.modal.request2.querySelector('form[data-table="3"]'));
-			formData.append("pu", e.target.getAttribute("data-target"));
+			formData.append("pu", form.getAttribute("data-target"));
+			const sender = `${form.getAttribute("data-action")}?${new URLSearchParams(new FormData(form))}`;
+			open(sender, "_blank", "left=0,top=0,width=600,height=200");
 			SinglePage.modal.request2.hide("submit", formData);
+			e.preventDefault();
 		});
 		SinglePage.modal.withdraw2.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
@@ -1056,7 +1069,14 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 				nvc.appendChild(newValue);
 				formControls[i].appendChild(nvc);
 			}
-			SinglePage.modal.approval2.querySelector('[data-trigger="submit"]').setAttribute("data-result", e.detail);
+			SinglePage.modal.approval2.querySelector('[data-action]').setAttribute("data-target", e.detail);
+		});
+		SinglePage.modal.approval2.querySelector('[data-action]').addEventListener("submit", e => {
+			const form = SinglePage.modal.approval2.querySelector('[data-action][data-target]');
+			const sender = `${form.getAttribute("data-action")}?${new URLSearchParams(new FormData(form))}`;
+			open(sender, "_blank", "left=0,top=0,width=600,height=200");
+			SinglePage.modal.approval2.hide("submit", form.getAttribute("data-target"));
+			e.preventDefault();
 		});
 		SinglePage.modal.disapproval2.addEventListener("modal-open", e => {
 			const db = SinglePage.currentPage.instance.transaction;
@@ -1559,7 +1579,15 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<div slot="body" class="overflow-auto" style="height: calc(100vh - 20rem);"><div data-grid="/Detail/Sales#list" data-table="1"></div></div>
 		<div slot="body" class="mt-3">仕入明細</div>
 		<div slot="body" class="overflow-auto" style="height: calc(100vh - 20rem);"><div data-grid="/Detail/Purchase#list" data-table="2"></div></div>
-		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success" data-result="">申請</button>
+		<form slot="footer" data-action="https://script.google.com/macros/s/AKfycbxMSW34Lm2yMj3LaJ9dR0XLIqQw-CqJvk-0dlOs7I_e4VIC5J_xfbIthoThBYeUQ9zknQ/exec">
+			<input type="hidden" name="from" value="{$smarty.session["Chatwork.uuid"]}" />
+			<input type="hidden" name="to" value="" />
+			<input type="hidden" name="message" value="売上承認申請
+[hr]
+「売上・請求管理システム」の確定登録が完了し、「承認」が申請されました。
+「確定一覧表」の「申請中」の「確認承認」のクリックをお願いします。承認の画面で「売上明細」「仕入明細」を確認し、「承認」のクリックをお願いします。" />
+			<button type="submit" class="btn btn-success">申請</button>
+		</form>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="withdraw" label="申請取下">
@@ -1646,7 +1674,15 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
 		<div slot="body" class="mt-3">仕入明細</div>
 		<form slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></form>
-		<button slot="footer" type="button" data-proxy="submit" class="btn btn-success">申請</button>
+		<form slot="footer" data-action="https://script.google.com/macros/s/AKfycbxMSW34Lm2yMj3LaJ9dR0XLIqQw-CqJvk-0dlOs7I_e4VIC5J_xfbIthoThBYeUQ9zknQ/exec">
+			<input type="hidden" name="from" value="{$smarty.session["Chatwork.uuid"]}" />
+			<input type="hidden" name="to" value="" />
+			<input type="hidden" name="message" value="仕入変更申請
+[hr]
+「売上・請求管理システム」の仕入変更が申請されました。
+「仕入一覧表」の「仕入変更承認」のクリックをお願いします。仕入変更申請の画面で仕入情報の変更状況を確認し、「承認」のクリックをお願いします。" />
+			<button type="submit" class="btn btn-success">申請</button>
+		</form>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="withdraw2" label="仕入変更申請取下">
@@ -1664,7 +1700,15 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="2"></div>
 		<div slot="body" class="mt-3">仕入明細</div>
 		<div slot="body" style="max-height: 50vh;overflow-y: auto;display: grid;column-gap: 0.75rem;grid-template: 1fr/1fr 1fr;grid-auto-columns: 1fr;grid-auto-flow: column;align-items: start;" data-table="3"></div>
-		<button slot="footer" type="button" data-trigger="submit" class="btn btn-success">承認</button>
+		<form slot="footer" data-action="https://script.google.com/macros/s/AKfycbxMSW34Lm2yMj3LaJ9dR0XLIqQw-CqJvk-0dlOs7I_e4VIC5J_xfbIthoThBYeUQ9zknQ/exec">
+			<input type="hidden" name="from" value="{$smarty.session["Chatwork.uuid"]}" />
+			<input type="hidden" name="to" value="account" />
+			<input type="hidden" name="message" value="仕入変更申請
+[hr]
+「売上・請求管理システム」の仕入変更が承認されました。
+「仕入一覧表」の「仕入変更反映」欄の「反映」ボタンのクリックをお願いします。仕入変更反映の画面で仕入情報の変更状況を確認し、「反映」のクリックをお願いします。" />
+			<button type="submit" class="btn btn-success">承認</button>
+		</form>
 		<button slot="footer" type="button" data-trigger="btn" class="btn btn-success">閉じる</button>
 	</modal-dialog>
 	<modal-dialog name="disapproval2" label="仕入変更承認解除">
