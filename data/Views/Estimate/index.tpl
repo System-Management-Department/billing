@@ -446,7 +446,11 @@ Promise.all([
 		}else if((gridInfo.slot == "summary_data1") || (gridInfo.slot == "summary_data2") || (gridInfo.slot == "summary_data3")){
 			data.attributes[gridInfo.slot] = e.target.value;
 		}else if(gridInfo.slot == "circulation"){
-			data.attributes[gridInfo.slot] = e.target.value;
+			if(e.target.value == ""){
+				data.attributes[gridInfo.slot] = "";
+			}else{
+				data.attributes[gridInfo.slot] = Number(e.target.value.replace(/,/g, ""));
+			}
 		}else if((gridInfo.slot == "quantity") || (gridInfo.slot == "unit_price")){
 			if(!data.record){
 				Object.assign(data, data.record ? {} : recordObj);
@@ -750,7 +754,12 @@ Promise.all([
 				items.summary_data3.value = data.attributes.summary_data3;
 			}
 			if("circulation" in items){
-				items.circulation.value = data.attributes.circulation;
+				if((typeof data.attributes.circulation == "string") && (data.attributes.circulation != "")){
+					data.attributes.circulation = Number(data.attributes.circulation.replace(/,/g, ""));
+				}
+				if(data.attributes.circulation != ""){
+					items.circulation.value = SinglePage.modal.number_format.query(data.attributes.circulation);
+				}
 			}
 		}
 	};
