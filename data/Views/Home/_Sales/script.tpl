@@ -86,7 +86,11 @@
 						}
 					}
 					if(number != null){
-						open(`/Sales/closeList?channel=${CreateWindowElement.channel}&key=${number}`, "_blank", "left=0,top=0,width=1000,height=300");
+						if("IPCPromise" in globalThis){
+							open(`/Sales/closeList2?channel=${CreateWindowElement.channel}&key=${number}`, "_blank", "left=0,top=0,width=1000,height=300");
+						}else{
+							open(`/Sales/closeList?channel=${CreateWindowElement.channel}&key=${number}`, "_blank", "left=0,top=0,width=1000,height=300");
+						}
 					}
 				});
 			});
