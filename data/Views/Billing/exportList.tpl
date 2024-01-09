@@ -82,6 +82,7 @@ new VirtualPage("/", class{
 			{header: "数量",               query: "number_format(sales_details.quantity,sales_details.quantity_place)"}
 		];
 		query.addField("DISTINCT sales_slips.invoice_format");
+		query.addField("sales_details.sd");
 		for(let i = 0; i < fields.length; i++){
 			query.addField(`${fields[i].query} AS field${i}`);
 			csvHeader.push(fields[i].header);
