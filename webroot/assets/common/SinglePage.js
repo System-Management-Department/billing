@@ -862,7 +862,7 @@ class FCMonthElement extends HTMLElement{
 		return (this.#input.value == "") ? null : new Date(this.#input.value);
 	}
 	set value(value){
-		this.#input.value = (typeof value == "string") ? value : JSON.stringify(value);
+		this.#input.value = (typeof value == "string") ? value.replace(/^([0-9]+-[0-9]+)-.*$/, "$1") : JSON.stringify(value);
 		this.#setList();
 	}
 	set props(value){
