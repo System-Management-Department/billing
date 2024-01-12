@@ -1539,6 +1539,7 @@ new BroadcastChannel(CreateWindowElement.channel).addEventListener("message", e 
 	<datalist id="division"></datalist>
 	<datalist id="invoice_format"><option value="1">通常請求書</option><option value="2">ニッピ用請求書</option><option value="3">加茂繊維用請求書</option><option value="4">ダイドー用請求書</option><option value="5">インボイス対応（軽減税率適用）請求書</option></datalist>
 	<datalist id="taxable"><option value="1">課税</option><option value="0">非課税</option></datalist>
+	<datalist id="sort1"><option value=""></option><option value="recording_date DESC">計上月　降順</option><option value="billing_date DESC">請求日　降順</option></datalist>
 	<modal-dialog name="leader" label="部門長選択">
 		<div slot="body" style="height: calc(100vh - 20rem);"><div data-grid="/Modal/Leader#list"></div></div>
 	</modal-dialog>

@@ -1,10 +1,16 @@
 {literal}
 	new VirtualPage("/Sales", class{
-		#lastFormData;
+		#lastFormData; #lastSort;
 		constructor(vp){
 			this.#lastFormData = null;
+			this.#lastSort = null;
 			vp.addEventListener("search", e => {
 				this.#lastFormData = e.formData;
+				if(this.#lastFormData.has("sort[]")){
+					this.#lastSort = this.#lastFormData.getAll("sort[]");
+				}else{
+					this.#lastSort = [];
+				}
 				this.reload();
 			});
 			vp.addEventListener("reload", e => { this.reload(); });
@@ -126,6 +132,7 @@
 			});
 		}
 		reload(){
+			const sortQ = this.#lastSort.slice();
 			fetch("/Sales/search", {
 				method: "POST",
 				body: this.#lastFormData
@@ -135,15 +142,20 @@
 				const info = this.transaction.select("ALL").setTable("_info").apply().reduce((a, b) => Object.assign(a, {[b.key]: b.value}), {});
 				document.querySelector('search-form').setAttribute("result", `${info.count}件中${info.display}件を表示`);
 				
+				const query = this.transaction.select("ALL")
+					.setTable("sales_slips")
+					.addField("sales_slips.*")
+					.leftJoin("sales_workflow using(ss)")
+					.addField("sales_workflow.regist_datetime")
+					.addField("sales_workflow.hide");
+				for(let sortI of sortQ){
+					if(sortI != ""){
+						query.setOrderBy(sortI);
+					}
+				}
 				GridGenerator.createTable(
 					document.querySelector('[slot="main"] [data-grid]'),
-					this.transaction.select("ALL")
-						.setTable("sales_slips")
-						.addField("sales_slips.*")
-						.leftJoin("sales_workflow using(ss)")
-						.addField("sales_workflow.regist_datetime")
-						.addField("sales_workflow.hide")
-						.apply()
+					query.apply()
 				);
 			});
 		}

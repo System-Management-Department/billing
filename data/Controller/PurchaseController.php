@@ -84,6 +84,13 @@ class PurchaseController extends ControllerBase{
 			if(!empty($_POST["apply_client"])){
 				$query->andWhere("apply_client=?", $_POST["apply_client"]);
 			}
+			if(!empty($_POST["sort"])){
+				foreach($_POST["sort"] as $sortq){
+					if(preg_match('/^(recording_date|billing_date)(\\s+(ASC|DESC))?$/i', $sortq)){
+						$query->setOrderBy($sortq);
+					}
+				}
+			}
 		}
 		$searchTable = json_encode($query($cnt));
 		

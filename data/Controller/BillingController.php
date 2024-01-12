@@ -73,6 +73,13 @@ class BillingController extends ControllerBase{
 			if(!empty($_POST["recording_date"])){
 				$query->andWhere("DATE_FORMAT(sales_slips.recording_date,'%Y%m')=DATE_FORMAT(?,'%Y%m')", $_POST["recording_date"]);
 			}
+			if(!empty($_POST["sort"])){
+				foreach($_POST["sort"] as $sortq){
+					if(preg_match('/^(recording_date|billing_date)(\\s+(ASC|DESC))?$/i', $sortq)){
+						$query->setOrderBy($sortq);
+					}
+				}
+			}
 		}
 		$searchIds = json_encode($query($cnt));
 		
