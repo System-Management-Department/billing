@@ -198,6 +198,9 @@ class CommittedController extends ControllerBase{
 		// 検証
 		$result = SalesSlip::checkUpdate($db, $_POST, [], $this->requestContext);
 		
+		if(array_key_exists("#error", $_POST)){
+			$result->addMessage("", "ERROR", "/");
+		}
 		if(!$result->hasError()){
 			SalesSlip::execUpdate($db, $_POST, $this->requestContext, $result);
 		}

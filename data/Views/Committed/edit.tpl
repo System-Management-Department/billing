@@ -128,6 +128,7 @@ edit-table{
 <script type="text/javascript" src="/assets/common/SQLite.js"></script>
 <script type="text/javascript" src="/assets/common/SinglePage.js"></script>
 <script type="text/javascript" src="/assets/common/GridGenerator.js"></script>
+<script type="text/javascript" src="/assets/common/SJISEncoder.js"></script>
 <script type="text/javascript" src="/assets/cleave/cleave.min.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jsuites.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jspreadsheet.js"></script>
@@ -138,10 +139,15 @@ var editPage = new VirtualPage("/edit", class{
 		document.querySelector('[data-trigger="submit"]').addEventListener("click", e => {
 			const form = document.querySelector("form");
 			const formData = new FormData(form);
+			const fev = [];
 			const grid = document.querySelector('[slot="main"] [data-grid]');
-			const details = Array.from(grid.querySelectorAll(':scope>*')).filter(row => this.gridRowMap.has(row)).map(tempRow => {
+			const details = Array.from(grid.querySelectorAll(':scope>*')).filter(row => this.gridRowMap.has(row)).map((tempRow, i) => {
 				const row = this.gridRowMap.get(tempRow).data
+				const sjisError = SJISEncoder.validate(row.detail).map(msg => msg.replace(/^[0-9]+行/, "内容"));
 				let res = {};
+				if(sjisError.length > 0){
+					fev.push([sjisError.join(" "), 2, `detail/${i}/detail`]);
+				}
 				for(let key in row){
 					if(typeof row[key] == "boolean"){
 						res[key] = row[key] ? 1 : 0;
@@ -168,6 +174,9 @@ var editPage = new VirtualPage("/edit", class{
 			}
 			formData.append("detail", JSON.stringify(details));
 			formData.append("detail_attribute", JSON.stringify(detailAttributes));
+			if(fev.length > 0){
+				formData.append("#error", "");
+			}
 			fetch(`/Committed/update/${id}`, {
 				method: "POST",
 				body: formData
@@ -185,7 +194,7 @@ var editPage = new VirtualPage("/edit", class{
 				}else{
 					const messages = {};
 					const messages2 = document.createDocumentFragment();
-					for(let meaasge of result.messages.filter(m => (m[1] == 2))){
+					for(let meaasge of result.messages.concat(fev).filter(m => (m[1] == 2))){
 						let token = meaasge[2].split("/");
 						if(token.length == 1){
 							messages[meaasge[2]] = meaasge[0];

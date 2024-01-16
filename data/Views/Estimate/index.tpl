@@ -163,6 +163,7 @@ edit-table{
 <script type="text/javascript" src="/assets/common/SinglePage.js"></script>
 <script type="text/javascript" src="/assets/common/GridGenerator.js"></script>
 <script type="text/javascript" src="/assets/common/PrintPage.js"></script>
+<script type="text/javascript" src="/assets/common/SJISEncoder.js"></script>
 <script type="text/javascript" src="/assets/cleave/cleave.min.js"></script>
 <script type="text/javascript" src="/assets/jspdf/jspdf.umd.min.js"></script>
 <script type="text/javascript" src="/assets/jspreadsheet/jsuites.js"></script>
@@ -1043,9 +1044,14 @@ Promise.all([
 		const info = xmlDoc.querySelector('info');
 		const form = document.querySelector('form');
 		const formData = new FormData(form);
-		const details = Array.from(grid.querySelectorAll(':scope>*')).filter(row => gridRowMap.has(row)).map(tempRow => {
+		const fev = [];
+		const details = Array.from(grid.querySelectorAll(':scope>*')).filter(row => gridRowMap.has(row)).map((tempRow, i) => {
 			const row = gridRowMap.get(tempRow).data
+			const sjisError = SJISEncoder.validate(row.detail).map(msg => msg.replace(/^[0-9]+行/, "内容"));
 			let res = {};
+			if(sjisError.length > 0){
+				fev.push([sjisError.join(" "), 2, `detail/${i}/detail`]);
+			}
 			for(let key in row){
 				if(typeof row[key] == "boolean"){
 					res[key] = row[key] ? 1 : 0;
@@ -1057,6 +1063,9 @@ Promise.all([
 		});
 		formData.append("invoice_format",id);
 		formData.append("detail", JSON.stringify(details));
+		if(fev.length > 0){
+			formData.append("#error", "");
+		}
 		if(info.hasAttribute("ss")){
 			formData.append("hide", `[${info.getAttribute("ss")}]`);
 		}
@@ -1071,7 +1080,7 @@ Promise.all([
 				const messages = {};
 				const messages2 = document.createDocumentFragment();
 				const alertMessages = [];
-				for(let meaasge of result.messages.filter(m => (m[1] == 2))){
+				for(let meaasge of result.messages.concat(fev).filter(m => (m[1] == 2))){
 					let token = meaasge[2].split("/");
 					if(token.length == 1){
 						messages[meaasge[2]] = meaasge[0];

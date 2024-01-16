@@ -38,6 +38,9 @@ class EstimateController extends ControllerBase{
 		// 検証
 		$result = SalesSlip::checkInsert($db, $_POST, [], $this->requestContext);
 		
+		if(array_key_exists("#error", $_POST)){
+			$result->addMessage("", "ERROR", "/");
+		}
 		if(!$result->hasError()){
 			SalesSlip::execInsert($db, $_POST, $this->requestContext, $result);
 		}
