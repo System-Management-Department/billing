@@ -502,7 +502,7 @@ Promise.all([
 		}
 		if(data.record){
 			data.amount_exc = Math.floor(data.quantity * data.unit_price + 0.000000001);
-			data.amount_tax = Math.floor((data.taxable) ? data.amount_exc * data.tax_rate + 0.000000001 : 0);
+			data.amount_tax = rounding((data.taxable) ? data.amount_exc * data.tax_rate : 0);
 			data.amount_inc = data.amount_exc + data.amount_tax;
 		}
 		if("unit" in items){
@@ -558,7 +558,7 @@ Promise.all([
 			}
 		}
 		for(let tax_rate in taxRate){
-			taxRate[tax_rate].amount_tax = Math.floor(taxRate[tax_rate].amount_exc * Number(tax_rate) + 0.000000001);
+			taxRate[tax_rate].amount_tax = rounding(taxRate[tax_rate].amount_exc * Number(tax_rate));
 			taxRate[tax_rate].amount_inc = taxRate[tax_rate].amount_exc + taxRate[tax_rate].amount_tax;
 			total.amount_tax += taxRate[tax_rate].amount_tax;
 			total.amount_inc += taxRate[tax_rate].amount_inc;
@@ -1108,7 +1108,9 @@ Promise.all([
 		});
 	});
 });
-
+function rounding(value){
+	return value < 0 ? Math.ceil(value - 0.000000001) : Math.floor(value + 0.000000001);
+}
 {/literal}</script>
 {/block}
 {block name="body"}
