@@ -41,7 +41,7 @@ new VirtualPage("/", class{
 		});
 		let csvHeader = [];
 		const fields = [
-			{header: "対象日付",           query: "STRFTIME('%Y/%m/%d', sales_workflow.approval_datetime)"},
+			{header: "対象日付",           query: "STRFTIME('%Y/%m/%d', sales_slips.recording_date)"},
 			{header: "帳票No",             query: "sales_slips.slip_number"},
 			{header: "顧客コード",         query: "apply_clients.apply_client"},
 			{header: "顧客名",             query: "apply_clients.name"},
